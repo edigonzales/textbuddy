@@ -5,7 +5,7 @@ plugins {
 
 group = 'app.textbuddy'
 version = '0.0.1-SNAPSHOT'
-description = 'Slice 00 project basis for Textbuddy'
+description = 'Slice 01 editor island base for Textbuddy'
 
 ext {
     jteVersion = '3.2.3'
@@ -18,6 +18,10 @@ java {
         languageVersion = JavaLanguageVersion.of(25)
     }
 }
+
+def frontendDir = layout.projectDirectory.dir('frontend')
+def frontendBuildDir = layout.buildDirectory.dir('frontend-dist')
+def generatedFrontendResourcesDir = layout.buildDirectory.dir('generated/frontend-resources')
 
 dependencies {
     implementation platform('org.springframework.boot:spring-boot-dependencies:4.0.5')
@@ -33,6 +37,50 @@ dependencies {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDir generatedFrontendResourcesDir
+        }
+    }
+}
+
+tasks.register('npmInstallFrontend', Exec) {
+    workingDir frontendDir.asFile
+    commandLine 'npm', 'ci'
+
+    inputs.files(
+            frontendDir.file('package.json'),
+            frontendDir.file('package-lock.json')
+    )
+    outputs.dir frontendDir.dir('node_modules')
+}
+
+tasks.register('buildFrontend', Exec) {
+    dependsOn 'npmInstallFrontend'
+    workingDir frontendDir.asFile
+    commandLine 'npm', 'run', 'build'
+
+    inputs.files(
+            frontendDir.file('package.json'),
+            frontendDir.file('package-lock.json'),
+            frontendDir.file('tsconfig.json'),
+            frontendDir.file('vite.config.ts')
+    )
+    inputs.dir frontendDir.dir('src')
+    outputs.dir frontendBuildDir
+}
+
+tasks.register('syncFrontendAssets', Sync) {
+    dependsOn 'buildFrontend'
+    from frontendBuildDir
+    into generatedFrontendResourcesDir.map { it.dir('static/editor') }
+}
+
+tasks.named('processResources') {
+    dependsOn 'syncFrontendAssets'
 }
 
 tasks.named('test') {

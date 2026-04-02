@@ -12,8 +12,8 @@
 | Slice | Status | Kurzbeschreibung |
 | --- | --- | --- |
 | 00 | done | Project Basis |
-| 01 | ready | Editor Island Base |
-| 02 | pending | Text Correction Base |
+| 01 | done | Editor Island Base |
+| 02 | ready | Text Correction Base |
 | 03 | pending | Text Correction Enhancements |
 | 04 | pending | Sentence Rewrite |
 | 05 | pending | Word Synonym |
@@ -39,4 +39,5 @@
 ## Handoff-Notizen
 
 - Slice 00 abgeschlossen: Gradle-Groovy-Basis, Spring-Boot-4-MVC-Shell mit JTE/HTMX, Frontend-Workspace, Kernservice-/Adapter-Stubs und Basistests stehen.
-- Slice 01 ist ready: Die sichtbare Arbeitsoberfläche besitzt mit `#editor-island-root` einen klaren Ankerpunkt für die Tiptap-Insel.
+- Slice 01 abgeschlossen: Die Tiptap-Insel ist in `GET /` integriert und liefert lokalen Plain-Text-Editor mit Hidden Mirror, Zeichen-/Wortzaehlern, Undo/Redo sowie den Events `editor:text-changed` und `editor:selection-changed`.
+- Slice 01 Build/Test-Handoff: Frontend-Assets werden per Gradle aus `frontend/` nach Spring-Static-Resources gebaut; MockMvc prueft die Seiteneinbindung, Playwright deckt Tippen, Mirror und Undo/Redo ab.

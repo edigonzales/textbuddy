@@ -4,4 +4,7 @@ build/
 bin/
 frontend/dist/
 frontend/node_modules/
+playwright/node_modules/
+playwright/playwright-report/
+playwright/test-results/
 jte-classes/

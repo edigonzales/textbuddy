@@ -5,65 +5,68 @@
 <div class="page-shell">
     <header class="app-header panel" data-testid="shell-header">
         <div>
-            <p class="eyebrow">Spring MVC Shell</p>
+            <p class="eyebrow">Spring MVC + Tiptap Island</p>
             <h1>Textbuddy</h1>
             <p>${page.subtitle()}</p>
         </div>
         <div class="status-strip">
-            <div class="status-pill">HTMX ist eingebunden, aber in Slice 00 noch ohne fachliche Nutzung.</div>
-            <div class="status-pill">Das künftige Editor-Frontend lebt vorbereitet unter <code>frontend/</code>.</div>
+            <div class="status-pill">Slice 01 bindet die Editor-Insel direkt in die serverseitige JTE-Shell ein.</div>
+            <div class="status-pill">Mirror, Zähler und Undo/Redo laufen rein clientseitig ohne Fach-API-Aufruf.</div>
         </div>
     </header>
 
     <main class="workspace-grid">
-        <section class="panel" data-testid="editor-placeholder">
+        <section class="panel" data-testid="editor-shell">
             <div class="panel-body">
                 <p class="eyebrow">Arbeitsfläche</p>
-                <h2>Editor-Container-Platzhalter</h2>
-                <p class="panel-copy">Slice 01 hängt die Tiptap-Insel an diese sichtbare, derzeit leere Arbeitsoberfläche.</p>
+                <h2>Editor Island Base</h2>
+                <p class="panel-copy">Der Editor bearbeitet aktuell nur Plain Text und hält Mirror, Counter sowie Undo/Redo lokal synchron.</p>
 
-                <div id="editor-island-root" class="editor-root" aria-disabled="true">
+                <div id="editor-island-root" class="editor-root" data-testid="editor-island-root">
                     <div class="chip-row">
                         <span class="chip">JTE rendert die Shell</span>
-                        <span class="chip">Spring MVC liefert die Seite</span>
-                        <span class="chip">Keine Editorlogik in Slice 00</span>
+                        <span class="chip">Tiptap bearbeitet Plain Text</span>
+                        <span class="chip">Keine Server-API in Slice 01</span>
                     </div>
 
-                    <div class="editor-canvas">
-                        <strong>Leere Arbeitsoberfläche</strong>
-                        <p>Hier erscheint später die Tiptap-Insel. Aktuell bleibt der Bereich absichtlich ohne fachliche Interaktion.</p>
-                    </div>
-                </div>
+                    <div class="editor-toolbar" data-testid="editor-toolbar">
+                        <div class="editor-toolbar-group">
+                            <button type="button" class="editor-button" data-editor-action="undo" data-testid="editor-undo" disabled>Undo</button>
+                            <button type="button" class="editor-button" data-editor-action="redo" data-testid="editor-redo" disabled>Redo</button>
+                        </div>
 
-                <div class="tool-grid" data-testid="tools-placeholder">
-                    <button type="button" disabled>Textkorrektur</button>
-                    <button type="button" disabled>Rewrite</button>
-                    <button type="button" disabled>Synonyme</button>
-                    <button type="button" disabled>Quick Actions</button>
-                    <button type="button" disabled>Advisor</button>
-                    <button type="button" disabled>Dokumentimport</button>
+                        <div class="editor-counter-bar" aria-live="polite">
+                            <span class="counter-pill"><strong data-editor-count="characters" data-testid="editor-character-count">0</strong> Zeichen</span>
+                            <span class="counter-pill"><strong data-editor-count="words" data-testid="editor-word-count">0</strong> Wörter</span>
+                        </div>
+                    </div>
+
+                    <div class="editor-canvas" data-testid="editor-canvas">
+                        <div class="editor-surface" data-editor-surface data-editor-placeholder="Schreibe hier deinen Text."></div>
+                        <textarea hidden name="text" data-editor-mirror data-testid="editor-mirror"></textarea>
+                    </div>
                 </div>
             </div>
         </section>
 
         <aside class="panel" data-testid="panel-placeholder">
             <div class="panel-body">
-                <p class="eyebrow">Rechtes Panel</p>
-                <h2>Seitenpanel-Platzhalter</h2>
-                <p class="panel-copy">Dieser Bereich bleibt in Slice 00 rein visuell und markiert die spätere Fläche für serverseitige Fragmente und Tool-Panels.</p>
+                <p class="eyebrow">Slice-Status</p>
+                <h2>Lokale Editorbasis</h2>
+                <p class="panel-copy">Die rechte Seite bleibt bewusst schlicht und dokumentiert nur den aktuell freigeschalteten Umfang dieses Slices.</p>
 
                 <div class="stack-list">
                     <div class="stack-item">
-                        <strong>Spätere Fragmente</strong>
-                        Advisor-Listen, Rewrite-Optionen und Tool-Ausgaben werden erst in späteren Slices ergänzt.
+                        <strong>Clientseitige Events</strong>
+                        Die Insel feuert <code>editor:text-changed</code> und <code>editor:selection-changed</code> fuer spaetere Integrationen.
                     </div>
                     <div class="stack-item">
                         <strong>Keine API-Vorgriffe</strong>
-                        Es existiert bewusst noch kein Endpoint außer <code>GET /</code>.
+                        Auch in Slice 01 bleibt es bewusst bei <code>GET /</code>; Textverarbeitung folgt erst spaeter.
                     </div>
                     <div class="stack-item">
-                        <strong>Stub-Basis aktiv</strong>
-                        Kernservices und Adapter sind nur als compilebare Beans und Interfaces vorhanden.
+                        <strong>Naechster Andockpunkt</strong>
+                        Slice 02 kann denselben Mirror-Text erstmals in die Textkorrektur-API einspeisen.
                     </div>
                 </div>
             </div>

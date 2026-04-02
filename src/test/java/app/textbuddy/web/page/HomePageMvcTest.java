@@ -21,7 +21,7 @@ class HomePageMvcTest {
     private WebApplicationContext webApplicationContext;
 
     @Test
-    void getRootRendersShell() throws Exception {
+    void getRootRendersEditorIslandShell() throws Exception {
         MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
 
         mockMvc.perform(get("/"))
@@ -29,10 +29,17 @@ class HomePageMvcTest {
                 .andExpect(view().name("pages/home"))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(content().string(containsString("Textbuddy")))
-                .andExpect(content().string(containsString("data-testid=\"editor-placeholder\"")))
+                .andExpect(content().string(containsString("data-testid=\"editor-shell\"")))
+                .andExpect(content().string(containsString("data-testid=\"editor-island-root\"")))
+                .andExpect(content().string(containsString("data-testid=\"editor-toolbar\"")))
+                .andExpect(content().string(containsString("data-testid=\"editor-mirror\"")))
+                .andExpect(content().string(containsString("data-testid=\"editor-character-count\">0</strong>")))
+                .andExpect(content().string(containsString("data-testid=\"editor-word-count\">0</strong>")))
+                .andExpect(content().string(containsString("/editor/editor-island.css")))
+                .andExpect(content().string(containsString("/editor/editor-island.js")))
                 .andExpect(content().string(containsString("data-testid=\"panel-placeholder\"")))
-                .andExpect(content().string(containsString("Leere Arbeitsoberfläche")))
-                .andExpect(content().string(containsString("HTMX ist eingebunden")))
+                .andExpect(content().string(containsString("Editor Island Base")))
+                .andExpect(content().string(containsString("Mirror, Zähler und Undo/Redo laufen rein clientseitig")))
                 .andExpect(content().string(containsString("Keine API-Vorgriffe")));
     }
 }

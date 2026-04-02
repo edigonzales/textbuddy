@@ -1,0 +1,12 @@
+{
+  "name": "textbuddy-playwright",
+  "version": "1.0.0",
+  "description": "Browser- und UI-Tests fuer Textbuddy",
+  "private": true,
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1"
+  }
+}
