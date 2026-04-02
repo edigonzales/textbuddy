@@ -5,10 +5,12 @@ import { TextCorrectionDecorationExtension } from "./correction-mark-extension";
 import {
   findCorrectionElements,
   findEditorElements,
+  findQuickActionElements,
   findRewriteBubbleElements,
 } from "./dom";
 import { dispatchSelectionChanged, dispatchTextChanged } from "./events";
 import { countWords, getPlainText, plainTextToHtml } from "./plain-text";
+import { mountQuickActionStream } from "./quick-action-stream";
 import { mountRewriteBubble } from "./rewrite-bubble";
 import { mountTextCorrectionBridge } from "./text-correction";
 import type { EditorElements } from "./types";
@@ -53,6 +55,7 @@ export function mountEditorIsland(): void {
   }
 
   const rewriteBubbleElements = findRewriteBubbleElements(elements.root);
+  const quickActionElements = findQuickActionElements(elements.root);
 
   const editor = new Editor({
     element: elements.surface,
@@ -118,5 +121,9 @@ export function mountEditorIsland(): void {
 
   if (rewriteBubbleElements) {
     mountRewriteBubble(editor, elements.root, elements, rewriteBubbleElements);
+  }
+
+  if (quickActionElements) {
+    mountQuickActionStream(editor, elements.root, quickActionElements);
   }
 }

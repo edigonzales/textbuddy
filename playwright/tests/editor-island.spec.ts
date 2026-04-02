@@ -14,6 +14,11 @@ interface SentenceRewriteRequestPayload {
   sentence: string;
 }
 
+interface QuickActionRequestPayload {
+  text: string;
+  language: string;
+}
+
 function createCorrectionResponse(text: string) {
   const blocks = [];
   const tehOffset = text.indexOf("teh");
@@ -45,6 +50,12 @@ function createCorrectionResponse(text: string) {
     original: text,
     blocks,
   };
+}
+
+function createSseBody(events: Array<{ event: string; payload: unknown }>): string {
+  return events
+    .map(({ event, payload }) => `event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`)
+    .join("");
 }
 
 test("typing updates mirror and undo redo state", async ({ page }) => {
@@ -233,6 +244,81 @@ test("sentence mode is reachable without word focus", async ({ page }) => {
   await expect(page.getByTestId("rewrite-bubble")).toBeVisible();
   await expect(page.getByTestId("rewrite-primary-action")).toHaveText("Satz umschreiben");
   await expect(page.getByTestId("rewrite-secondary-action")).toBeHidden();
+});
+
+test("plain language streams into the editor, shows a diff and supports full undo", async ({
+  page,
+}) => {
+  const requestBodies: QuickActionRequestPayload[] = [];
+
+  await page.route("**/api/quick-actions/plain-language/stream", async (route) => {
+    const payload = route.request().postDataJSON() as QuickActionRequestPayload;
+
+    requestBodies.push(payload);
+    await route.fulfill({
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream",
+      },
+      body: createSseBody([
+        {
+          event: "chunk",
+          payload: {
+            text: "Kurz und einfach: ",
+          },
+        },
+        {
+          event: "chunk",
+          payload: {
+            text: "Der einfache Thema ",
+          },
+        },
+        {
+          event: "chunk",
+          payload: {
+            text: "ist wichtig.",
+          },
+        },
+        {
+          event: "complete",
+          payload: {
+            text: "Kurz und einfach: Der einfache Thema ist wichtig.",
+          },
+        },
+      ]),
+    });
+  });
+
+  await page.goto("/");
+
+  const editor = page.getByTestId("editor-input");
+  const mirror = page.getByTestId("editor-mirror");
+
+  await expect(page.locator("[data-quick-action]")).toHaveCount(1);
+
+  await editor.click();
+  await page.keyboard.type("Der komplizierte Sachverhalt ist relevant.");
+  await page.getByTestId("quick-action-plain-language").click();
+
+  await expect.poll(() => requestBodies.at(-1)?.text).toBe(
+    "Der komplizierte Sachverhalt ist relevant.",
+  );
+  await expect.poll(() => requestBodies.at(-1)?.language).toBe("auto");
+  await expect(page.getByTestId("quick-action-status")).toContainText("abgeschlossen");
+  await expect(mirror).toHaveValue("Kurz und einfach: Der einfache Thema ist wichtig.");
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+  await expect(page.getByTestId("rewrite-diff-before")).toContainText(
+    "Der komplizierte Sachverhalt ist relevant.",
+  );
+  await expect(page.getByTestId("rewrite-diff-after")).toContainText(
+    "Kurz und einfach: Der einfache Thema ist wichtig.",
+  );
+
+  await page.getByTestId("rewrite-diff-undo").click();
+
+  await expect(mirror).toHaveValue("Der komplizierte Sachverhalt ist relevant.");
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeHidden();
+  await expect(page.getByTestId("quick-action-status")).toContainText("rueckgaengig");
 });
 
 test("incomplete sentences keep word mode without sentence action", async ({ page }) => {

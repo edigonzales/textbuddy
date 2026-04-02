@@ -30,6 +30,7 @@ const IDLE_MESSAGE = "Schreibe Text, um Korrekturen zu sehen.";
 const DEBOUNCE_MESSAGE = "Pruefung nach Tipp-Pause...";
 const LOADING_MESSAGE = "Pruefe geaenderte Segmente...";
 const ERROR_MESSAGE = "Korrekturen konnten gerade nicht geladen werden.";
+const STREAMING_MESSAGE = "Rewrite-Stream laeuft gerade.";
 
 interface SegmentCorrectionState extends TextCorrectionSegment {
   blocks: TextCorrectionBlock[];
@@ -94,6 +95,10 @@ export function mountTextCorrectionBridge(
 
   const dictionaryStore = createLocalDictionaryStore();
   const inFlightRequests = new Set<AbortController>();
+
+  function isQuickActionStreaming(): boolean {
+    return root.dataset.quickActionStreaming === "true";
+  }
 
   function setPanelState(state: "idle" | "loading" | "success" | "error", message: string): void {
     panelState = state;
@@ -572,6 +577,21 @@ export function mountTextCorrectionBridge(
     const previousText = currentText;
 
     currentText = detail.text;
+
+    if (isQuickActionStreaming()) {
+      latestRequestId += 1;
+
+      if (typeof debounceHandle === "number") {
+        window.clearTimeout(debounceHandle);
+        debounceHandle = undefined;
+      }
+
+      abortInFlightRequests();
+      clearCorrections();
+      setPanelState("idle", STREAMING_MESSAGE);
+      return;
+    }
+
     scheduleCorrection(previousText, detail.text);
   });
 

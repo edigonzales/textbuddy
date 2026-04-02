@@ -10,8 +10,8 @@
             <p>${page.subtitle()}</p>
         </div>
         <div class="status-strip">
-            <div class="status-pill">Slice 05 kombiniert <code>POST /api/word-synonym</code> und <code>POST /api/sentence-rewrite</code> in einem gemeinsamen Bubble-Menue direkt am Editor.</div>
-            <div class="status-pill">Wortfokus hat Vorrang, Satzumformung bleibt aber ueber denselben Bubble-Kontext erreichbar und ersetzt weiterhin nur die exakte Zielrange.</div>
+            <div class="status-pill">Slice 06 bringt <code>POST /api/quick-actions/plain-language/stream</code> als ersten echten SSE-Quick-Action-Endpoint in die Editor-Insel.</div>
+            <div class="status-pill">Der Volltext-Rewrite streamt live in den Editor, zeigt danach einen Diff und kann komplett auf den Ursprungszustand zurueckgesetzt werden.</div>
         </div>
     </header>
 
@@ -19,8 +19,8 @@
         <section class="panel" data-testid="editor-shell">
             <div class="panel-body">
                 <p class="eyebrow">Arbeitsfläche</p>
-                <h2>Word Synonym + Sentence Rewrite</h2>
-                <p class="panel-copy">Die Insel nutzt eine gemeinsame Rewrite-Bubble: Wort-Synonyme fuer praezisen Austausch einzelner Woerter und Satzumformung fuer komplette Alternativen im selben Kontext.</p>
+                <h2>Quick Actions + Rewrite Bubble</h2>
+                <p class="panel-copy">Die Insel kombiniert weiter Wort-/Satz-Rewrite im Bubble-Menue und ergaenzt jetzt einen ersten streamingfaehigen Volltext-Rewrite als Plain-Language-Quick-Action.</p>
 
                 <div id="editor-island-root" class="editor-root" data-testid="editor-island-root">
                     <div class="chip-row">
@@ -29,9 +29,25 @@
                         <span class="chip">LanguageTool prueft nur geaenderte Segmente</span>
                         <span class="chip">Fokussiertes Wort hat Vorrang vor Satzfokus</span>
                         <span class="chip">Dasselbe Bubble-Menue startet Wort-Synonyme oder Satzumformung</span>
-                        <span class="chip">Synonyme senden Wort plus Satzkontext</span>
-                        <span class="chip">Beide Aktionen ersetzen exakt nur ihre Zielrange</span>
+                        <span class="chip">Plain Language streamt ueber SSE direkt in den Editor</span>
+                        <span class="chip">Rewrite-Diff und kompletter Undo bauen auf derselben Streaming-Basis auf</span>
                     </div>
+
+                    <section class="quick-action-panel" data-quick-action-panel data-testid="quick-action-panel" data-quick-action-state="idle">
+                        <div class="quick-action-panel-head">
+                            <div>
+                                <p class="eyebrow">Quick Actions</p>
+                                <h3>Rewrite mit Streaming</h3>
+                                <p class="panel-copy">Nur Plain Language ist in Slice 06 aktiv. Weitere Quick Actions bleiben bis zu ihren eigenen Slices verborgen.</p>
+                            </div>
+
+                            <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" aria-live="polite">Bereit fuer Plain Language.</p>
+                        </div>
+
+                        <div class="quick-action-row">
+                            <button type="button" class="quick-action-button" data-quick-action="plain-language" data-testid="quick-action-plain-language">Plain Language</button>
+                        </div>
+                    </section>
 
                     <div class="editor-toolbar" data-testid="editor-toolbar">
                         <div class="editor-toolbar-group">
@@ -65,6 +81,29 @@
                             </div>
                         </div>
                     </div>
+
+                    <section class="rewrite-diff-panel" data-rewrite-diff-panel data-testid="rewrite-diff-panel" hidden>
+                        <div class="rewrite-diff-head">
+                            <div>
+                                <p class="eyebrow">Rewrite Diff</p>
+                                <h3>Alt gegen Neu</h3>
+                            </div>
+
+                            <button type="button" class="rewrite-diff-undo" data-rewrite-diff-undo data-testid="rewrite-diff-undo">Rewrite rueckgaengig machen</button>
+                        </div>
+
+                        <div class="rewrite-diff-grid">
+                            <article class="rewrite-diff-column">
+                                <strong>Vorher</strong>
+                                <div class="rewrite-diff-content" data-rewrite-diff-before data-testid="rewrite-diff-before"></div>
+                            </article>
+
+                            <article class="rewrite-diff-column">
+                                <strong>Nachher</strong>
+                                <div class="rewrite-diff-content" data-rewrite-diff-after data-testid="rewrite-diff-after"></div>
+                            </article>
+                        </div>
+                    </section>
                 </div>
             </div>
         </section>
@@ -106,12 +145,12 @@
 
                 <div class="stack-list problems-footnotes">
                     <div class="stack-item">
-                        <strong>Neu in Slice 05</strong>
-                        Wort-Synonyme und Satzumformung teilen sich jetzt einen gemeinsamen Bubble-Kontext, bleiben technisch aber auf getrennten Endpoints.
+                        <strong>Neu in Slice 06</strong>
+                        Plain Language nutzt jetzt einen separaten SSE-Endpoint und eine gemeinsame Streaming-Infrastruktur mit Diff und komplettem Rewrite-Undo.
                     </div>
                     <div class="stack-item">
                         <strong>Bewusst noch nicht aktiv</strong>
-                        Keine weiteren Rewrite-Arten, keine Quick Actions und kein Advisor ausserhalb dieses Bubble-Kontexts in Slice 05.
+                        Keine weiteren Quick Actions, kein Advisor und kein Upload ausserhalb des bereits vorhandenen Bubble-Kontexts.
                     </div>
                 </div>
             </div>

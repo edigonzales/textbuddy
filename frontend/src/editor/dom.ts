@@ -1,6 +1,7 @@
 import type {
   CorrectionElements,
   EditorElements,
+  QuickActionElements,
   RewriteBubbleElements,
 } from "./types";
 
@@ -99,5 +100,40 @@ export function findRewriteBubbleElements(root: HTMLElement): RewriteBubbleEleme
     overlay,
     status,
     options,
+  };
+}
+
+export function findQuickActionElements(root: HTMLElement): QuickActionElements | null {
+  const panel = queryRequired<HTMLElement>(root, "[data-quick-action-panel]");
+  const status = queryRequired<HTMLElement>(root, "[data-quick-action-status]");
+  const plainLanguageButton = queryRequired<HTMLButtonElement>(
+    root,
+    "[data-quick-action='plain-language']",
+  );
+  const diffPanel = queryRequired<HTMLElement>(root, "[data-rewrite-diff-panel]");
+  const diffBefore = queryRequired<HTMLElement>(root, "[data-rewrite-diff-before]");
+  const diffAfter = queryRequired<HTMLElement>(root, "[data-rewrite-diff-after]");
+  const diffUndoButton = queryRequired<HTMLButtonElement>(root, "[data-rewrite-diff-undo]");
+
+  if (
+    !panel ||
+    !status ||
+    !plainLanguageButton ||
+    !diffPanel ||
+    !diffBefore ||
+    !diffAfter ||
+    !diffUndoButton
+  ) {
+    return null;
+  }
+
+  return {
+    panel,
+    status,
+    plainLanguageButton,
+    diffPanel,
+    diffBefore,
+    diffAfter,
+    diffUndoButton,
   };
 }

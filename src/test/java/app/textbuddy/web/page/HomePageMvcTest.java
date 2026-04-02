@@ -37,18 +37,24 @@ class HomePageMvcTest {
                 .andExpect(content().string(containsString("data-testid=\"editor-word-count\">0</strong>")))
                 .andExpect(content().string(containsString("/editor/editor-island.css")))
                 .andExpect(content().string(containsString("/editor/editor-island.js")))
+                .andExpect(content().string(containsString("data-testid=\"quick-action-panel\"")))
+                .andExpect(content().string(containsString("data-testid=\"quick-action-status\"")))
+                .andExpect(content().string(containsString("data-testid=\"quick-action-plain-language\"")))
+                .andExpect(content().string(containsString("data-testid=\"rewrite-diff-panel\"")))
+                .andExpect(content().string(containsString("data-testid=\"rewrite-diff-undo\"")))
                 .andExpect(content().string(containsString("data-testid=\"rewrite-bubble\"")))
                 .andExpect(content().string(containsString("data-testid=\"rewrite-primary-action\"")))
                 .andExpect(content().string(containsString("data-testid=\"rewrite-secondary-action\"")))
                 .andExpect(content().string(containsString("data-testid=\"correction-panel\"")))
                 .andExpect(content().string(containsString("data-testid=\"correction-status\"")))
-                .andExpect(content().string(containsString("Word Synonym + Sentence Rewrite")))
-                .andExpect(content().string(containsString("POST /api/word-synonym")))
-                .andExpect(content().string(containsString("POST /api/sentence-rewrite")))
+                .andExpect(content().string(containsString("Quick Actions + Rewrite Bubble")))
+                .andExpect(content().string(containsString("POST /api/quick-actions/plain-language/stream")))
+                .andExpect(content().string(containsString("Plain Language")))
                 .andExpect(content().string(containsString("Textkorrektur")))
                 .andExpect(content().string(containsString("data-testid=\"correction-language\"")))
                 .andExpect(content().string(containsString("data-testid=\"dictionary-form\"")))
                 .andExpect(content().string(containsString("data-testid=\"dictionary-list\"")))
-                .andExpect(content().string(containsString("Bubble-Menue")));
+                .andExpect(content().string(containsString("Bubble-Menue")))
+                .andExpect(content().string(containsString("Rewrite mit Streaming")));
     }
 }

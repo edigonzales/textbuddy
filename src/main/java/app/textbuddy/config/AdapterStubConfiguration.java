@@ -3,10 +3,12 @@ package app.textbuddy.config;
 import app.textbuddy.integration.advisor.AdvisorDocumentRepository;
 import app.textbuddy.integration.docling.DoclingClient;
 import app.textbuddy.integration.llm.LlmClientFacade;
+import app.textbuddy.integration.llm.PlainLanguageLlmClient;
 import app.textbuddy.integration.llm.WordSynonymLlmClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -37,6 +39,32 @@ public class AdapterStubConfiguration {
             alternatives.add("Praeziser gesagt: " + stem + punctuation);
 
             return List.copyOf(alternatives);
+        };
+    }
+
+    @Bean
+    PlainLanguageLlmClient plainLanguageLlmClient() {
+        return (text, language) -> {
+            String normalized = normalize(text);
+
+            if (normalized.isBlank()) {
+                return List.of();
+            }
+
+            String rewritten = normalized
+                    .replace("komplizierte", "einfache")
+                    .replace("kompliziert", "einfach")
+                    .replace("Sachverhalt", "Thema")
+                    .replace("spezifisch", "klar")
+                    .replace("relevant", "wichtig")
+                    .replace("praezise", "klar");
+
+            String prefix = normalize(language).toLowerCase(Locale.ROOT).startsWith("en")
+                    ? "In plain language: "
+                    : "Kurz und einfach: ";
+            String combined = prefix + rewritten;
+
+            return splitIntoChunks(combined, 20);
         };
     }
 
@@ -103,5 +131,27 @@ public class AdapterStubConfiguration {
 
     private static String normalize(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private static List<String> splitIntoChunks(String value, int maxChunkLength) {
+        List<String> chunks = new ArrayList<>();
+        int index = 0;
+
+        while (index < value.length()) {
+            int nextIndex = Math.min(value.length(), index + maxChunkLength);
+
+            if (nextIndex < value.length()) {
+                int splitIndex = value.lastIndexOf(' ', nextIndex - 1);
+
+                if (splitIndex > index) {
+                    nextIndex = splitIndex + 1;
+                }
+            }
+
+            chunks.add(value.substring(index, nextIndex));
+            index = nextIndex;
+        }
+
+        return List.copyOf(chunks);
     }
 }

@@ -21,6 +21,16 @@ export interface EditorElements {
   redoButton: HTMLButtonElement;
 }
 
+export interface QuickActionElements {
+  panel: HTMLElement;
+  status: HTMLElement;
+  plainLanguageButton: HTMLButtonElement;
+  diffPanel: HTMLElement;
+  diffBefore: HTMLElement;
+  diffAfter: HTMLElement;
+  diffUndoButton: HTMLButtonElement;
+}
+
 export interface RewriteBubbleElements {
   bubble: HTMLElement;
   focus: HTMLElement;
@@ -68,4 +78,27 @@ export interface SentenceRewriteResponse {
 
 export interface WordSynonymResponse {
   synonyms: string[];
+}
+
+export interface QuickActionSseChunkPayload {
+  text: string;
+}
+
+export interface QuickActionSseCompletePayload {
+  text: string;
+}
+
+export interface QuickActionSseErrorPayload {
+  message: string;
+}
+
+export interface RewriteDiffToken {
+  text: string;
+  status: "unchanged" | "added" | "removed";
+}
+
+export interface RewriteDiffView {
+  before: RewriteDiffToken[];
+  after: RewriteDiffToken[];
+  hasChanges: boolean;
 }

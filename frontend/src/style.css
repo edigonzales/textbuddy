@@ -62,6 +62,95 @@
   color: #0f6d68;
 }
 
+#editor-island-root .quick-action-panel,
+#editor-island-root .rewrite-diff-panel {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border-radius: 20px;
+  border: 1px solid rgba(15, 109, 104, 0.18);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+#editor-island-root .quick-action-panel-head,
+#editor-island-root .rewrite-diff-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.9rem;
+  align-items: flex-start;
+}
+
+#editor-island-root .quick-action-panel-head .panel-copy {
+  margin-top: 0.45rem;
+}
+
+#editor-island-root .quick-action-status {
+  margin: 0;
+  min-width: min(18rem, 100%);
+  padding: 0.8rem 0.95rem;
+  border-radius: 16px;
+  background: rgba(15, 109, 104, 0.08);
+  color: #164d53;
+  font-weight: 600;
+}
+
+#editor-island-root .quick-action-panel[data-quick-action-state="streaming"] .quick-action-status {
+  background: rgba(161, 110, 27, 0.12);
+  color: #7f4d14;
+}
+
+#editor-island-root .quick-action-panel[data-quick-action-state="success"] .quick-action-status {
+  background: rgba(84, 138, 33, 0.12);
+  color: #386114;
+}
+
+#editor-island-root .quick-action-panel[data-quick-action-state="error"] .quick-action-status {
+  background: rgba(178, 59, 59, 0.12);
+  color: #8d2f2f;
+}
+
+#editor-island-root .quick-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+#editor-island-root .quick-action-button,
+#editor-island-root .rewrite-diff-undo {
+  border-radius: 16px;
+  border: 1px solid rgba(15, 109, 104, 0.18);
+  font: inherit;
+  font-weight: 700;
+}
+
+#editor-island-root .quick-action-button {
+  min-width: min(100%, 16rem);
+  padding: 0.9rem 1rem;
+  background: linear-gradient(135deg, rgba(15, 109, 104, 0.14), rgba(15, 109, 104, 0.24));
+  color: #164d53;
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    border-color 140ms ease;
+  box-shadow: 0 12px 30px rgba(28, 39, 48, 0.08);
+}
+
+#editor-island-root .quick-action-button:hover:enabled,
+#editor-island-root .rewrite-diff-undo:hover {
+  transform: translateY(-1px);
+  border-color: rgba(15, 109, 104, 0.4);
+  box-shadow: 0 14px 32px rgba(28, 39, 48, 0.12);
+}
+
+#editor-island-root .quick-action-button:disabled {
+  color: rgba(22, 77, 83, 0.42);
+  cursor: not-allowed;
+  box-shadow: none;
+  background: rgba(255, 255, 255, 0.6);
+}
+
 #editor-island-root .editor-canvas {
   position: relative;
   min-height: 340px;
@@ -235,6 +324,63 @@
     border-color 140ms ease;
 }
 
+#editor-island-root .rewrite-diff-panel[hidden] {
+  display: none;
+}
+
+#editor-island-root .rewrite-diff-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+#editor-island-root .rewrite-diff-column {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.9rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(15, 109, 104, 0.14);
+}
+
+#editor-island-root .rewrite-diff-column strong {
+  color: #164d53;
+}
+
+#editor-island-root .rewrite-diff-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.15rem;
+  min-height: 3.8rem;
+  color: #1c2730;
+  white-space: pre-wrap;
+}
+
+#editor-island-root .rewrite-diff-token {
+  border-radius: 10px;
+  padding: 0.15rem 0.2rem;
+  white-space: break-spaces;
+}
+
+#editor-island-root .rewrite-diff-token[data-diff-status="removed"] {
+  background: rgba(178, 59, 59, 0.14);
+  color: #7e2323;
+  text-decoration: line-through;
+}
+
+#editor-island-root .rewrite-diff-token[data-diff-status="added"] {
+  background: rgba(84, 138, 33, 0.14);
+  color: #305f0f;
+}
+
+#editor-island-root .rewrite-diff-undo {
+  padding: 0.82rem 0.95rem;
+  background: rgba(255, 255, 255, 0.92);
+  color: #164d53;
+  cursor: pointer;
+}
+
 .textbuddy-correction-mark {
   border-radius: 0.25rem;
   background: rgba(193, 56, 56, 0.12);
@@ -254,9 +400,19 @@
     width: 100%;
   }
 
+  #editor-island-root .quick-action-status,
+  #editor-island-root .quick-action-button,
+  #editor-island-root .rewrite-diff-undo {
+    width: 100%;
+  }
+
   #editor-island-root .editor-button {
     flex: 1 1 0;
     justify-content: center;
+  }
+
+  #editor-island-root .rewrite-diff-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   #editor-island-root .rewrite-bubble {
