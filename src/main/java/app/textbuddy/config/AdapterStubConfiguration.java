@@ -1,6 +1,7 @@
 package app.textbuddy.config;
 
 import app.textbuddy.integration.advisor.AdvisorDocumentRepository;
+import app.textbuddy.integration.llm.BulletPointsLlmClient;
 import app.textbuddy.integration.docling.DoclingClient;
 import app.textbuddy.integration.llm.LlmClientFacade;
 import app.textbuddy.integration.llm.PlainLanguageLlmClient;
@@ -14,6 +15,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 @Configuration(proxyBeanMethods = false)
 public class AdapterStubConfiguration {
@@ -65,6 +67,24 @@ public class AdapterStubConfiguration {
             String combined = prefix + rewritten;
 
             return splitIntoChunks(combined, 20);
+        };
+    }
+
+    @Bean
+    BulletPointsLlmClient bulletPointsLlmClient() {
+        return (text, language) -> {
+            String normalized = normalize(text);
+
+            if (normalized.isBlank()) {
+                return List.of();
+            }
+
+            List<String> bulletItems = splitIntoBulletPointItems(normalized);
+            String bulletPoints = bulletItems.stream()
+                    .map(item -> "- " + item)
+                    .collect(Collectors.joining("\n"));
+
+            return splitIntoChunks(bulletPoints, 18);
         };
     }
 
@@ -131,6 +151,39 @@ public class AdapterStubConfiguration {
 
     private static String normalize(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private static List<String> splitIntoBulletPointItems(String value) {
+        List<String> items = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+
+        for (int index = 0; index < value.length(); index += 1) {
+            char character = value.charAt(index);
+
+            if (character == '\n') {
+                appendBulletPointItem(items, current);
+                current.setLength(0);
+                continue;
+            }
+
+            current.append(character);
+
+            if (character == '.' || character == '!' || character == '?' || character == ';') {
+                appendBulletPointItem(items, current);
+                current.setLength(0);
+            }
+        }
+
+        appendBulletPointItem(items, current);
+        return items.isEmpty() ? List.of(value) : List.copyOf(items);
+    }
+
+    private static void appendBulletPointItem(List<String> items, StringBuilder candidate) {
+        String normalized = normalize(candidate.toString());
+
+        if (!normalized.isBlank()) {
+            items.add(normalized);
+        }
     }
 
     private static List<String> splitIntoChunks(String value, int maxChunkLength) {

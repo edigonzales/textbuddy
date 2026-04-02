@@ -25,6 +25,7 @@ export interface QuickActionElements {
   panel: HTMLElement;
   status: HTMLElement;
   plainLanguageButton: HTMLButtonElement;
+  bulletPointsButton: HTMLButtonElement;
   diffPanel: HTMLElement;
   diffBefore: HTMLElement;
   diffAfter: HTMLElement;

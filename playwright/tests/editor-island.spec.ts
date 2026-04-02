@@ -294,7 +294,7 @@ test("plain language streams into the editor, shows a diff and supports full und
   const editor = page.getByTestId("editor-input");
   const mirror = page.getByTestId("editor-mirror");
 
-  await expect(page.locator("[data-quick-action]")).toHaveCount(1);
+  await expect(page.locator("[data-quick-action]")).toHaveCount(2);
 
   await editor.click();
   await page.keyboard.type("Der komplizierte Sachverhalt ist relevant.");
@@ -317,6 +317,76 @@ test("plain language streams into the editor, shows a diff and supports full und
   await page.getByTestId("rewrite-diff-undo").click();
 
   await expect(mirror).toHaveValue("Der komplizierte Sachverhalt ist relevant.");
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeHidden();
+  await expect(page.getByTestId("quick-action-status")).toContainText("rueckgaengig");
+});
+
+test("bullet points stream into the editor, show a diff and support full undo", async ({
+  page,
+}) => {
+  const requestBodies: QuickActionRequestPayload[] = [];
+
+  await page.route("**/api/quick-actions/bullet-points/stream", async (route) => {
+    const payload = route.request().postDataJSON() as QuickActionRequestPayload;
+
+    requestBodies.push(payload);
+    await route.fulfill({
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream",
+      },
+      body: createSseBody([
+        {
+          event: "chunk",
+          payload: {
+            text: "- Projektlage klaeren\n",
+          },
+        },
+        {
+          event: "chunk",
+          payload: {
+            text: "- Naechste Schritte festhalten",
+          },
+        },
+        {
+          event: "complete",
+          payload: {
+            text: "- Projektlage klaeren\n- Naechste Schritte festhalten",
+          },
+        },
+      ]),
+    });
+  });
+
+  await page.goto("/");
+
+  const editor = page.getByTestId("editor-input");
+  const mirror = page.getByTestId("editor-mirror");
+
+  await editor.click();
+  await page.keyboard.type("Projektlage klaeren. Naechste Schritte festhalten.");
+  await page.getByTestId("quick-action-bullet-points").click();
+
+  await expect.poll(() => requestBodies.at(-1)?.text).toBe(
+    "Projektlage klaeren. Naechste Schritte festhalten.",
+  );
+  await expect.poll(() => requestBodies.at(-1)?.language).toBe("auto");
+  await expect(page.getByTestId("quick-action-status")).toContainText("Bullet Points abgeschlossen");
+  await expect(mirror).toHaveValue("- Projektlage klaeren\n- Naechste Schritte festhalten");
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+  await expect(page.getByTestId("rewrite-diff-before")).toContainText(
+    "Projektlage klaeren. Naechste Schritte festhalten.",
+  );
+  await expect(page.getByTestId("rewrite-diff-after")).toContainText(
+    "- Projektlage klaeren",
+  );
+  await expect(page.getByTestId("rewrite-diff-after")).toContainText(
+    "- Naechste Schritte festhalten",
+  );
+
+  await page.getByTestId("rewrite-diff-undo").click();
+
+  await expect(mirror).toHaveValue("Projektlage klaeren. Naechste Schritte festhalten.");
   await expect(page.getByTestId("rewrite-diff-panel")).toBeHidden();
   await expect(page.getByTestId("quick-action-status")).toContainText("rueckgaengig");
 });

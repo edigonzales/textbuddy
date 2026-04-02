@@ -10,8 +10,8 @@
             <p>${page.subtitle()}</p>
         </div>
         <div class="status-strip">
-            <div class="status-pill">Slice 06 bringt <code>POST /api/quick-actions/plain-language/stream</code> als ersten echten SSE-Quick-Action-Endpoint in die Editor-Insel.</div>
-            <div class="status-pill">Der Volltext-Rewrite streamt live in den Editor, zeigt danach einen Diff und kann komplett auf den Ursprungszustand zurueckgesetzt werden.</div>
+            <div class="status-pill">Neben dem bestehenden <code>POST /api/quick-actions/plain-language/stream</code> ergaenzt Slice 07 jetzt <code>POST /api/quick-actions/bullet-points/stream</code> als zweite aktive SSE-Quick-Action.</div>
+            <div class="status-pill">Beide Volltext-Rewrites streamen live in den Editor, nutzen denselben Diff und lassen sich komplett auf den Ursprungszustand zuruecksetzen.</div>
         </div>
     </header>
 
@@ -20,7 +20,7 @@
             <div class="panel-body">
                 <p class="eyebrow">Arbeitsfläche</p>
                 <h2>Quick Actions + Rewrite Bubble</h2>
-                <p class="panel-copy">Die Insel kombiniert weiter Wort-/Satz-Rewrite im Bubble-Menue und ergaenzt jetzt einen ersten streamingfaehigen Volltext-Rewrite als Plain-Language-Quick-Action.</p>
+                <p class="panel-copy">Die Insel kombiniert weiter Wort-/Satz-Rewrite im Bubble-Menue und bietet jetzt zwei streamingfaehige Volltext-Rewrites fuer Plain Language und Bullet Points.</p>
 
                 <div id="editor-island-root" class="editor-root" data-testid="editor-island-root">
                     <div class="chip-row">
@@ -30,6 +30,7 @@
                         <span class="chip">Fokussiertes Wort hat Vorrang vor Satzfokus</span>
                         <span class="chip">Dasselbe Bubble-Menue startet Wort-Synonyme oder Satzumformung</span>
                         <span class="chip">Plain Language streamt ueber SSE direkt in den Editor</span>
+                        <span class="chip">Bullet Points nutzt dieselbe Streaming- und Diff-Infrastruktur</span>
                         <span class="chip">Rewrite-Diff und kompletter Undo bauen auf derselben Streaming-Basis auf</span>
                     </div>
 
@@ -38,14 +39,15 @@
                             <div>
                                 <p class="eyebrow">Quick Actions</p>
                                 <h3>Rewrite mit Streaming</h3>
-                                <p class="panel-copy">Nur Plain Language ist in Slice 06 aktiv. Weitere Quick Actions bleiben bis zu ihren eigenen Slices verborgen.</p>
+                                <p class="panel-copy">Plain Language und Bullet Points sind in Slice 07 aktiv. Weitere Quick Actions bleiben bis zu ihren eigenen Slices verborgen.</p>
                             </div>
 
-                            <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" aria-live="polite">Bereit fuer Plain Language.</p>
+                            <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" aria-live="polite">Bereit fuer Plain Language und Bullet Points.</p>
                         </div>
 
                         <div class="quick-action-row">
                             <button type="button" class="quick-action-button" data-quick-action="plain-language" data-testid="quick-action-plain-language">Plain Language</button>
+                            <button type="button" class="quick-action-button" data-quick-action="bullet-points" data-testid="quick-action-bullet-points">Bullet Points</button>
                         </div>
                     </section>
 
@@ -145,8 +147,8 @@
 
                 <div class="stack-list problems-footnotes">
                     <div class="stack-item">
-                        <strong>Neu in Slice 06</strong>
-                        Plain Language nutzt jetzt einen separaten SSE-Endpoint und eine gemeinsame Streaming-Infrastruktur mit Diff und komplettem Rewrite-Undo.
+                        <strong>Neu in Slice 07</strong>
+                        Bullet Points nutzt jetzt denselben separaten SSE-Ansatz wie Plain Language und haengt sich an dieselbe Streaming-, Diff- und Undo-Infrastruktur.
                     </div>
                     <div class="stack-item">
                         <strong>Bewusst noch nicht aktiv</strong>

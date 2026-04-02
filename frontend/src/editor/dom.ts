@@ -110,6 +110,10 @@ export function findQuickActionElements(root: HTMLElement): QuickActionElements 
     root,
     "[data-quick-action='plain-language']",
   );
+  const bulletPointsButton = queryRequired<HTMLButtonElement>(
+    root,
+    "[data-quick-action='bullet-points']",
+  );
   const diffPanel = queryRequired<HTMLElement>(root, "[data-rewrite-diff-panel]");
   const diffBefore = queryRequired<HTMLElement>(root, "[data-rewrite-diff-before]");
   const diffAfter = queryRequired<HTMLElement>(root, "[data-rewrite-diff-after]");
@@ -119,6 +123,7 @@ export function findQuickActionElements(root: HTMLElement): QuickActionElements 
     !panel ||
     !status ||
     !plainLanguageButton ||
+    !bulletPointsButton ||
     !diffPanel ||
     !diffBefore ||
     !diffAfter ||
@@ -131,6 +136,7 @@ export function findQuickActionElements(root: HTMLElement): QuickActionElements 
     panel,
     status,
     plainLanguageButton,
+    bulletPointsButton,
     diffPanel,
     diffBefore,
     diffAfter,
