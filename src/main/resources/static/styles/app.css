@@ -1,0 +1,196 @@
+:root {
+    --bg-top: #f8f4eb;
+    --bg-bottom: #e4ecf2;
+    --surface: rgba(255, 255, 255, 0.82);
+    --surface-strong: #ffffff;
+    --border: rgba(24, 44, 57, 0.14);
+    --text: #1c2730;
+    --muted: #5c6a74;
+    --accent: #0f6d68;
+    --accent-soft: rgba(15, 109, 104, 0.12);
+    --shadow: 0 18px 48px rgba(28, 39, 48, 0.12);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+    color: var(--text);
+    background:
+            radial-gradient(circle at top left, rgba(15, 109, 104, 0.16), transparent 32%),
+            linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+}
+
+a {
+    color: inherit;
+}
+
+.page-shell {
+    width: min(1200px, calc(100% - 2rem));
+    margin: 0 auto;
+    padding: 2rem 0 3rem;
+}
+
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    align-items: flex-start;
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(14px);
+}
+
+.eyebrow {
+    margin: 0 0 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
+
+.app-header h1 {
+    margin: 0;
+    font-size: clamp(2.2rem, 4vw, 3.3rem);
+    line-height: 0.95;
+}
+
+.app-header p {
+    margin: 0.75rem 0 0;
+    max-width: 52rem;
+    color: var(--muted);
+}
+
+.status-strip {
+    display: grid;
+    gap: 0.75rem;
+    min-width: min(18rem, 100%);
+}
+
+.status-pill {
+    padding: 0.85rem 1rem;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: var(--surface-strong);
+    font-size: 0.95rem;
+}
+
+.workspace-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.85fr);
+    gap: 1.25rem;
+    margin-top: 1.25rem;
+}
+
+.panel {
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(14px);
+}
+
+.panel-body {
+    padding: 1.4rem;
+}
+
+.panel h2,
+.panel h3 {
+    margin: 0;
+}
+
+.panel-copy {
+    margin: 0.75rem 0 0;
+    color: var(--muted);
+}
+
+.editor-root {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.25rem;
+    padding: 1.3rem;
+    border: 1px dashed rgba(15, 109, 104, 0.45);
+    border-radius: 22px;
+    background: linear-gradient(135deg, rgba(15, 109, 104, 0.08), rgba(255, 255, 255, 0.56));
+}
+
+.editor-canvas {
+    min-height: 320px;
+    padding: 1.4rem;
+    border-radius: 20px;
+    background: var(--surface-strong);
+    border: 1px solid rgba(15, 109, 104, 0.16);
+}
+
+.editor-canvas p {
+    margin: 0.7rem 0 0;
+    color: var(--muted);
+}
+
+.chip-row,
+.tool-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.chip {
+    padding: 0.5rem 0.8rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.92rem;
+    font-weight: 600;
+}
+
+.tool-grid {
+    margin-top: 1.1rem;
+}
+
+.tool-grid button {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 0.85rem 1rem;
+    background: rgba(255, 255, 255, 0.74);
+    color: var(--muted);
+    font: inherit;
+    cursor: not-allowed;
+}
+
+.stack-list {
+    display: grid;
+    gap: 0.9rem;
+    margin-top: 1.1rem;
+}
+
+.stack-item {
+    padding: 1rem;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: var(--surface-strong);
+}
+
+.stack-item strong {
+    display: block;
+    margin-bottom: 0.35rem;
+}
+
+@media (max-width: 900px) {
+    .app-header,
+    .workspace-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .page-shell {
+        width: min(100% - 1rem, 1200px);
+        padding-top: 1rem;
+    }
+}

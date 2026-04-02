@@ -1,0 +1,38 @@
+package app.textbuddy.web.page;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+
+@SpringBootTest
+class HomePageMvcTest {
+
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+
+    @Test
+    void getRootRendersShell() throws Exception {
+        MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("pages/home"))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("Textbuddy")))
+                .andExpect(content().string(containsString("data-testid=\"editor-placeholder\"")))
+                .andExpect(content().string(containsString("data-testid=\"panel-placeholder\"")))
+                .andExpect(content().string(containsString("Leere Arbeitsoberfläche")))
+                .andExpect(content().string(containsString("HTMX ist eingebunden")))
+                .andExpect(content().string(containsString("Keine API-Vorgriffe")));
+    }
+}

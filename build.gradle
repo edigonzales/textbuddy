@@ -1,0 +1,40 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.0.5'
+}
+
+group = 'app.textbuddy'
+version = '0.0.1-SNAPSHOT'
+description = 'Slice 00 project basis for Textbuddy'
+
+ext {
+    jteVersion = '3.2.3'
+    htmxVersion = '2.0.8'
+    springAiVersion = '2.0.0-M2'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+dependencies {
+    implementation platform('org.springframework.boot:spring-boot-dependencies:4.0.5')
+    testImplementation platform('org.springframework.boot:spring-boot-dependencies:4.0.5')
+
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation "gg.jte:jte-spring-boot-starter-4:${jteVersion}"
+    implementation "org.webjars.npm:htmx.org:${htmxVersion}"
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
