@@ -5,6 +5,10 @@ interface CorrectionRequestPayload {
   language: string;
 }
 
+interface SentenceRewriteRequestPayload {
+  sentence: string;
+}
+
 function createCorrectionResponse(text: string) {
   const blocks = [];
   const tehOffset = text.indexOf("teh");
@@ -103,6 +107,68 @@ test("text correction marks problems and applies a suggestion", async ({ page })
   await expect(correctionStatus).toHaveText("Keine Probleme gefunden.");
   await expect(problemItems).toHaveCount(0);
   await expect(correctionMarks).toHaveCount(0);
+});
+
+test("sentence rewrite bubble only appears for completed sentences", async ({ page }) => {
+  await page.goto("/");
+
+  const editor = page.getByTestId("editor-input");
+  const bubble = page.getByTestId("sentence-rewrite-bubble");
+
+  await editor.click();
+  await page.keyboard.type("Ich bin");
+
+  await expect(bubble).toBeHidden();
+
+  await page.keyboard.type(".");
+
+  await expect(bubble).toBeVisible();
+
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("Alpha Satz");
+
+  await expect(bubble).toBeHidden();
+
+  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("End");
+
+  await expect(bubble).toBeVisible();
+});
+
+test("sentence rewrite uses the focused sentence and replaces only that range", async ({ page }) => {
+  const requestBodies: SentenceRewriteRequestPayload[] = [];
+
+  await page.route("**/api/sentence-rewrite", async (route) => {
+    const payload = route.request().postDataJSON() as SentenceRewriteRequestPayload;
+
+    requestBodies.push(payload);
+    await route.fulfill({
+      json: {
+        original: payload.sentence,
+        alternatives: ["Beta Alternative."],
+      },
+    });
+  });
+
+  await page.goto("/");
+
+  const editor = page.getByTestId("editor-input");
+  const mirror = page.getByTestId("editor-mirror");
+  const bubble = page.getByTestId("sentence-rewrite-bubble");
+
+  await editor.click();
+  await page.keyboard.type("Alpha Satz. Beta Satz.");
+
+  await expect(bubble).toBeVisible();
+
+  await page.getByTestId("sentence-rewrite-trigger").click();
+
+  await expect.poll(() => requestBodies.at(-1)?.sentence).toBe("Beta Satz.");
+  await expect(page.getByTestId("sentence-rewrite-status")).toContainText("Alternative");
+
+  await page.getByTestId("sentence-rewrite-option").first().click();
+
+  await expect(mirror).toHaveValue("Alpha Satz. Beta Alternative.");
 });
 
 test("language selection is sent with correction requests", async ({ page }) => {

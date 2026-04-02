@@ -1,4 +1,4 @@
 package app.textbuddy.sentencerewrite;
 
-public record SentenceRewriteRequest() {
+public record SentenceRewriteRequest(String sentence) {
 }

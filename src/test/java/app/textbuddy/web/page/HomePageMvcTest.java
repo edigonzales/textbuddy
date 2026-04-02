@@ -37,13 +37,16 @@ class HomePageMvcTest {
                 .andExpect(content().string(containsString("data-testid=\"editor-word-count\">0</strong>")))
                 .andExpect(content().string(containsString("/editor/editor-island.css")))
                 .andExpect(content().string(containsString("/editor/editor-island.js")))
+                .andExpect(content().string(containsString("data-testid=\"sentence-rewrite-bubble\"")))
+                .andExpect(content().string(containsString("data-testid=\"sentence-rewrite-trigger\"")))
                 .andExpect(content().string(containsString("data-testid=\"correction-panel\"")))
                 .andExpect(content().string(containsString("data-testid=\"correction-status\"")))
-                .andExpect(content().string(containsString("Text Correction Enhancements")))
-                .andExpect(content().string(containsString("POST /api/text-correction")))
+                .andExpect(content().string(containsString("Sentence Rewrite")))
+                .andExpect(content().string(containsString("POST /api/sentence-rewrite")))
+                .andExpect(content().string(containsString("Textkorrektur")))
                 .andExpect(content().string(containsString("data-testid=\"correction-language\"")))
                 .andExpect(content().string(containsString("data-testid=\"dictionary-form\"")))
                 .andExpect(content().string(containsString("data-testid=\"dictionary-list\"")))
-                .andExpect(content().string(containsString("Sprache, lokales Woerterbuch")));
+                .andExpect(content().string(containsString("Bubble-Menue")));
     }
 }

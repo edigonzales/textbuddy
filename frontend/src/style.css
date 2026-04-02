@@ -65,7 +65,7 @@
 #editor-island-root .editor-canvas {
   position: relative;
   min-height: 340px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 #editor-island-root .editor-surface {
@@ -101,6 +101,90 @@
   outline: none;
 }
 
+#editor-island-root .sentence-rewrite-bubble {
+  position: absolute;
+  z-index: 20;
+  display: grid;
+  gap: 0.7rem;
+  width: min(320px, calc(100% - 1rem));
+  padding: 0.8rem;
+  border-radius: 20px;
+  background:
+    linear-gradient(145deg, rgba(19, 36, 43, 0.96), rgba(13, 28, 35, 0.98));
+  color: #f4fbfd;
+  box-shadow: 0 22px 46px rgba(19, 31, 38, 0.22);
+  border: 1px solid rgba(152, 214, 210, 0.18);
+  transform: translateX(-50%);
+}
+
+#editor-island-root .sentence-rewrite-bubble[hidden] {
+  display: none;
+}
+
+#editor-island-root .sentence-rewrite-bubble[data-placement="top"] {
+  transform: translate(-50%, 0);
+}
+
+#editor-island-root .sentence-rewrite-trigger,
+#editor-island-root .sentence-rewrite-option {
+  border: 1px solid rgba(152, 214, 210, 0.18);
+  border-radius: 14px;
+  font: inherit;
+}
+
+#editor-island-root .sentence-rewrite-trigger {
+  width: 100%;
+  padding: 0.82rem 0.95rem;
+  background: rgba(15, 109, 104, 0.16);
+  color: #f4fbfd;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    background-color 140ms ease,
+    border-color 140ms ease;
+}
+
+#editor-island-root .sentence-rewrite-trigger:hover:enabled,
+#editor-island-root .sentence-rewrite-option:hover {
+  transform: translateY(-1px);
+  background: rgba(15, 109, 104, 0.28);
+  border-color: rgba(152, 214, 210, 0.34);
+}
+
+#editor-island-root .sentence-rewrite-trigger:disabled {
+  opacity: 0.72;
+  cursor: progress;
+}
+
+#editor-island-root .sentence-rewrite-overlay {
+  display: grid;
+  gap: 0.65rem;
+}
+
+#editor-island-root .sentence-rewrite-status {
+  margin: 0;
+  color: rgba(244, 251, 253, 0.84);
+  font-size: 0.95rem;
+}
+
+#editor-island-root .sentence-rewrite-options {
+  display: grid;
+  gap: 0.55rem;
+}
+
+#editor-island-root .sentence-rewrite-option {
+  padding: 0.78rem 0.9rem;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f4fbfd;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    background-color 140ms ease,
+    border-color 140ms ease;
+}
+
 .textbuddy-correction-mark {
   border-radius: 0.25rem;
   background: rgba(193, 56, 56, 0.12);
@@ -123,5 +207,9 @@
   #editor-island-root .editor-button {
     flex: 1 1 0;
     justify-content: center;
+  }
+
+  #editor-island-root .sentence-rewrite-bubble {
+    width: calc(100% - 0.5rem);
   }
 }

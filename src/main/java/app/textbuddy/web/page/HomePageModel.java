@@ -5,7 +5,7 @@ public record HomePageModel(String title, String subtitle) {
     public static HomePageModel defaultPage() {
         return new HomePageModel(
                 "Textbuddy Workspace",
-                "Slice 03 kombiniert Sprachauswahl, lokales Woerterbuch und inkrementelle Segmentpruefung auf dem bestehenden Textkorrektur-Endpoint."
+                "Slice 04 verbindet Satzfokus, Bubble-Menue und alternative Formulierungen ueber einen eigenen Sentence-Rewrite-Endpoint."
         );
     }
 }

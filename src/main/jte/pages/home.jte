@@ -10,8 +10,8 @@
             <p>${page.subtitle()}</p>
         </div>
         <div class="status-strip">
-            <div class="status-pill">Slice 03 prueft nur geaenderte Segmente ueber <code>POST /api/text-correction</code> und triggert sofort bei Punkt oder Zeilenumbruch.</div>
-            <div class="status-pill">Sprache, lokales Woerterbuch, Markierungen und Suggestion-Apply bleiben vollstaendig in der JS-Insel und ziehen keine spaeteren Features vor.</div>
+            <div class="status-pill">Slice 04 kombiniert <code>POST /api/sentence-rewrite</code> mit einem Bubble-Menue direkt am fokussierten Satz.</div>
+            <div class="status-pill">Textkorrektur, Satzfokus, Rewrite-Abruf und exakter Satzaustausch bleiben vollstaendig in der JS-Insel und ziehen keine Quick Actions vor.</div>
         </div>
     </header>
 
@@ -19,16 +19,17 @@
         <section class="panel" data-testid="editor-shell">
             <div class="panel-body">
                 <p class="eyebrow">Arbeitsfläche</p>
-                <h2>Text Correction Enhancements</h2>
-                <p class="panel-copy">Die Korrektur prueft nur geaenderte Segmente, reagiert sofort auf Satzgrenzen und laesst bekannte Woerter lokal im Browser ausblenden.</p>
+                <h2>Sentence Rewrite</h2>
+                <p class="panel-copy">Die Insel erkennt den fokussierten Satz, blendet ein Bubble-Menue ein und ersetzt nach Auswahl exakt nur diesen Satzbereich.</p>
 
                 <div id="editor-island-root" class="editor-root" data-testid="editor-island-root">
                     <div class="chip-row">
                         <span class="chip">JTE rendert die Shell</span>
                         <span class="chip">Tiptap bearbeitet Plain Text</span>
                         <span class="chip">LanguageTool prueft nur geaenderte Segmente</span>
-                        <span class="chip">Punkt und Zeilenumbruch triggern sofort</span>
-                        <span class="chip">Vorschlaege werden im Editor angewendet</span>
+                        <span class="chip">Fokussierter Satz wird lokal erkannt</span>
+                        <span class="chip">Bubble-Menue laedt Alternativen per Rewrite-Endpoint</span>
+                        <span class="chip">Auswahl ersetzt exakt die Satzrange</span>
                     </div>
 
                     <div class="editor-toolbar" data-testid="editor-toolbar">
@@ -43,9 +44,18 @@
                         </div>
                     </div>
 
-                    <div class="editor-canvas" data-testid="editor-canvas">
+                    <div class="editor-canvas" data-testid="editor-canvas" data-editor-canvas>
                         <div class="editor-surface" data-editor-surface data-editor-placeholder="Schreibe hier deinen Text."></div>
                         <textarea hidden name="text" data-editor-mirror data-testid="editor-mirror"></textarea>
+
+                        <div class="sentence-rewrite-bubble" data-sentence-rewrite-bubble data-testid="sentence-rewrite-bubble" hidden>
+                            <button type="button" class="sentence-rewrite-trigger" data-sentence-rewrite-trigger data-testid="sentence-rewrite-trigger">Satz umschreiben</button>
+
+                            <div class="sentence-rewrite-overlay" data-sentence-rewrite-overlay hidden>
+                                <p class="sentence-rewrite-status" data-sentence-rewrite-status data-testid="sentence-rewrite-status" aria-live="polite"></p>
+                                <div class="sentence-rewrite-options" data-sentence-rewrite-options></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -88,12 +98,12 @@
 
                 <div class="stack-list problems-footnotes">
                     <div class="stack-item">
-                        <strong>Bewusst noch nicht aktiv</strong>
-                        Kein Satz-Rewrite, keine Synonyme, keine Quick Actions und keine spaeteren Bubble-Menues in Slice 03.
+                        <strong>Neu in Slice 04</strong>
+                        Satz-Rewrite laeuft getrennt von der Korrektur ueber einen eigenen Endpoint und bleibt auf Bubble-Kontext am fokussierten Satz beschraenkt.
                     </div>
                     <div class="stack-item">
-                        <strong>Editorinteraktion bleibt clientseitig</strong>
-                        Die serverseitige API liefert weiter nur Korrekturblocke; Markierung, Fokus, Woerterbuchfilter und diff-basierte Re-Checks laufen in der Insel.
+                        <strong>Bewusst noch nicht aktiv</strong>
+                        Keine Wort-Synonyme, keine Quick Actions und keine weiteren Rewrite-Pfade ausserhalb des Bubble-Menues in Slice 04.
                     </div>
                 </div>
             </div>

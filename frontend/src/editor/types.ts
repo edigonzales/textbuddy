@@ -12,12 +12,21 @@ export interface EditorSelectionChangedDetail {
 
 export interface EditorElements {
   root: HTMLElement;
+  canvas: HTMLElement;
   surface: HTMLElement;
   mirror: HTMLTextAreaElement;
   characterCount: HTMLElement;
   wordCount: HTMLElement;
   undoButton: HTMLButtonElement;
   redoButton: HTMLButtonElement;
+}
+
+export interface SentenceRewriteElements {
+  bubble: HTMLElement;
+  trigger: HTMLButtonElement;
+  overlay: HTMLElement;
+  status: HTMLElement;
+  options: HTMLElement;
 }
 
 export interface CorrectionElements {
@@ -48,4 +57,9 @@ export interface TextCorrectionBlock {
 export interface TextCorrectionResponse {
   original: string;
   blocks: TextCorrectionBlock[];
+}
+
+export interface SentenceRewriteResponse {
+  original: string;
+  alternatives: string[];
 }

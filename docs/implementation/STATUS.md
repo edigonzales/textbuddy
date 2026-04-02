@@ -15,8 +15,8 @@
 | 01 | done | Editor Island Base |
 | 02 | done | Text Correction Base |
 | 03 | done | Text Correction Enhancements |
-| 04 | ready | Sentence Rewrite |
-| 05 | pending | Word Synonym |
+| 04 | done | Sentence Rewrite |
+| 05 | ready | Word Synonym |
 | 06 | pending | Quick Action Infrastructure |
 | 07 | pending | Quick Action Bullet Points |
 | 08 | pending | Quick Action Proofread |
@@ -45,3 +45,5 @@
 - Slice 02 Build/Test-Handoff: `./gradlew build` ist gruen, Unit- und MockMvc-Tests decken Service und Endpoint ab, und Playwright prueft Markierung plus Anwenden eines Vorschlags im Browser.
 - Slice 03 abgeschlossen: Die Editor-Insel waehlt jetzt die Korrektursprache, speichert ein lokales Woerterbuch browserlokal und prueft nur geaenderte Segmente; Punkt und Zeilenumbruch ueberspringen die Debounce-Verzoegerung.
 - Slice 03 Build/Test-Handoff: Frontend-Unit-Tests decken Segment-Diff, Soforttrigger und Woerterbuchfilter ab, MockMvc bestaetigt die unveraenderte Shell/Endpoint-Nutzung, und Playwright prueft Sprache, lokales Woerterbuch sowie differenzierte Re-Checks; `./gradlew build` und `npm test` unter `playwright/` sind gruen.
+- Slice 04 abgeschlossen: `POST /api/sentence-rewrite` liefert alternative Formulierungen ueber `SentenceRewriteService`, die Editor-Insel erkennt den fokussierten Satz, blendet ein Bubble-Menue ein und ersetzt nach Auswahl exakt nur dessen Range.
+- Slice 04 Build/Test-Handoff: Java-Unit- und MockMvc-Tests decken Service und Rewrite-Endpoint ab, Frontend-Unit-Tests pruefen Satzfokus-Ranges, und Playwright validiert Bubble, Request-Satz und exakten Satzaustausch; `./gradlew test` und `npm test` unter `playwright/` sind gruen.

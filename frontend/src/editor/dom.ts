@@ -1,4 +1,4 @@
-import type { CorrectionElements, EditorElements } from "./types";
+import type { CorrectionElements, EditorElements, SentenceRewriteElements } from "./types";
 
 function queryRequired<T extends Element>(parent: ParentNode, selector: string): T | null {
   return parent.querySelector<T>(selector);
@@ -11,6 +11,7 @@ export function findEditorElements(): EditorElements | null {
     return null;
   }
 
+  const canvas = queryRequired<HTMLElement>(root, "[data-editor-canvas]");
   const surface = queryRequired<HTMLElement>(root, "[data-editor-surface]");
   const mirror = queryRequired<HTMLTextAreaElement>(root, "[data-editor-mirror]");
   const characterCount = queryRequired<HTMLElement>(root, "[data-editor-count='characters']");
@@ -18,12 +19,13 @@ export function findEditorElements(): EditorElements | null {
   const undoButton = queryRequired<HTMLButtonElement>(root, "[data-editor-action='undo']");
   const redoButton = queryRequired<HTMLButtonElement>(root, "[data-editor-action='redo']");
 
-  if (!surface || !mirror || !characterCount || !wordCount || !undoButton || !redoButton) {
+  if (!canvas || !surface || !mirror || !characterCount || !wordCount || !undoButton || !redoButton) {
     return null;
   }
 
   return {
     root,
+    canvas,
     surface,
     mirror,
     characterCount,
@@ -69,5 +71,25 @@ export function findCorrectionElements(): CorrectionElements | null {
     dictionaryInput,
     dictionaryList,
     dictionaryEmpty,
+  };
+}
+
+export function findSentenceRewriteElements(root: HTMLElement): SentenceRewriteElements | null {
+  const bubble = queryRequired<HTMLElement>(root, "[data-sentence-rewrite-bubble]");
+  const trigger = queryRequired<HTMLButtonElement>(root, "[data-sentence-rewrite-trigger]");
+  const overlay = queryRequired<HTMLElement>(root, "[data-sentence-rewrite-overlay]");
+  const status = queryRequired<HTMLElement>(root, "[data-sentence-rewrite-status]");
+  const options = queryRequired<HTMLElement>(root, "[data-sentence-rewrite-options]");
+
+  if (!bubble || !trigger || !overlay || !status || !options) {
+    return null;
+  }
+
+  return {
+    bubble,
+    trigger,
+    overlay,
+    status,
+    options,
   };
 }

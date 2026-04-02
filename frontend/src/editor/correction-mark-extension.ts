@@ -96,6 +96,33 @@ export function plainTextRangeToDocumentRange(
   return { from, to };
 }
 
+export function documentPositionToPlainTextOffset(
+  doc: ProseMirrorNode,
+  position: number,
+): number | null {
+  const boundaries = buildBoundaryIndex(doc);
+  let lowerBound = 0;
+  let upperBound = boundaries.length - 1;
+
+  while (lowerBound <= upperBound) {
+    const middle = Math.floor((lowerBound + upperBound) / 2);
+    const candidate = boundaries[middle];
+
+    if (candidate === position) {
+      return middle;
+    }
+
+    if (candidate < position) {
+      lowerBound = middle + 1;
+      continue;
+    }
+
+    upperBound = middle - 1;
+  }
+
+  return null;
+}
+
 function buildDecorationSet(
   doc: ProseMirrorNode,
   corrections: readonly CorrectionRange[],
