@@ -4,18 +4,11 @@ import app.textbuddy.advisor.AdvisorCatalogService;
 import app.textbuddy.advisor.AdvisorValidationService;
 import app.textbuddy.document.DocumentConversionService;
 import app.textbuddy.quickaction.QuickActionService;
-import app.textbuddy.wordsynonym.WordSynonymService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
 public class CoreStubConfiguration {
-
-    @Bean
-    WordSynonymService wordSynonymService() {
-        return new WordSynonymService() {
-        };
-    }
 
     @Bean
     QuickActionService quickActionService() {

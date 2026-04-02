@@ -3,11 +3,15 @@ package app.textbuddy.config;
 import app.textbuddy.integration.advisor.AdvisorDocumentRepository;
 import app.textbuddy.integration.docling.DoclingClient;
 import app.textbuddy.integration.llm.LlmClientFacade;
+import app.textbuddy.integration.llm.WordSynonymLlmClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Locale;
 
 @Configuration(proxyBeanMethods = false)
 public class AdapterStubConfiguration {
@@ -37,6 +41,39 @@ public class AdapterStubConfiguration {
     }
 
     @Bean
+    WordSynonymLlmClient wordSynonymLlmClient() {
+        return (word, context) -> {
+            String normalizedWord = normalize(word);
+            String normalizedContext = normalize(context);
+
+            if (normalizedWord.isBlank() || normalizedContext.isBlank()) {
+                return List.of();
+            }
+
+            String lowerWord = normalizedWord.toLowerCase(Locale.ROOT);
+            Map<String, List<String>> synonymsByWord = new LinkedHashMap<>();
+
+            synonymsByWord.put("holprig", List.of("hakelig", "unrund", "stockend"));
+            synonymsByWord.put("schnell", List.of("rasch", "flink", "zuegig"));
+            synonymsByWord.put("gut", List.of("stark", "solide", "passend"));
+            synonymsByWord.put("wichtig", List.of("zentral", "relevant", "entscheidend"));
+            synonymsByWord.put("klar", List.of("deutlich", "praezise", "eindeutig"));
+
+            List<String> mapped = synonymsByWord.get(lowerWord);
+
+            if (mapped != null) {
+                return mapped;
+            }
+
+            return List.of(
+                    "praeziseres " + normalizedWord,
+                    "passenderes " + normalizedWord,
+                    "konkreteres " + normalizedWord
+            );
+        };
+    }
+
+    @Bean
     DoclingClient doclingClient() {
         return new DoclingClient() {
         };
@@ -62,5 +99,9 @@ public class AdapterStubConfiguration {
         }
 
         return sentence.substring(index);
+    }
+
+    private static String normalize(String value) {
+        return value == null ? "" : value.trim();
     }
 }

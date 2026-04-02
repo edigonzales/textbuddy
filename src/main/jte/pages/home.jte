@@ -10,8 +10,8 @@
             <p>${page.subtitle()}</p>
         </div>
         <div class="status-strip">
-            <div class="status-pill">Slice 04 kombiniert <code>POST /api/sentence-rewrite</code> mit einem Bubble-Menue direkt am fokussierten Satz.</div>
-            <div class="status-pill">Textkorrektur, Satzfokus, Rewrite-Abruf und exakter Satzaustausch bleiben vollstaendig in der JS-Insel und ziehen keine Quick Actions vor.</div>
+            <div class="status-pill">Slice 05 kombiniert <code>POST /api/word-synonym</code> und <code>POST /api/sentence-rewrite</code> in einem gemeinsamen Bubble-Menue direkt am Editor.</div>
+            <div class="status-pill">Wortfokus hat Vorrang, Satzumformung bleibt aber ueber denselben Bubble-Kontext erreichbar und ersetzt weiterhin nur die exakte Zielrange.</div>
         </div>
     </header>
 
@@ -19,17 +19,18 @@
         <section class="panel" data-testid="editor-shell">
             <div class="panel-body">
                 <p class="eyebrow">Arbeitsfläche</p>
-                <h2>Sentence Rewrite</h2>
-                <p class="panel-copy">Die Insel erkennt den fokussierten Satz, blendet ein Bubble-Menue ein und ersetzt nach Auswahl exakt nur diesen Satzbereich.</p>
+                <h2>Word Synonym + Sentence Rewrite</h2>
+                <p class="panel-copy">Die Insel nutzt eine gemeinsame Rewrite-Bubble: Wort-Synonyme fuer praezisen Austausch einzelner Woerter und Satzumformung fuer komplette Alternativen im selben Kontext.</p>
 
                 <div id="editor-island-root" class="editor-root" data-testid="editor-island-root">
                     <div class="chip-row">
                         <span class="chip">JTE rendert die Shell</span>
                         <span class="chip">Tiptap bearbeitet Plain Text</span>
                         <span class="chip">LanguageTool prueft nur geaenderte Segmente</span>
-                        <span class="chip">Fokussierter Satz wird lokal erkannt</span>
-                        <span class="chip">Bubble-Menue laedt Alternativen per Rewrite-Endpoint</span>
-                        <span class="chip">Auswahl ersetzt exakt die Satzrange</span>
+                        <span class="chip">Fokussiertes Wort hat Vorrang vor Satzfokus</span>
+                        <span class="chip">Dasselbe Bubble-Menue startet Wort-Synonyme oder Satzumformung</span>
+                        <span class="chip">Synonyme senden Wort plus Satzkontext</span>
+                        <span class="chip">Beide Aktionen ersetzen exakt nur ihre Zielrange</span>
                     </div>
 
                     <div class="editor-toolbar" data-testid="editor-toolbar">
@@ -48,12 +49,19 @@
                         <div class="editor-surface" data-editor-surface data-editor-placeholder="Schreibe hier deinen Text."></div>
                         <textarea hidden name="text" data-editor-mirror data-testid="editor-mirror"></textarea>
 
-                        <div class="sentence-rewrite-bubble" data-sentence-rewrite-bubble data-testid="sentence-rewrite-bubble" hidden>
-                            <button type="button" class="sentence-rewrite-trigger" data-sentence-rewrite-trigger data-testid="sentence-rewrite-trigger">Satz umschreiben</button>
+                        <div class="rewrite-bubble" data-rewrite-bubble data-testid="rewrite-bubble" hidden>
+                            <p class="rewrite-focus">
+                                <strong data-rewrite-focus data-testid="rewrite-focus"></strong>
+                            </p>
 
-                            <div class="sentence-rewrite-overlay" data-sentence-rewrite-overlay hidden>
-                                <p class="sentence-rewrite-status" data-sentence-rewrite-status data-testid="sentence-rewrite-status" aria-live="polite"></p>
-                                <div class="sentence-rewrite-options" data-sentence-rewrite-options></div>
+                            <div class="rewrite-action-row">
+                                <button type="button" class="rewrite-primary-action" data-rewrite-primary-action data-testid="rewrite-primary-action">Wort umschreiben</button>
+                                <button type="button" class="rewrite-secondary-action" data-rewrite-secondary-action data-testid="rewrite-secondary-action" hidden>Satz umschreiben</button>
+                            </div>
+
+                            <div class="rewrite-overlay" data-rewrite-overlay hidden>
+                                <p class="rewrite-status" data-rewrite-status data-testid="rewrite-status" aria-live="polite"></p>
+                                <div class="rewrite-options" data-rewrite-options></div>
                             </div>
                         </div>
                     </div>
@@ -98,12 +106,12 @@
 
                 <div class="stack-list problems-footnotes">
                     <div class="stack-item">
-                        <strong>Neu in Slice 04</strong>
-                        Satz-Rewrite laeuft getrennt von der Korrektur ueber einen eigenen Endpoint und bleibt auf Bubble-Kontext am fokussierten Satz beschraenkt.
+                        <strong>Neu in Slice 05</strong>
+                        Wort-Synonyme und Satzumformung teilen sich jetzt einen gemeinsamen Bubble-Kontext, bleiben technisch aber auf getrennten Endpoints.
                     </div>
                     <div class="stack-item">
                         <strong>Bewusst noch nicht aktiv</strong>
-                        Keine Wort-Synonyme, keine Quick Actions und keine weiteren Rewrite-Pfade ausserhalb des Bubble-Menues in Slice 04.
+                        Keine weiteren Rewrite-Arten, keine Quick Actions und kein Advisor ausserhalb dieses Bubble-Kontexts in Slice 05.
                     </div>
                 </div>
             </div>

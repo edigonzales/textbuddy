@@ -5,11 +5,11 @@ import { TextCorrectionDecorationExtension } from "./correction-mark-extension";
 import {
   findCorrectionElements,
   findEditorElements,
-  findSentenceRewriteElements,
+  findRewriteBubbleElements,
 } from "./dom";
 import { dispatchSelectionChanged, dispatchTextChanged } from "./events";
 import { countWords, getPlainText, plainTextToHtml } from "./plain-text";
-import { mountSentenceRewriteBridge } from "./sentence-rewrite";
+import { mountRewriteBubble } from "./rewrite-bubble";
 import { mountTextCorrectionBridge } from "./text-correction";
 import type { EditorElements } from "./types";
 
@@ -52,7 +52,7 @@ export function mountEditorIsland(): void {
     return;
   }
 
-  const sentenceRewriteElements = findSentenceRewriteElements(elements.root);
+  const rewriteBubbleElements = findRewriteBubbleElements(elements.root);
 
   const editor = new Editor({
     element: elements.surface,
@@ -116,7 +116,7 @@ export function mountEditorIsland(): void {
     mountTextCorrectionBridge(editor, elements.root, correctionElements);
   }
 
-  if (sentenceRewriteElements) {
-    mountSentenceRewriteBridge(editor, elements.root, elements, sentenceRewriteElements);
+  if (rewriteBubbleElements) {
+    mountRewriteBubble(editor, elements.root, elements, rewriteBubbleElements);
   }
 }

@@ -21,9 +21,11 @@ export interface EditorElements {
   redoButton: HTMLButtonElement;
 }
 
-export interface SentenceRewriteElements {
+export interface RewriteBubbleElements {
   bubble: HTMLElement;
-  trigger: HTMLButtonElement;
+  focus: HTMLElement;
+  primaryAction: HTMLButtonElement;
+  secondaryAction: HTMLButtonElement;
   overlay: HTMLElement;
   status: HTMLElement;
   options: HTMLElement;
@@ -62,4 +64,8 @@ export interface TextCorrectionResponse {
 export interface SentenceRewriteResponse {
   original: string;
   alternatives: string[];
+}
+
+export interface WordSynonymResponse {
+  synonyms: string[];
 }

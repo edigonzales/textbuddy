@@ -5,6 +5,11 @@ interface CorrectionRequestPayload {
   language: string;
 }
 
+interface WordSynonymRequestPayload {
+  word: string;
+  context: string;
+}
+
 interface SentenceRewriteRequestPayload {
   sentence: string;
 }
@@ -109,33 +114,77 @@ test("text correction marks problems and applies a suggestion", async ({ page })
   await expect(correctionMarks).toHaveCount(0);
 });
 
-test("sentence rewrite bubble only appears for completed sentences", async ({ page }) => {
+test("rewrite bubble switches between word and sentence mode based on focus", async ({ page }) => {
   await page.goto("/");
 
   const editor = page.getByTestId("editor-input");
-  const bubble = page.getByTestId("sentence-rewrite-bubble");
+  const bubble = page.getByTestId("rewrite-bubble");
+  const primaryAction = page.getByTestId("rewrite-primary-action");
+  const secondaryAction = page.getByTestId("rewrite-secondary-action");
 
   await editor.click();
-  await page.keyboard.type("Ich bin");
-
-  await expect(bubble).toBeHidden();
-
-  await page.keyboard.type(".");
+  await page.keyboard.type("Alpha schnell.");
 
   await expect(bubble).toBeVisible();
+  await expect(primaryAction).toHaveText("Satz umschreiben");
+  await expect(secondaryAction).toBeHidden();
 
-  await page.keyboard.press("Enter");
-  await page.keyboard.type("Alpha Satz");
-
-  await expect(bubble).toBeHidden();
-
-  await page.keyboard.press("ArrowUp");
-  await page.keyboard.press("End");
+  await page.keyboard.press("ArrowLeft");
 
   await expect(bubble).toBeVisible();
+  await expect(primaryAction).toHaveText("Wort umschreiben");
+  await expect(secondaryAction).toHaveText("Satz umschreiben");
+  await expect(secondaryAction).toBeVisible();
+
+  await page.keyboard.press("ArrowRight");
+
+  await expect(bubble).toBeVisible();
+  await expect(primaryAction).toHaveText("Satz umschreiben");
+  await expect(secondaryAction).toBeHidden();
 });
 
-test("sentence rewrite uses the focused sentence and replaces only that range", async ({ page }) => {
+test("word synonym uses the focused word context and replaces only that range", async ({ page }) => {
+  const requestBodies: WordSynonymRequestPayload[] = [];
+
+  await page.route("**/api/word-synonym", async (route) => {
+    const payload = route.request().postDataJSON() as WordSynonymRequestPayload;
+
+    requestBodies.push(payload);
+    await route.fulfill({
+      json: {
+        synonyms: ["rasch"],
+      },
+    });
+  });
+
+  await page.goto("/");
+
+  const editor = page.getByTestId("editor-input");
+  const mirror = page.getByTestId("editor-mirror");
+  const bubble = page.getByTestId("rewrite-bubble");
+
+  await editor.click();
+  await page.keyboard.type("Alpha schnell.");
+
+  await expect(bubble).toBeVisible();
+  await expect(page.getByTestId("rewrite-primary-action")).toHaveText("Satz umschreiben");
+
+  await page.keyboard.press("ArrowLeft");
+
+  await expect(bubble).toBeVisible();
+
+  await page.getByTestId("rewrite-primary-action").click();
+
+  await expect.poll(() => requestBodies.at(-1)?.word).toBe("schnell");
+  await expect.poll(() => requestBodies.at(-1)?.context).toBe("Alpha schnell.");
+  await expect(page.getByTestId("rewrite-status")).toContainText("Synonym");
+
+  await page.getByTestId("rewrite-option").first().click();
+
+  await expect(mirror).toHaveValue("Alpha rasch.");
+});
+
+test("sentence rewrite is reachable from the word bubble and replaces only the sentence range", async ({ page }) => {
   const requestBodies: SentenceRewriteRequestPayload[] = [];
 
   await page.route("**/api/sentence-rewrite", async (route) => {
@@ -145,7 +194,7 @@ test("sentence rewrite uses the focused sentence and replaces only that range", 
     await route.fulfill({
       json: {
         original: payload.sentence,
-        alternatives: ["Beta Alternative."],
+        alternatives: ["Alpha Alternative."],
       },
     });
   });
@@ -154,21 +203,50 @@ test("sentence rewrite uses the focused sentence and replaces only that range", 
 
   const editor = page.getByTestId("editor-input");
   const mirror = page.getByTestId("editor-mirror");
-  const bubble = page.getByTestId("sentence-rewrite-bubble");
 
   await editor.click();
-  await page.keyboard.type("Alpha Satz. Beta Satz.");
+  await page.keyboard.type("Alpha schnell. Beta Satz.");
+  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("ArrowLeft");
 
-  await expect(bubble).toBeVisible();
+  await expect(page.getByTestId("rewrite-bubble")).toBeVisible();
+  await expect(page.getByTestId("rewrite-secondary-action")).toBeVisible();
 
-  await page.getByTestId("sentence-rewrite-trigger").click();
+  await page.getByTestId("rewrite-secondary-action").click();
 
-  await expect.poll(() => requestBodies.at(-1)?.sentence).toBe("Beta Satz.");
-  await expect(page.getByTestId("sentence-rewrite-status")).toContainText("Alternative");
+  await expect.poll(() => requestBodies.at(-1)?.sentence).toBe("Alpha schnell.");
+  await expect(page.getByTestId("rewrite-status")).toContainText("Alternative");
 
-  await page.getByTestId("sentence-rewrite-option").first().click();
+  await page.getByTestId("rewrite-option").first().click();
 
-  await expect(mirror).toHaveValue("Alpha Satz. Beta Alternative.");
+  await expect(mirror).toHaveValue("Alpha Alternative. Beta Satz.");
+});
+
+test("sentence mode is reachable without word focus", async ({ page }) => {
+  await page.goto("/");
+
+  const editor = page.getByTestId("editor-input");
+
+  await editor.click();
+  await page.keyboard.type("Alpha Satz.");
+
+  await expect(page.getByTestId("rewrite-bubble")).toBeVisible();
+  await expect(page.getByTestId("rewrite-primary-action")).toHaveText("Satz umschreiben");
+  await expect(page.getByTestId("rewrite-secondary-action")).toBeHidden();
+});
+
+test("incomplete sentences keep word mode without sentence action", async ({ page }) => {
+  await page.goto("/");
+
+  const editor = page.getByTestId("editor-input");
+
+  await editor.click();
+  await page.keyboard.type("Alpha schnell");
+  await page.keyboard.press("ArrowLeft");
+
+  await expect(page.getByTestId("rewrite-bubble")).toBeVisible();
+  await expect(page.getByTestId("rewrite-primary-action")).toHaveText("Wort umschreiben");
+  await expect(page.getByTestId("rewrite-secondary-action")).toBeHidden();
 });
 
 test("language selection is sent with correction requests", async ({ page }) => {

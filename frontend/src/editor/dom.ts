@@ -1,4 +1,8 @@
-import type { CorrectionElements, EditorElements, SentenceRewriteElements } from "./types";
+import type {
+  CorrectionElements,
+  EditorElements,
+  RewriteBubbleElements,
+} from "./types";
 
 function queryRequired<T extends Element>(parent: ParentNode, selector: string): T | null {
   return parent.querySelector<T>(selector);
@@ -74,20 +78,24 @@ export function findCorrectionElements(): CorrectionElements | null {
   };
 }
 
-export function findSentenceRewriteElements(root: HTMLElement): SentenceRewriteElements | null {
-  const bubble = queryRequired<HTMLElement>(root, "[data-sentence-rewrite-bubble]");
-  const trigger = queryRequired<HTMLButtonElement>(root, "[data-sentence-rewrite-trigger]");
-  const overlay = queryRequired<HTMLElement>(root, "[data-sentence-rewrite-overlay]");
-  const status = queryRequired<HTMLElement>(root, "[data-sentence-rewrite-status]");
-  const options = queryRequired<HTMLElement>(root, "[data-sentence-rewrite-options]");
+export function findRewriteBubbleElements(root: HTMLElement): RewriteBubbleElements | null {
+  const bubble = queryRequired<HTMLElement>(root, "[data-rewrite-bubble]");
+  const focus = queryRequired<HTMLElement>(root, "[data-rewrite-focus]");
+  const primaryAction = queryRequired<HTMLButtonElement>(root, "[data-rewrite-primary-action]");
+  const secondaryAction = queryRequired<HTMLButtonElement>(root, "[data-rewrite-secondary-action]");
+  const overlay = queryRequired<HTMLElement>(root, "[data-rewrite-overlay]");
+  const status = queryRequired<HTMLElement>(root, "[data-rewrite-status]");
+  const options = queryRequired<HTMLElement>(root, "[data-rewrite-options]");
 
-  if (!bubble || !trigger || !overlay || !status || !options) {
+  if (!bubble || !focus || !primaryAction || !secondaryAction || !overlay || !status || !options) {
     return null;
   }
 
   return {
     bubble,
-    trigger,
+    focus,
+    primaryAction,
+    secondaryAction,
     overlay,
     status,
     options,

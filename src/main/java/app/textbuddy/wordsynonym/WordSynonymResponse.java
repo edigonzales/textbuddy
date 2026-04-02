@@ -1,4 +1,6 @@
 package app.textbuddy.wordsynonym;
 
-public record WordSynonymResponse() {
+import java.util.List;
+
+public record WordSynonymResponse(List<String> synonyms) {
 }

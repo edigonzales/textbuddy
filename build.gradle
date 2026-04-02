@@ -5,7 +5,7 @@ plugins {
 
 group = 'app.textbuddy'
 version = '0.0.1-SNAPSHOT'
-description = 'Slice 04 sentence rewrite for Textbuddy'
+description = 'Slice 05 word synonym for Textbuddy'
 
 ext {
     jteVersion = '3.2.3'
