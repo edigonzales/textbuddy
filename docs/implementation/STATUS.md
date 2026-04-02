@@ -13,9 +13,9 @@
 | --- | --- | --- |
 | 00 | done | Project Basis |
 | 01 | done | Editor Island Base |
-| 02 | ready | Text Correction Base |
-| 03 | pending | Text Correction Enhancements |
-| 04 | pending | Sentence Rewrite |
+| 02 | done | Text Correction Base |
+| 03 | done | Text Correction Enhancements |
+| 04 | ready | Sentence Rewrite |
 | 05 | pending | Word Synonym |
 | 06 | pending | Quick Action Infrastructure |
 | 07 | pending | Quick Action Bullet Points |
@@ -41,3 +41,7 @@
 - Slice 00 abgeschlossen: Gradle-Groovy-Basis, Spring-Boot-4-MVC-Shell mit JTE/HTMX, Frontend-Workspace, Kernservice-/Adapter-Stubs und Basistests stehen.
 - Slice 01 abgeschlossen: Die Tiptap-Insel ist in `GET /` integriert und liefert lokalen Plain-Text-Editor mit Hidden Mirror, Zeichen-/Wortzaehlern, Undo/Redo sowie den Events `editor:text-changed` und `editor:selection-changed`.
 - Slice 01 Build/Test-Handoff: Frontend-Assets werden per Gradle aus `frontend/` nach Spring-Static-Resources gebaut; MockMvc prueft die Seiteneinbindung, Playwright deckt Tippen, Mirror und Undo/Redo ab.
+- Slice 02 abgeschlossen: `POST /api/text-correction` liefert Volltext-Korrekturblöcke, `TextCorrectionService` mappt LanguageTool-Matches mit Default-Sprache `auto`, und die Editor-Insel markiert Probleme inklusive Problems-Panel und Suggestion-Apply.
+- Slice 02 Build/Test-Handoff: `./gradlew build` ist gruen, Unit- und MockMvc-Tests decken Service und Endpoint ab, und Playwright prueft Markierung plus Anwenden eines Vorschlags im Browser.
+- Slice 03 abgeschlossen: Die Editor-Insel waehlt jetzt die Korrektursprache, speichert ein lokales Woerterbuch browserlokal und prueft nur geaenderte Segmente; Punkt und Zeilenumbruch ueberspringen die Debounce-Verzoegerung.
+- Slice 03 Build/Test-Handoff: Frontend-Unit-Tests decken Segment-Diff, Soforttrigger und Woerterbuchfilter ab, MockMvc bestaetigt die unveraenderte Shell/Endpoint-Nutzung, und Playwright prueft Sprache, lokales Woerterbuch sowie differenzierte Re-Checks; `./gradlew build` und `npm test` unter `playwright/` sind gruen.

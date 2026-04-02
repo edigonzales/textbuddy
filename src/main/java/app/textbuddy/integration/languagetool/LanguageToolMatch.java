@@ -1,8 +1,8 @@
-package app.textbuddy.textcorrection;
+package app.textbuddy.integration.languagetool;
 
 import java.util.List;
 
-public record CorrectionBlock(
+public record LanguageToolMatch(
         int offset,
         int length,
         String message,

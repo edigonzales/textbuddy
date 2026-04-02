@@ -101,6 +101,15 @@
   outline: none;
 }
 
+.textbuddy-correction-mark {
+  border-radius: 0.25rem;
+  background: rgba(193, 56, 56, 0.12);
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: #b23b3b;
+  text-decoration-thickness: 2px;
+}
+
 @media (max-width: 720px) {
   #editor-island-root .editor-toolbar {
     align-items: stretch;

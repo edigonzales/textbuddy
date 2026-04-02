@@ -10,8 +10,8 @@
             <p>${page.subtitle()}</p>
         </div>
         <div class="status-strip">
-            <div class="status-pill">Slice 01 bindet die Editor-Insel direkt in die serverseitige JTE-Shell ein.</div>
-            <div class="status-pill">Mirror, Zähler und Undo/Redo laufen rein clientseitig ohne Fach-API-Aufruf.</div>
+            <div class="status-pill">Slice 03 prueft nur geaenderte Segmente ueber <code>POST /api/text-correction</code> und triggert sofort bei Punkt oder Zeilenumbruch.</div>
+            <div class="status-pill">Sprache, lokales Woerterbuch, Markierungen und Suggestion-Apply bleiben vollstaendig in der JS-Insel und ziehen keine spaeteren Features vor.</div>
         </div>
     </header>
 
@@ -19,14 +19,16 @@
         <section class="panel" data-testid="editor-shell">
             <div class="panel-body">
                 <p class="eyebrow">Arbeitsfläche</p>
-                <h2>Editor Island Base</h2>
-                <p class="panel-copy">Der Editor bearbeitet aktuell nur Plain Text und hält Mirror, Counter sowie Undo/Redo lokal synchron.</p>
+                <h2>Text Correction Enhancements</h2>
+                <p class="panel-copy">Die Korrektur prueft nur geaenderte Segmente, reagiert sofort auf Satzgrenzen und laesst bekannte Woerter lokal im Browser ausblenden.</p>
 
                 <div id="editor-island-root" class="editor-root" data-testid="editor-island-root">
                     <div class="chip-row">
                         <span class="chip">JTE rendert die Shell</span>
                         <span class="chip">Tiptap bearbeitet Plain Text</span>
-                        <span class="chip">Keine Server-API in Slice 01</span>
+                        <span class="chip">LanguageTool prueft nur geaenderte Segmente</span>
+                        <span class="chip">Punkt und Zeilenumbruch triggern sofort</span>
+                        <span class="chip">Vorschlaege werden im Editor angewendet</span>
                     </div>
 
                     <div class="editor-toolbar" data-testid="editor-toolbar">
@@ -49,24 +51,49 @@
             </div>
         </section>
 
-        <aside class="panel" data-testid="panel-placeholder">
+        <aside class="panel correction-panel" data-testid="correction-panel" data-correction-panel data-correction-state="idle">
             <div class="panel-body">
-                <p class="eyebrow">Slice-Status</p>
-                <h2>Lokale Editorbasis</h2>
-                <p class="panel-copy">Die rechte Seite bleibt bewusst schlicht und dokumentiert nur den aktuell freigeschalteten Umfang dieses Slices.</p>
+                <p class="eyebrow">Problems Panel</p>
+                <h2>Textkorrektur</h2>
+                <p class="panel-copy">Die Insel steuert Sprache, lokales Woerterbuch und differenzierte Re-Checks. Der Server bleibt beim bestehenden Korrektur-Endpoint.</p>
 
-                <div class="stack-list">
+                <div class="correction-controls" data-testid="correction-controls">
+                    <label class="control-stack" for="correction-language">
+                        <span class="control-label">Korrektursprache</span>
+                        <select id="correction-language" class="control-select" data-correction-language data-testid="correction-language">
+                            <option value="auto" selected>Automatisch</option>
+                            <option value="de-DE">Deutsch</option>
+                            <option value="en-US">Englisch</option>
+                        </select>
+                    </label>
+
+                    <div class="dictionary-shell" data-testid="dictionary-shell">
+                        <div class="dictionary-head">
+                            <strong>Lokales Woerterbuch</strong>
+                            <span>Nur browserlokal, ohne Serverpersistenz</span>
+                        </div>
+
+                        <form class="dictionary-form" data-dictionary-form data-testid="dictionary-form">
+                            <input type="text" class="dictionary-input" data-dictionary-input data-testid="dictionary-input" placeholder="Wort hinzufuegen" autocomplete="off" />
+                            <button type="submit" class="dictionary-submit" data-testid="dictionary-submit">Hinzufuegen</button>
+                        </form>
+
+                        <p class="dictionary-empty" data-dictionary-empty data-testid="dictionary-empty">Noch keine lokalen Woerter gespeichert.</p>
+                        <ul class="dictionary-list" data-dictionary-list data-testid="dictionary-list"></ul>
+                    </div>
+                </div>
+
+                <p class="problem-status" data-correction-status data-testid="correction-status">Schreibe Text, um Korrekturen zu sehen.</p>
+                <div class="problem-list" data-correction-list data-testid="correction-problem-list"></div>
+
+                <div class="stack-list problems-footnotes">
                     <div class="stack-item">
-                        <strong>Clientseitige Events</strong>
-                        Die Insel feuert <code>editor:text-changed</code> und <code>editor:selection-changed</code> fuer spaetere Integrationen.
+                        <strong>Bewusst noch nicht aktiv</strong>
+                        Kein Satz-Rewrite, keine Synonyme, keine Quick Actions und keine spaeteren Bubble-Menues in Slice 03.
                     </div>
                     <div class="stack-item">
-                        <strong>Keine API-Vorgriffe</strong>
-                        Auch in Slice 01 bleibt es bewusst bei <code>GET /</code>; Textverarbeitung folgt erst spaeter.
-                    </div>
-                    <div class="stack-item">
-                        <strong>Naechster Andockpunkt</strong>
-                        Slice 02 kann denselben Mirror-Text erstmals in die Textkorrektur-API einspeisen.
+                        <strong>Editorinteraktion bleibt clientseitig</strong>
+                        Die serverseitige API liefert weiter nur Korrekturblocke; Markierung, Fokus, Woerterbuchfilter und diff-basierte Re-Checks laufen in der Insel.
                     </div>
                 </div>
             </div>

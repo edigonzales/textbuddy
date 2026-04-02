@@ -1,9 +1,11 @@
 import { Editor } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 
-import { findEditorElements } from "./dom";
+import { TextCorrectionDecorationExtension } from "./correction-mark-extension";
+import { findCorrectionElements, findEditorElements } from "./dom";
 import { dispatchSelectionChanged, dispatchTextChanged } from "./events";
 import { countWords, getPlainText, plainTextToHtml } from "./plain-text";
+import { mountTextCorrectionBridge } from "./text-correction";
 import type { EditorElements } from "./types";
 
 function syncUndoRedoState(elements: EditorElements, editor: Editor): void {
@@ -39,6 +41,7 @@ function syncSelectionState(elements: EditorElements, editor: Editor): void {
 
 export function mountEditorIsland(): void {
   const elements = findEditorElements();
+  const correctionElements = findCorrectionElements();
 
   if (!elements) {
     return;
@@ -65,6 +68,7 @@ export function mountEditorIsland(): void {
         strike: false,
         underline: false,
       }),
+      TextCorrectionDecorationExtension,
     ],
     content: plainTextToHtml(elements.mirror.value),
     editorProps: {
@@ -100,4 +104,8 @@ export function mountEditorIsland(): void {
   elements.redoButton.addEventListener("click", () => {
     editor.chain().focus().redo().run();
   });
+
+  if (correctionElements) {
+    mountTextCorrectionBridge(editor, elements.root, correctionElements);
+  }
 }

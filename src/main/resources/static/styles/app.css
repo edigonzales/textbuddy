@@ -183,6 +183,233 @@ a {
     margin-bottom: 0.35rem;
 }
 
+.correction-controls {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.control-stack {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.control-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
+
+.control-select,
+.dictionary-input,
+.dictionary-submit,
+.dictionary-inline-button,
+.dictionary-word-remove {
+    border: 1px solid rgba(15, 109, 104, 0.18);
+    border-radius: 14px;
+    font: inherit;
+}
+
+.control-select,
+.dictionary-input {
+    width: 100%;
+    padding: 0.8rem 0.9rem;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--text);
+}
+
+.dictionary-shell {
+    display: grid;
+    gap: 0.85rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.64);
+}
+
+.dictionary-head {
+    display: grid;
+    gap: 0.2rem;
+}
+
+.dictionary-head strong {
+    font-size: 0.95rem;
+}
+
+.dictionary-head span,
+.dictionary-empty {
+    color: var(--muted);
+    font-size: 0.92rem;
+}
+
+.dictionary-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.7rem;
+}
+
+.dictionary-submit,
+.dictionary-inline-button,
+.dictionary-word-remove {
+    padding: 0.65rem 0.9rem;
+    background: rgba(255, 255, 255, 0.96);
+    color: var(--accent);
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+            transform 140ms ease,
+            border-color 140ms ease,
+            box-shadow 140ms ease;
+}
+
+.dictionary-submit:hover,
+.dictionary-inline-button:hover,
+.dictionary-word-remove:hover {
+    transform: translateY(-1px);
+    border-color: rgba(15, 109, 104, 0.42);
+    box-shadow: 0 12px 24px rgba(28, 39, 48, 0.08);
+}
+
+.dictionary-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.dictionary-word {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.35rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface-strong);
+}
+
+.dictionary-word-label {
+    padding-left: 0.5rem;
+    font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
+    font-size: 0.9rem;
+}
+
+.dictionary-word-remove {
+    border-radius: 999px;
+}
+
+.correction-panel .problem-status {
+    margin: 1rem 0 0;
+    color: var(--muted);
+}
+
+.correction-panel[data-correction-state="success"] .problem-status {
+    color: var(--accent);
+}
+
+.correction-panel[data-correction-state="error"] .problem-status {
+    color: #972f2f;
+}
+
+.problem-list {
+    display: grid;
+    gap: 0.9rem;
+    margin-top: 1rem;
+}
+
+.problem-item {
+    display: grid;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: var(--surface-strong);
+    cursor: pointer;
+    transition:
+            transform 140ms ease,
+            box-shadow 140ms ease,
+            border-color 140ms ease;
+}
+
+.problem-item:hover {
+    transform: translateY(-1px);
+    border-color: rgba(15, 109, 104, 0.35);
+    box-shadow: 0 14px 30px rgba(28, 39, 48, 0.1);
+}
+
+.problem-item:focus-visible {
+    outline: 2px solid rgba(15, 109, 104, 0.42);
+    outline-offset: 2px;
+}
+
+.problem-item-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.problem-index {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.7rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.problem-fragment {
+    font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
+    font-size: 0.9rem;
+    color: #9e2d2d;
+}
+
+.problem-message,
+.problem-detail {
+    margin: 0;
+}
+
+.problem-detail,
+.problem-empty {
+    color: var(--muted);
+}
+
+.problem-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+}
+
+.suggestion-button {
+    border: 1px solid rgba(15, 109, 104, 0.22);
+    border-radius: 999px;
+    padding: 0.55rem 0.85rem;
+    background: rgba(255, 255, 255, 0.96);
+    color: var(--accent);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+            transform 140ms ease,
+            border-color 140ms ease,
+            box-shadow 140ms ease;
+}
+
+.suggestion-button:hover {
+    transform: translateY(-1px);
+    border-color: rgba(15, 109, 104, 0.42);
+    box-shadow: 0 12px 24px rgba(28, 39, 48, 0.08);
+}
+
+.problems-footnotes {
+    margin-top: 1rem;
+}
+
 @media (max-width: 900px) {
     .app-header,
     .workspace-grid {
@@ -192,5 +419,9 @@ a {
     .page-shell {
         width: min(100% - 1rem, 1200px);
         padding-top: 1rem;
+    }
+
+    .dictionary-form {
+        grid-template-columns: 1fr;
     }
 }

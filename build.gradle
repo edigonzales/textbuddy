@@ -5,7 +5,7 @@ plugins {
 
 group = 'app.textbuddy'
 version = '0.0.1-SNAPSHOT'
-description = 'Slice 01 editor island base for Textbuddy'
+description = 'Slice 03 text correction enhancements for Textbuddy'
 
 ext {
     jteVersion = '3.2.3'
@@ -73,6 +73,19 @@ tasks.register('buildFrontend', Exec) {
     outputs.dir frontendBuildDir
 }
 
+tasks.register('testFrontendUnit', Exec) {
+    dependsOn 'npmInstallFrontend'
+    workingDir frontendDir.asFile
+    commandLine 'npm', 'run', 'test:unit'
+
+    inputs.files(
+            frontendDir.file('package.json'),
+            frontendDir.file('package-lock.json'),
+            frontendDir.file('tsconfig.json')
+    )
+    inputs.dir frontendDir.dir('src')
+}
+
 tasks.register('syncFrontendAssets', Sync) {
     dependsOn 'buildFrontend'
     from frontendBuildDir
@@ -84,5 +97,6 @@ tasks.named('processResources') {
 }
 
 tasks.named('test') {
+    dependsOn 'testFrontendUnit'
     useJUnitPlatform()
 }

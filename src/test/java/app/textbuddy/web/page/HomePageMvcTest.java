@@ -37,9 +37,13 @@ class HomePageMvcTest {
                 .andExpect(content().string(containsString("data-testid=\"editor-word-count\">0</strong>")))
                 .andExpect(content().string(containsString("/editor/editor-island.css")))
                 .andExpect(content().string(containsString("/editor/editor-island.js")))
-                .andExpect(content().string(containsString("data-testid=\"panel-placeholder\"")))
-                .andExpect(content().string(containsString("Editor Island Base")))
-                .andExpect(content().string(containsString("Mirror, Zähler und Undo/Redo laufen rein clientseitig")))
-                .andExpect(content().string(containsString("Keine API-Vorgriffe")));
+                .andExpect(content().string(containsString("data-testid=\"correction-panel\"")))
+                .andExpect(content().string(containsString("data-testid=\"correction-status\"")))
+                .andExpect(content().string(containsString("Text Correction Enhancements")))
+                .andExpect(content().string(containsString("POST /api/text-correction")))
+                .andExpect(content().string(containsString("data-testid=\"correction-language\"")))
+                .andExpect(content().string(containsString("data-testid=\"dictionary-form\"")))
+                .andExpect(content().string(containsString("data-testid=\"dictionary-list\"")))
+                .andExpect(content().string(containsString("Sprache, lokales Woerterbuch")));
     }
 }

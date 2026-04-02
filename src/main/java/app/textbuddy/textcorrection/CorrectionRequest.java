@@ -1,4 +1,4 @@
 package app.textbuddy.textcorrection;
 
-public record CorrectionRequest() {
+public record CorrectionRequest(String text, String language) {
 }

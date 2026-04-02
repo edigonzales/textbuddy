@@ -19,3 +19,33 @@ export interface EditorElements {
   undoButton: HTMLButtonElement;
   redoButton: HTMLButtonElement;
 }
+
+export interface CorrectionElements {
+  panel: HTMLElement;
+  status: HTMLElement;
+  list: HTMLElement;
+  languageSelect: HTMLSelectElement;
+  dictionaryForm: HTMLFormElement;
+  dictionaryInput: HTMLInputElement;
+  dictionaryList: HTMLElement;
+  dictionaryEmpty: HTMLElement;
+}
+
+export interface CorrectionRange {
+  offset: number;
+  length: number;
+}
+
+export interface TextCorrectionBlock {
+  offset: number;
+  length: number;
+  message: string;
+  shortMessage: string;
+  ruleId: string;
+  replacements: string[];
+}
+
+export interface TextCorrectionResponse {
+  original: string;
+  blocks: TextCorrectionBlock[];
+}

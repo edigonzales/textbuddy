@@ -5,19 +5,12 @@ import app.textbuddy.advisor.AdvisorValidationService;
 import app.textbuddy.document.DocumentConversionService;
 import app.textbuddy.quickaction.QuickActionService;
 import app.textbuddy.sentencerewrite.SentenceRewriteService;
-import app.textbuddy.textcorrection.TextCorrectionService;
 import app.textbuddy.wordsynonym.WordSynonymService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
 public class CoreStubConfiguration {
-
-    @Bean
-    TextCorrectionService textCorrectionService() {
-        return new TextCorrectionService() {
-        };
-    }
 
     @Bean
     SentenceRewriteService sentenceRewriteService() {
