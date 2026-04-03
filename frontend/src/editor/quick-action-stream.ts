@@ -12,10 +12,10 @@ import type {
   RewriteDiffToken,
 } from "./types";
 
-const IDLE_MESSAGE = "Bereit fuer Plain Language und Bullet Points.";
+const IDLE_MESSAGE = "Bereit fuer Plain Language, Bullet Points und Proofread.";
 const UNDONE_MESSAGE = "Rewrite wurde rueckgaengig gemacht.";
 
-type QuickActionKey = "plain-language" | "bullet-points";
+type QuickActionKey = "plain-language" | "bullet-points" | "proofread";
 
 interface QuickActionDefinition {
   button: HTMLButtonElement;
@@ -78,6 +78,13 @@ export function mountQuickActionStream(
       streamingMessage: "Bullet Points streamen gerade...",
       successMessage: "Bullet Points abgeschlossen.",
       errorMessage: "Bullet Points konnten gerade nicht erstellt werden.",
+    },
+    proofread: {
+      button: elements.proofreadButton,
+      endpoint: "/api/quick-actions/proofread/stream",
+      streamingMessage: "Proofread streamt gerade...",
+      successMessage: "Proofread abgeschlossen.",
+      errorMessage: "Proofread konnte gerade nicht abgeschlossen werden.",
     },
   };
 
@@ -224,6 +231,10 @@ export function mountQuickActionStream(
 
   elements.bulletPointsButton.addEventListener("click", () => {
     void runQuickAction("bullet-points");
+  });
+
+  elements.proofreadButton.addEventListener("click", () => {
+    void runQuickAction("proofread");
   });
 
   elements.diffUndoButton.addEventListener("click", () => {

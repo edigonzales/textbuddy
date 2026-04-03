@@ -5,6 +5,7 @@ import app.textbuddy.integration.llm.BulletPointsLlmClient;
 import app.textbuddy.integration.docling.DoclingClient;
 import app.textbuddy.integration.llm.LlmClientFacade;
 import app.textbuddy.integration.llm.PlainLanguageLlmClient;
+import app.textbuddy.integration.llm.ProofreadLlmClient;
 import app.textbuddy.integration.llm.WordSynonymLlmClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -85,6 +86,27 @@ public class AdapterStubConfiguration {
                     .collect(Collectors.joining("\n"));
 
             return splitIntoChunks(bulletPoints, 18);
+        };
+    }
+
+    @Bean
+    ProofreadLlmClient proofreadLlmClient() {
+        return (text, language) -> {
+            String normalized = normalize(text);
+
+            if (normalized.isBlank()) {
+                return List.of();
+            }
+
+            String proofread = normalized
+                    .replace("Teh", "The")
+                    .replace("teh", "the")
+                    .replace("Recieve", "Receive")
+                    .replace("recieve", "receive")
+                    .replace("Wierd", "Weird")
+                    .replace("wierd", "weird");
+
+            return splitIntoChunks(proofread, 20);
         };
     }
 

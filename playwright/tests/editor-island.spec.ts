@@ -294,7 +294,7 @@ test("plain language streams into the editor, shows a diff and supports full und
   const editor = page.getByTestId("editor-input");
   const mirror = page.getByTestId("editor-mirror");
 
-  await expect(page.locator("[data-quick-action]")).toHaveCount(2);
+  await expect(page.locator("[data-quick-action]")).toHaveCount(3);
 
   await editor.click();
   await page.keyboard.type("Der komplizierte Sachverhalt ist relevant.");
@@ -387,6 +387,67 @@ test("bullet points stream into the editor, show a diff and support full undo", 
   await page.getByTestId("rewrite-diff-undo").click();
 
   await expect(mirror).toHaveValue("Projektlage klaeren. Naechste Schritte festhalten.");
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeHidden();
+  await expect(page.getByTestId("quick-action-status")).toContainText("rueckgaengig");
+});
+
+test("proofread streams into the editor, shows a diff and supports full undo", async ({
+  page,
+}) => {
+  const requestBodies: QuickActionRequestPayload[] = [];
+
+  await page.route("**/api/quick-actions/proofread/stream", async (route) => {
+    const payload = route.request().postDataJSON() as QuickActionRequestPayload;
+
+    requestBodies.push(payload);
+    await route.fulfill({
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream",
+      },
+      body: createSseBody([
+        {
+          event: "chunk",
+          payload: {
+            text: "This is ",
+          },
+        },
+        {
+          event: "chunk",
+          payload: {
+            text: "the text.",
+          },
+        },
+        {
+          event: "complete",
+          payload: {
+            text: "This is the text.",
+          },
+        },
+      ]),
+    });
+  });
+
+  await page.goto("/");
+
+  const editor = page.getByTestId("editor-input");
+  const mirror = page.getByTestId("editor-mirror");
+
+  await editor.click();
+  await page.keyboard.type("This is teh text.");
+  await page.getByTestId("quick-action-proofread").click();
+
+  await expect.poll(() => requestBodies.at(-1)?.text).toBe("This is teh text.");
+  await expect.poll(() => requestBodies.at(-1)?.language).toBe("auto");
+  await expect(page.getByTestId("quick-action-status")).toContainText("Proofread abgeschlossen");
+  await expect(mirror).toHaveValue("This is the text.");
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+  await expect(page.getByTestId("rewrite-diff-before")).toContainText("This is teh text.");
+  await expect(page.getByTestId("rewrite-diff-after")).toContainText("This is the text.");
+
+  await page.getByTestId("rewrite-diff-undo").click();
+
+  await expect(mirror).toHaveValue("This is teh text.");
   await expect(page.getByTestId("rewrite-diff-panel")).toBeHidden();
   await expect(page.getByTestId("quick-action-status")).toContainText("rueckgaengig");
 });

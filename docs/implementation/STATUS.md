@@ -19,8 +19,8 @@
 | 05 | done | Word Synonym |
 | 06 | done | Quick Action Infrastructure |
 | 07 | done | Quick Action Bullet Points |
-| 08 | ready | Quick Action Proofread |
-| 09 | pending | Quick Action Summarize |
+| 08 | done | Quick Action Proofread |
+| 09 | ready | Quick Action Summarize |
 | 10 | pending | Quick Action Formality |
 | 11 | pending | Quick Action Social Media |
 | 12 | pending | Quick Action Medium |
@@ -53,3 +53,5 @@
 - Slice 06 Build/Test-Handoff: Java-Tests decken SSE-Payloads, Home-Page-Shell und den Plain-Language-Streaming-Endpoint ab, Frontend-Unit-Tests laufen weiter unveraendert, und Playwright validiert Stream-Verarbeitung, Diff-Anzeige und kompletten Undo; `./gradlew test` und `npm test` unter `playwright/` sind gruen.
 - Slice 07 abgeschlossen: `POST /api/quick-actions/bullet-points/stream` nutzt dieselbe `SseEmitter`-, Diff- und Undo-Infrastruktur wie Plain Language, waehrend die Editor-Insel genau eine weitere aktive Quick Action fuer strukturierte Stichpunkte freischaltet.
 - Slice 07 Build/Test-Handoff: Unit-Tests decken den Bullet-Points-Servicepfad in `DefaultQuickActionService` ab, MockMvc prueft den neuen Streaming-Endpoint, und Playwright validiert Button, Stream, Diff und Undo fuer Bullet Points; naechster Slice ist `08 Quick Action Proofread`.
+- Slice 08 abgeschlossen: `POST /api/quick-actions/proofread/stream` nutzt einen eigenen Proofread-Service mit separatem LLM-Adapter und haengt sich in dieselbe `SseEmitter`-, Diff- und Undo-Infrastruktur wie die bestehenden Volltext-Rewrites.
+- Slice 08 Build/Test-Handoff: Unit-Tests decken `ProofreadQuickActionService` ab, MockMvc prueft den neuen Streaming-Endpoint, und Playwright validiert die Proofread-Aktion inklusive Stream, Diff und Undo; naechster Slice ist `09 Quick Action Summarize`.

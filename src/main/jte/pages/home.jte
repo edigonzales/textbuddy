@@ -10,8 +10,8 @@
             <p>${page.subtitle()}</p>
         </div>
         <div class="status-strip">
-            <div class="status-pill">Neben dem bestehenden <code>POST /api/quick-actions/plain-language/stream</code> ergaenzt Slice 07 jetzt <code>POST /api/quick-actions/bullet-points/stream</code> als zweite aktive SSE-Quick-Action.</div>
-            <div class="status-pill">Beide Volltext-Rewrites streamen live in den Editor, nutzen denselben Diff und lassen sich komplett auf den Ursprungszustand zuruecksetzen.</div>
+            <div class="status-pill">Slice 08 haelt jetzt <code>POST /api/quick-actions/plain-language/stream</code>, <code>POST /api/quick-actions/bullet-points/stream</code> und <code>POST /api/quick-actions/proofread/stream</code> als aktive SSE-Quick-Actions bereit.</div>
+            <div class="status-pill">Alle drei Volltext-Rewrites streamen live in den Editor, nutzen denselben Diff und lassen sich komplett auf den Ursprungszustand zuruecksetzen.</div>
         </div>
     </header>
 
@@ -20,7 +20,7 @@
             <div class="panel-body">
                 <p class="eyebrow">Arbeitsfläche</p>
                 <h2>Quick Actions + Rewrite Bubble</h2>
-                <p class="panel-copy">Die Insel kombiniert weiter Wort-/Satz-Rewrite im Bubble-Menue und bietet jetzt zwei streamingfaehige Volltext-Rewrites fuer Plain Language und Bullet Points.</p>
+                <p class="panel-copy">Die Insel kombiniert weiter Wort-/Satz-Rewrite im Bubble-Menue und bietet jetzt drei streamingfaehige Volltext-Rewrites fuer Plain Language, Bullet Points und Proofread.</p>
 
                 <div id="editor-island-root" class="editor-root" data-testid="editor-island-root">
                     <div class="chip-row">
@@ -31,6 +31,7 @@
                         <span class="chip">Dasselbe Bubble-Menue startet Wort-Synonyme oder Satzumformung</span>
                         <span class="chip">Plain Language streamt ueber SSE direkt in den Editor</span>
                         <span class="chip">Bullet Points nutzt dieselbe Streaming- und Diff-Infrastruktur</span>
+                        <span class="chip">Proofread nutzt dieselbe Streaming- und Diff-Infrastruktur</span>
                         <span class="chip">Rewrite-Diff und kompletter Undo bauen auf derselben Streaming-Basis auf</span>
                     </div>
 
@@ -39,15 +40,16 @@
                             <div>
                                 <p class="eyebrow">Quick Actions</p>
                                 <h3>Rewrite mit Streaming</h3>
-                                <p class="panel-copy">Plain Language und Bullet Points sind in Slice 07 aktiv. Weitere Quick Actions bleiben bis zu ihren eigenen Slices verborgen.</p>
+                                <p class="panel-copy">Plain Language, Bullet Points und Proofread sind in Slice 08 aktiv. Weitere Quick Actions bleiben bis zu ihren eigenen Slices verborgen.</p>
                             </div>
 
-                            <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" aria-live="polite">Bereit fuer Plain Language und Bullet Points.</p>
+                            <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" aria-live="polite">Bereit fuer Plain Language, Bullet Points und Proofread.</p>
                         </div>
 
                         <div class="quick-action-row">
                             <button type="button" class="quick-action-button" data-quick-action="plain-language" data-testid="quick-action-plain-language">Plain Language</button>
                             <button type="button" class="quick-action-button" data-quick-action="bullet-points" data-testid="quick-action-bullet-points">Bullet Points</button>
+                            <button type="button" class="quick-action-button" data-quick-action="proofread" data-testid="quick-action-proofread">Proofread</button>
                         </div>
                     </section>
 
@@ -147,8 +149,8 @@
 
                 <div class="stack-list problems-footnotes">
                     <div class="stack-item">
-                        <strong>Neu in Slice 07</strong>
-                        Bullet Points nutzt jetzt denselben separaten SSE-Ansatz wie Plain Language und haengt sich an dieselbe Streaming-, Diff- und Undo-Infrastruktur.
+                        <strong>Neu in Slice 08</strong>
+                        Proofread nutzt jetzt denselben separaten SSE-Ansatz wie Plain Language und Bullet Points und haengt sich an dieselbe Streaming-, Diff- und Undo-Infrastruktur.
                     </div>
                     <div class="stack-item">
                         <strong>Bewusst noch nicht aktiv</strong>
