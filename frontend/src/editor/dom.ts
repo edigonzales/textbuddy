@@ -118,6 +118,14 @@ export function findQuickActionElements(root: HTMLElement): QuickActionElements 
     root,
     "[data-quick-action='proofread']",
   );
+  const summarizeButton = queryRequired<HTMLButtonElement>(
+    root,
+    "[data-quick-action='summarize']",
+  );
+  const summarizeOptionSelect = queryRequired<HTMLSelectElement>(
+    root,
+    "[data-quick-action-option='summarize']",
+  );
   const diffPanel = queryRequired<HTMLElement>(root, "[data-rewrite-diff-panel]");
   const diffBefore = queryRequired<HTMLElement>(root, "[data-rewrite-diff-before]");
   const diffAfter = queryRequired<HTMLElement>(root, "[data-rewrite-diff-after]");
@@ -129,6 +137,8 @@ export function findQuickActionElements(root: HTMLElement): QuickActionElements 
     !plainLanguageButton ||
     !bulletPointsButton ||
     !proofreadButton ||
+    !summarizeButton ||
+    !summarizeOptionSelect ||
     !diffPanel ||
     !diffBefore ||
     !diffAfter ||
@@ -143,6 +153,8 @@ export function findQuickActionElements(root: HTMLElement): QuickActionElements 
     plainLanguageButton,
     bulletPointsButton,
     proofreadButton,
+    summarizeButton,
+    summarizeOptionSelect,
     diffPanel,
     diffBefore,
     diffAfter,

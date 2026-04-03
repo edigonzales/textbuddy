@@ -17,6 +17,7 @@ interface SentenceRewriteRequestPayload {
 interface QuickActionRequestPayload {
   text: string;
   language: string;
+  option?: string;
 }
 
 function createCorrectionResponse(text: string) {
@@ -294,7 +295,7 @@ test("plain language streams into the editor, shows a diff and supports full und
   const editor = page.getByTestId("editor-input");
   const mirror = page.getByTestId("editor-mirror");
 
-  await expect(page.locator("[data-quick-action]")).toHaveCount(3);
+  await expect(page.locator("[data-quick-action]")).toHaveCount(4);
 
   await editor.click();
   await page.keyboard.type("Der komplizierte Sachverhalt ist relevant.");
@@ -450,6 +451,125 @@ test("proofread streams into the editor, shows a diff and supports full undo", a
   await expect(mirror).toHaveValue("This is teh text.");
   await expect(page.getByTestId("rewrite-diff-panel")).toBeHidden();
   await expect(page.getByTestId("quick-action-status")).toContainText("rueckgaengig");
+});
+
+test("summarize with the sentence option streams into the editor and sends the selected option", async ({
+  page,
+}) => {
+  const requestBodies: QuickActionRequestPayload[] = [];
+
+  await page.route("**/api/quick-actions/summarize/stream", async (route) => {
+    const payload = route.request().postDataJSON() as QuickActionRequestPayload;
+
+    requestBodies.push(payload);
+    await route.fulfill({
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream",
+      },
+      body: createSseBody([
+        {
+          event: "chunk",
+          payload: {
+            text: "Kurzfassung: ",
+          },
+        },
+        {
+          event: "chunk",
+          payload: {
+            text: "Der Kernpunkt steht fest.",
+          },
+        },
+        {
+          event: "complete",
+          payload: {
+            text: "Kurzfassung: Der Kernpunkt steht fest.",
+          },
+        },
+      ]),
+    });
+  });
+
+  await page.goto("/");
+
+  const editor = page.getByTestId("editor-input");
+  const mirror = page.getByTestId("editor-mirror");
+
+  await editor.click();
+  await page.keyboard.type("Der Kernpunkt steht fest. Weitere Details folgen.");
+  await expect(page.getByTestId("quick-action-summarize-option")).toHaveValue("sentence");
+  await page.getByTestId("quick-action-summarize").click();
+
+  await expect.poll(() => requestBodies.at(-1)?.text).toBe(
+    "Der Kernpunkt steht fest. Weitere Details folgen.",
+  );
+  await expect.poll(() => requestBodies.at(-1)?.language).toBe("auto");
+  await expect.poll(() => requestBodies.at(-1)?.option).toBe("sentence");
+  await expect(page.getByTestId("quick-action-status")).toContainText("Summarize abgeschlossen");
+  await expect(mirror).toHaveValue("Kurzfassung: Der Kernpunkt steht fest.");
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+  await expect(page.getByTestId("rewrite-diff-after")).toContainText(
+    "Kurzfassung: Der Kernpunkt steht fest.",
+  );
+});
+
+test("summarize with the management summary option streams the selected variant", async ({
+  page,
+}) => {
+  const requestBodies: QuickActionRequestPayload[] = [];
+
+  await page.route("**/api/quick-actions/summarize/stream", async (route) => {
+    const payload = route.request().postDataJSON() as QuickActionRequestPayload;
+
+    requestBodies.push(payload);
+    await route.fulfill({
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream",
+      },
+      body: createSseBody([
+        {
+          event: "chunk",
+          payload: {
+            text: "Management Summary\n",
+          },
+        },
+        {
+          event: "chunk",
+          payload: {
+            text: "- Kernpunkt: Projekt ist freigegeben.\n- Empfehlung: Umsetzung starten.",
+          },
+        },
+        {
+          event: "complete",
+          payload: {
+            text: "Management Summary\n- Kernpunkt: Projekt ist freigegeben.\n- Empfehlung: Umsetzung starten.",
+          },
+        },
+      ]),
+    });
+  });
+
+  await page.goto("/");
+
+  const editor = page.getByTestId("editor-input");
+  const mirror = page.getByTestId("editor-mirror");
+
+  await editor.click();
+  await page.keyboard.type("Projekt ist freigegeben. Umsetzung kann starten.");
+  await page.getByTestId("quick-action-summarize-option").selectOption("management_summary");
+  await page.getByTestId("quick-action-summarize").click();
+
+  await expect.poll(() => requestBodies.at(-1)?.option).toBe("management_summary");
+  await expect(page.getByTestId("quick-action-status")).toContainText("Summarize abgeschlossen");
+  await expect(mirror).toHaveValue(
+    "Management Summary\n- Kernpunkt: Projekt ist freigegeben.\n- Empfehlung: Umsetzung starten.",
+  );
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+  await expect(page.getByTestId("rewrite-diff-after")).toContainText("Management Summary");
+  await expect(page.getByTestId("rewrite-diff-after")).toContainText(
+    "- Empfehlung: Umsetzung starten.",
+  );
 });
 
 test("incomplete sentences keep word mode without sentence action", async ({ page }) => {

@@ -20,8 +20,8 @@
 | 06 | done | Quick Action Infrastructure |
 | 07 | done | Quick Action Bullet Points |
 | 08 | done | Quick Action Proofread |
-| 09 | ready | Quick Action Summarize |
-| 10 | pending | Quick Action Formality |
+| 09 | done | Quick Action Summarize |
+| 10 | ready | Quick Action Formality |
 | 11 | pending | Quick Action Social Media |
 | 12 | pending | Quick Action Medium |
 | 13 | pending | Quick Action Character Speech |
@@ -55,3 +55,5 @@
 - Slice 07 Build/Test-Handoff: Unit-Tests decken den Bullet-Points-Servicepfad in `DefaultQuickActionService` ab, MockMvc prueft den neuen Streaming-Endpoint, und Playwright validiert Button, Stream, Diff und Undo fuer Bullet Points; naechster Slice ist `08 Quick Action Proofread`.
 - Slice 08 abgeschlossen: `POST /api/quick-actions/proofread/stream` nutzt einen eigenen Proofread-Service mit separatem LLM-Adapter und haengt sich in dieselbe `SseEmitter`-, Diff- und Undo-Infrastruktur wie die bestehenden Volltext-Rewrites.
 - Slice 08 Build/Test-Handoff: Unit-Tests decken `ProofreadQuickActionService` ab, MockMvc prueft den neuen Streaming-Endpoint, und Playwright validiert die Proofread-Aktion inklusive Stream, Diff und Undo; naechster Slice ist `09 Quick Action Summarize`.
+- Slice 09 abgeschlossen: `POST /api/quick-actions/summarize/stream` nutzt einen eigenen Summarize-Service mit festem Options-Mapping fuer `sentence`, `three_sentence`, `paragraph`, `page` und `management_summary`; die Toolbar bietet dafuer ein eigenes Dropdown, waehrend Streaming, Diff und kompletter Undo unveraendert wiederverwendet werden.
+- Slice 09 Build/Test-Handoff: Parameterisierte Unit-Tests decken das Options-Mapping ab, MockMvc prueft den Summarize-Endpoint inklusive Pflichtfeld `option`, und Playwright validiert mindestens zwei Summarize-Varianten im Browser; naechster Slice ist `10 Quick Action Formality`.

@@ -6,7 +6,9 @@ import app.textbuddy.integration.docling.DoclingClient;
 import app.textbuddy.integration.llm.LlmClientFacade;
 import app.textbuddy.integration.llm.PlainLanguageLlmClient;
 import app.textbuddy.integration.llm.ProofreadLlmClient;
+import app.textbuddy.integration.llm.SummarizeLlmClient;
 import app.textbuddy.integration.llm.WordSynonymLlmClient;
+import app.textbuddy.quickaction.SummarizePrompt;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -111,6 +113,43 @@ public class AdapterStubConfiguration {
     }
 
     @Bean
+    SummarizeLlmClient summarizeLlmClient() {
+        return (text, language, prompt) -> {
+            String normalized = normalize(text);
+
+            if (normalized.isBlank()) {
+                return List.of();
+            }
+
+            List<String> sentences = splitIntoBulletPointItems(normalized);
+            String summary = switch (prompt) {
+                case SENTENCE -> "Kurzfassung: " + firstItem(sentences);
+                case THREE_SENTENCE -> "Kurzfassung in drei Saetzen: "
+                        + String.join(" ", firstItems(sentences, 3));
+                case PARAGRAPH -> "Zusammenfassung: "
+                        + String.join(" ", firstItems(sentences, 4));
+                case PAGE -> """
+                        Zusammenfassung auf etwa einer Seite:
+
+                        %s
+                        """.formatted(String.join(" ", firstItems(sentences, 6)));
+                case MANAGEMENT_SUMMARY -> """
+                        Management Summary
+                        - Kernpunkt: %s
+                        - Einordnung: %s
+                        - Empfehlung: %s
+                        """.formatted(
+                        firstItem(sentences),
+                        itemAt(sentences, 1, firstItem(sentences)),
+                        itemAt(sentences, sentences.size() - 1, firstItem(sentences))
+                );
+            };
+
+            return splitIntoChunks(summary, 24);
+        };
+    }
+
+    @Bean
     WordSynonymLlmClient wordSynonymLlmClient() {
         return (word, context) -> {
             String normalizedWord = normalize(word);
@@ -206,6 +245,26 @@ public class AdapterStubConfiguration {
         if (!normalized.isBlank()) {
             items.add(normalized);
         }
+    }
+
+    private static String firstItem(List<String> items) {
+        return items.isEmpty() ? "" : items.getFirst();
+    }
+
+    private static List<String> firstItems(List<String> items, int count) {
+        if (items.isEmpty()) {
+            return List.of();
+        }
+
+        return List.copyOf(items.subList(0, Math.min(items.size(), count)));
+    }
+
+    private static String itemAt(List<String> items, int index, String fallback) {
+        if (items.isEmpty() || index < 0 || index >= items.size()) {
+            return fallback;
+        }
+
+        return items.get(index);
     }
 
     private static List<String> splitIntoChunks(String value, int maxChunkLength) {

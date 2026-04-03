@@ -12,10 +12,16 @@ import type {
   RewriteDiffToken,
 } from "./types";
 
-const IDLE_MESSAGE = "Bereit fuer Plain Language, Bullet Points und Proofread.";
+const IDLE_MESSAGE = "Bereit fuer Plain Language, Bullet Points, Proofread und Summarize.";
 const UNDONE_MESSAGE = "Rewrite wurde rueckgaengig gemacht.";
 
-type QuickActionKey = "plain-language" | "bullet-points" | "proofread";
+type QuickActionKey = "plain-language" | "bullet-points" | "proofread" | "summarize";
+
+interface QuickActionRequestBody {
+  text: string;
+  language: string;
+  option?: string;
+}
 
 interface QuickActionDefinition {
   button: HTMLButtonElement;
@@ -23,6 +29,7 @@ interface QuickActionDefinition {
   streamingMessage: string;
   successMessage: string;
   errorMessage: string;
+  buildRequestBody?: (text: string) => QuickActionRequestBody;
 }
 
 interface CompletedRewriteState {
@@ -86,6 +93,18 @@ export function mountQuickActionStream(
       successMessage: "Proofread abgeschlossen.",
       errorMessage: "Proofread konnte gerade nicht abgeschlossen werden.",
     },
+    summarize: {
+      button: elements.summarizeButton,
+      endpoint: "/api/quick-actions/summarize/stream",
+      streamingMessage: "Summarize streamt gerade...",
+      successMessage: "Summarize abgeschlossen.",
+      errorMessage: "Summarize konnte gerade nicht abgeschlossen werden.",
+      buildRequestBody: (text) => ({
+        text,
+        language: "auto",
+        option: elements.summarizeOptionSelect.value,
+      }),
+    },
   };
 
   function setPanelState(
@@ -108,6 +127,7 @@ export function mountQuickActionStream(
     Object.values(quickActions).forEach((action) => {
       action.button.disabled = disabled;
     });
+    elements.summarizeOptionSelect.disabled = disabled;
   }
 
   function applyEditorText(text: string): void {
@@ -153,6 +173,12 @@ export function mountQuickActionStream(
     }
 
     const controller = new AbortController();
+    const requestBody = action.buildRequestBody
+      ? action.buildRequestBody(originalText)
+      : {
+          text: originalText,
+          language: "auto",
+        };
 
     clearDiff();
     activeStream = {
@@ -165,10 +191,7 @@ export function mountQuickActionStream(
 
     try {
       await postQuickActionSse(action.endpoint, {
-        body: {
-          text: originalText,
-          language: "auto",
-        },
+        body: requestBody,
         signal: controller.signal,
         onChunk: (payload: QuickActionSseChunkPayload) => {
           if (activeStream?.controller !== controller) {
@@ -235,6 +258,10 @@ export function mountQuickActionStream(
 
   elements.proofreadButton.addEventListener("click", () => {
     void runQuickAction("proofread");
+  });
+
+  elements.summarizeButton.addEventListener("click", () => {
+    void runQuickAction("summarize");
   });
 
   elements.diffUndoButton.addEventListener("click", () => {

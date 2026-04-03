@@ -116,12 +116,42 @@
   gap: 0.75rem;
 }
 
+#editor-island-root .quick-action-menu {
+  display: grid;
+  gap: 0.55rem;
+  min-width: min(100%, 18rem);
+}
+
+#editor-island-root .quick-action-select-shell {
+  display: grid;
+  gap: 0.4rem;
+}
+
+#editor-island-root .quick-action-select-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0f6d68;
+}
+
 #editor-island-root .quick-action-button,
 #editor-island-root .rewrite-diff-undo {
   border-radius: 16px;
   border: 1px solid rgba(15, 109, 104, 0.18);
   font: inherit;
   font-weight: 700;
+}
+
+#editor-island-root .quick-action-select {
+  width: 100%;
+  padding: 0.82rem 0.95rem;
+  border: 1px solid rgba(15, 109, 104, 0.18);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #164d53;
+  font: inherit;
+  box-shadow: 0 12px 30px rgba(28, 39, 48, 0.08);
 }
 
 #editor-island-root .quick-action-button {
@@ -147,6 +177,12 @@
 #editor-island-root .quick-action-button:disabled {
   color: rgba(22, 77, 83, 0.42);
   cursor: not-allowed;
+  box-shadow: none;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+#editor-island-root .quick-action-select:disabled {
+  color: rgba(22, 77, 83, 0.42);
   box-shadow: none;
   background: rgba(255, 255, 255, 0.6);
 }
@@ -401,7 +437,9 @@
   }
 
   #editor-island-root .quick-action-status,
+  #editor-island-root .quick-action-menu,
   #editor-island-root .quick-action-button,
+  #editor-island-root .quick-action-select,
   #editor-island-root .rewrite-diff-undo {
     width: 100%;
   }
