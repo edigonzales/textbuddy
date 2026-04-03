@@ -3,11 +3,13 @@ package app.textbuddy.config;
 import app.textbuddy.integration.advisor.AdvisorDocumentRepository;
 import app.textbuddy.integration.llm.BulletPointsLlmClient;
 import app.textbuddy.integration.docling.DoclingClient;
+import app.textbuddy.integration.llm.FormalityLlmClient;
 import app.textbuddy.integration.llm.LlmClientFacade;
 import app.textbuddy.integration.llm.PlainLanguageLlmClient;
 import app.textbuddy.integration.llm.ProofreadLlmClient;
 import app.textbuddy.integration.llm.SummarizeLlmClient;
 import app.textbuddy.integration.llm.WordSynonymLlmClient;
+import app.textbuddy.quickaction.FormalityPrompt;
 import app.textbuddy.quickaction.SummarizePrompt;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -109,6 +111,35 @@ public class AdapterStubConfiguration {
                     .replace("wierd", "weird");
 
             return splitIntoChunks(proofread, 20);
+        };
+    }
+
+    @Bean
+    FormalityLlmClient formalityLlmClient() {
+        return (text, language, prompt) -> {
+            String normalized = normalize(text);
+
+            if (normalized.isBlank()) {
+                return List.of();
+            }
+
+            String rewritten = switch (prompt) {
+                case FORMAL -> "Formell ueberarbeitet: " + normalized
+                        .replace("Hallo", "Guten Tag")
+                        .replace("hi", "guten Tag")
+                        .replace("schnell", "zeitnah")
+                        .replace("brauchen", "benoetigen")
+                        .replace("brauch", "benoetige")
+                        .replace("Danke", "Vielen Dank");
+                case INFORMAL -> "Lockerer formuliert: " + normalized
+                        .replace("Guten Tag", "Hallo")
+                        .replace("zeitnah", "schnell")
+                        .replace("benoetigen", "brauchen")
+                        .replace("benoetige", "brauch")
+                        .replace("Vielen Dank", "Danke");
+            };
+
+            return splitIntoChunks(rewritten, 22);
         };
     }
 

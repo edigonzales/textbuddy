@@ -29,6 +29,8 @@ export interface QuickActionElements {
   proofreadButton: HTMLButtonElement;
   summarizeButton: HTMLButtonElement;
   summarizeOptionSelect: HTMLSelectElement;
+  formalityButton: HTMLButtonElement;
+  formalityOptionSelect: HTMLSelectElement;
   diffPanel: HTMLElement;
   diffBefore: HTMLElement;
   diffAfter: HTMLElement;

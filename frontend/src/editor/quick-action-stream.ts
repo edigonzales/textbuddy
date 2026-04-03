@@ -12,10 +12,16 @@ import type {
   RewriteDiffToken,
 } from "./types";
 
-const IDLE_MESSAGE = "Bereit fuer Plain Language, Bullet Points, Proofread und Summarize.";
+const IDLE_MESSAGE =
+  "Bereit fuer Plain Language, Bullet Points, Proofread, Summarize und Formality.";
 const UNDONE_MESSAGE = "Rewrite wurde rueckgaengig gemacht.";
 
-type QuickActionKey = "plain-language" | "bullet-points" | "proofread" | "summarize";
+type QuickActionKey =
+  | "plain-language"
+  | "bullet-points"
+  | "proofread"
+  | "summarize"
+  | "formality";
 
 interface QuickActionRequestBody {
   text: string;
@@ -105,6 +111,18 @@ export function mountQuickActionStream(
         option: elements.summarizeOptionSelect.value,
       }),
     },
+    formality: {
+      button: elements.formalityButton,
+      endpoint: "/api/quick-actions/formality/stream",
+      streamingMessage: "Formality streamt gerade...",
+      successMessage: "Formality abgeschlossen.",
+      errorMessage: "Formality konnte gerade nicht abgeschlossen werden.",
+      buildRequestBody: (text) => ({
+        text,
+        language: "auto",
+        option: elements.formalityOptionSelect.value,
+      }),
+    },
   };
 
   function setPanelState(
@@ -128,6 +146,7 @@ export function mountQuickActionStream(
       action.button.disabled = disabled;
     });
     elements.summarizeOptionSelect.disabled = disabled;
+    elements.formalityOptionSelect.disabled = disabled;
   }
 
   function applyEditorText(text: string): void {
@@ -262,6 +281,10 @@ export function mountQuickActionStream(
 
   elements.summarizeButton.addEventListener("click", () => {
     void runQuickAction("summarize");
+  });
+
+  elements.formalityButton.addEventListener("click", () => {
+    void runQuickAction("formality");
   });
 
   elements.diffUndoButton.addEventListener("click", () => {

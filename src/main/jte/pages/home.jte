@@ -10,8 +10,8 @@
             <p>${page.subtitle()}</p>
         </div>
         <div class="status-strip">
-            <div class="status-pill">Slice 09 haelt jetzt <code>POST /api/quick-actions/plain-language/stream</code>, <code>POST /api/quick-actions/bullet-points/stream</code>, <code>POST /api/quick-actions/proofread/stream</code> und <code>POST /api/quick-actions/summarize/stream</code> als aktive SSE-Quick-Actions bereit.</div>
-            <div class="status-pill">Summarize bringt ein eigenes Varianten-Dropdown fuer <code>sentence</code>, <code>three_sentence</code>, <code>paragraph</code>, <code>page</code> und <code>management_summary</code>, bleibt aber auf derselben Diff- und Undo-Infrastruktur.</div>
+            <div class="status-pill">Slice 10 haelt jetzt <code>POST /api/quick-actions/plain-language/stream</code>, <code>POST /api/quick-actions/bullet-points/stream</code>, <code>POST /api/quick-actions/proofread/stream</code>, <code>POST /api/quick-actions/summarize/stream</code> und <code>POST /api/quick-actions/formality/stream</code> als aktive SSE-Quick-Actions bereit.</div>
+            <div class="status-pill">Formality bringt ein eigenes Varianten-Dropdown fuer <code>formal</code> und <code>informal</code>, waehrend Summarize seine Varianten behaelt und beide auf derselben Diff- und Undo-Infrastruktur bleiben.</div>
         </div>
     </header>
 
@@ -20,7 +20,7 @@
             <div class="panel-body">
                 <p class="eyebrow">Arbeitsfläche</p>
                 <h2>Quick Actions + Rewrite Bubble</h2>
-                <p class="panel-copy">Die Insel kombiniert weiter Wort-/Satz-Rewrite im Bubble-Menue und bietet jetzt vier streamingfaehige Volltext-Rewrites fuer Plain Language, Bullet Points, Proofread und Summarize mit fester Variantenwahl.</p>
+                <p class="panel-copy">Die Insel kombiniert weiter Wort-/Satz-Rewrite im Bubble-Menue und bietet jetzt fuenf streamingfaehige Volltext-Rewrites fuer Plain Language, Bullet Points, Proofread, Summarize und Formality mit aktionsspezifischer Variantenwahl.</p>
 
                 <div id="editor-island-root" class="editor-root" data-testid="editor-island-root">
                     <div class="chip-row">
@@ -33,6 +33,7 @@
                         <span class="chip">Bullet Points nutzt dieselbe Streaming- und Diff-Infrastruktur</span>
                         <span class="chip">Proofread nutzt dieselbe Streaming- und Diff-Infrastruktur</span>
                         <span class="chip">Summarize waehlt seine Variante ueber ein eigenes Dropdown</span>
+                        <span class="chip">Formality waehlt zwischen formal und informal</span>
                         <span class="chip">Rewrite-Diff und kompletter Undo bauen auf derselben Streaming-Basis auf</span>
                     </div>
 
@@ -41,10 +42,10 @@
                             <div>
                                 <p class="eyebrow">Quick Actions</p>
                                 <h3>Rewrite mit Streaming</h3>
-                                <p class="panel-copy">Plain Language, Bullet Points, Proofread und Summarize sind in Slice 09 aktiv. Summarize nutzt ein eigenes Varianten-Menue, weitere Quick Actions bleiben bis zu ihren eigenen Slices verborgen.</p>
+                                <p class="panel-copy">Plain Language, Bullet Points, Proofread, Summarize und Formality sind in Slice 10 aktiv. Summarize und Formality nutzen eigene Varianten-Menues, weitere Quick Actions bleiben bis zu ihren eigenen Slices verborgen.</p>
                             </div>
 
-                            <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" aria-live="polite">Bereit fuer Plain Language, Bullet Points, Proofread und Summarize.</p>
+                            <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" aria-live="polite">Bereit fuer Plain Language, Bullet Points, Proofread, Summarize und Formality.</p>
                         </div>
 
                         <div class="quick-action-row">
@@ -63,6 +64,16 @@
                                     </select>
                                 </label>
                                 <button type="button" class="quick-action-button" data-quick-action="summarize" data-testid="quick-action-summarize">Summarize</button>
+                            </div>
+                            <div class="quick-action-menu" data-testid="quick-action-formality-menu">
+                                <label class="quick-action-select-shell" for="quick-action-formality-option">
+                                    <span class="quick-action-select-label">Formality-Variante</span>
+                                    <select id="quick-action-formality-option" class="quick-action-select" data-quick-action-option="formality" data-testid="quick-action-formality-option">
+                                        <option value="formal" selected>Formell</option>
+                                        <option value="informal">Informell</option>
+                                    </select>
+                                </label>
+                                <button type="button" class="quick-action-button" data-quick-action="formality" data-testid="quick-action-formality">Formality</button>
                             </div>
                         </div>
                     </section>
@@ -163,8 +174,8 @@
 
                 <div class="stack-list problems-footnotes">
                     <div class="stack-item">
-                        <strong>Neu in Slice 09</strong>
-                        Summarize streamt jetzt ueber <code>POST /api/quick-actions/summarize/stream</code>, verlangt eine feste Option im Request und nutzt dieselbe Streaming-, Diff- und Undo-Infrastruktur wie die anderen Volltext-Rewrites.
+                        <strong>Neu in Slice 10</strong>
+                        Formality streamt jetzt ueber <code>POST /api/quick-actions/formality/stream</code>, verlangt eine feste Option im Request und nutzt dieselbe Streaming-, Diff- und Undo-Infrastruktur wie die anderen Volltext-Rewrites.
                     </div>
                     <div class="stack-item">
                         <strong>Bewusst noch nicht aktiv</strong>

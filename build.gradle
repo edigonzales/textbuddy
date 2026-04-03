@@ -5,7 +5,7 @@ plugins {
 
 group = 'app.textbuddy'
 version = '0.0.1-SNAPSHOT'
-description = 'Slice 09 quick action summarize for Textbuddy'
+description = 'Slice 10 quick action formality for Textbuddy'
 
 ext {
     jteVersion = '3.2.3'

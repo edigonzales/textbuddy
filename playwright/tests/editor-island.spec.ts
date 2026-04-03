@@ -295,7 +295,7 @@ test("plain language streams into the editor, shows a diff and supports full und
   const editor = page.getByTestId("editor-input");
   const mirror = page.getByTestId("editor-mirror");
 
-  await expect(page.locator("[data-quick-action]")).toHaveCount(4);
+  await expect(page.locator("[data-quick-action]")).toHaveCount(5);
 
   await editor.click();
   await page.keyboard.type("Der komplizierte Sachverhalt ist relevant.");
@@ -569,6 +569,83 @@ test("summarize with the management summary option streams the selected variant"
   await expect(page.getByTestId("rewrite-diff-after")).toContainText("Management Summary");
   await expect(page.getByTestId("rewrite-diff-after")).toContainText(
     "- Empfehlung: Umsetzung starten.",
+  );
+});
+
+test("formality streams both formal and informal variants with the selected option", async ({
+  page,
+}) => {
+  const requestBodies: QuickActionRequestPayload[] = [];
+
+  await page.route("**/api/quick-actions/formality/stream", async (route) => {
+    const payload = route.request().postDataJSON() as QuickActionRequestPayload;
+
+    requestBodies.push(payload);
+
+    const responseText =
+      payload.option === "informal"
+        ? "Lockerer formuliert: Hallo, wir brauchen schnell deine Rueckmeldung."
+        : "Formell ueberarbeitet: Guten Tag, wir benoetigen zeitnah Ihre Rueckmeldung.";
+
+    await route.fulfill({
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream",
+      },
+      body: createSseBody([
+        {
+          event: "chunk",
+          payload: {
+            text: responseText.slice(0, 24),
+          },
+        },
+        {
+          event: "chunk",
+          payload: {
+            text: responseText.slice(24),
+          },
+        },
+        {
+          event: "complete",
+          payload: {
+            text: responseText,
+          },
+        },
+      ]),
+    });
+  });
+
+  await page.goto("/");
+
+  const editor = page.getByTestId("editor-input");
+  const mirror = page.getByTestId("editor-mirror");
+  const optionSelect = page.getByTestId("quick-action-formality-option");
+
+  await editor.click();
+  await page.keyboard.type("Hallo, wir brauchen schnell deine Rueckmeldung.");
+  await expect(optionSelect).toHaveValue("formal");
+  await page.getByTestId("quick-action-formality").click();
+
+  await expect.poll(() => requestBodies.at(-1)?.option).toBe("formal");
+  await expect(page.getByTestId("quick-action-status")).toContainText("Formality abgeschlossen");
+  await expect(mirror).toHaveValue(
+    "Formell ueberarbeitet: Guten Tag, wir benoetigen zeitnah Ihre Rueckmeldung.",
+  );
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+
+  await page.getByTestId("rewrite-diff-undo").click();
+
+  await expect(mirror).toHaveValue("Hallo, wir brauchen schnell deine Rueckmeldung.");
+  await optionSelect.selectOption("informal");
+  await page.getByTestId("quick-action-formality").click();
+
+  await expect.poll(() => requestBodies.at(-1)?.option).toBe("informal");
+  await expect(page.getByTestId("quick-action-status")).toContainText("Formality abgeschlossen");
+  await expect(mirror).toHaveValue(
+    "Lockerer formuliert: Hallo, wir brauchen schnell deine Rueckmeldung.",
+  );
+  await expect(page.getByTestId("rewrite-diff-after")).toContainText(
+    "Lockerer formuliert: Hallo, wir brauchen schnell deine Rueckmeldung.",
   );
 });
 
