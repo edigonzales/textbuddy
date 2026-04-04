@@ -13,7 +13,7 @@ import type {
 } from "./types";
 
 const IDLE_MESSAGE =
-  "Bereit fuer Plain Language, Bullet Points, Proofread, Summarize, Formality und Social Media.";
+  "Bereit fuer Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media und Medium.";
 const UNDONE_MESSAGE = "Rewrite wurde rueckgaengig gemacht.";
 
 type QuickActionKey =
@@ -22,7 +22,8 @@ type QuickActionKey =
   | "proofread"
   | "summarize"
   | "formality"
-  | "social-media";
+  | "social-media"
+  | "medium";
 
 interface QuickActionRequestBody {
   text: string;
@@ -136,6 +137,18 @@ export function mountQuickActionStream(
         option: elements.socialMediaOptionSelect.value,
       }),
     },
+    medium: {
+      button: elements.mediumButton,
+      endpoint: "/api/quick-actions/medium/stream",
+      streamingMessage: "Medium streamt gerade...",
+      successMessage: "Medium abgeschlossen.",
+      errorMessage: "Medium konnte gerade nicht abgeschlossen werden.",
+      buildRequestBody: (text) => ({
+        text,
+        language: "auto",
+        option: elements.mediumOptionSelect.value,
+      }),
+    },
   };
 
   function setPanelState(
@@ -161,6 +174,7 @@ export function mountQuickActionStream(
     elements.summarizeOptionSelect.disabled = disabled;
     elements.formalityOptionSelect.disabled = disabled;
     elements.socialMediaOptionSelect.disabled = disabled;
+    elements.mediumOptionSelect.disabled = disabled;
   }
 
   function applyEditorText(text: string): void {
@@ -303,6 +317,10 @@ export function mountQuickActionStream(
 
   elements.socialMediaButton.addEventListener("click", () => {
     void runQuickAction("social-media");
+  });
+
+  elements.mediumButton.addEventListener("click", () => {
+    void runQuickAction("medium");
   });
 
   elements.diffUndoButton.addEventListener("click", () => {

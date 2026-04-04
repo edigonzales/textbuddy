@@ -139,6 +139,11 @@ export function findQuickActionElements(root: HTMLElement): QuickActionElements 
     root,
     "[data-quick-action-option='social-media']",
   );
+  const mediumButton = queryRequired<HTMLButtonElement>(root, "[data-quick-action='medium']");
+  const mediumOptionSelect = queryRequired<HTMLSelectElement>(
+    root,
+    "[data-quick-action-option='medium']",
+  );
   const diffPanel = queryRequired<HTMLElement>(root, "[data-rewrite-diff-panel]");
   const diffBefore = queryRequired<HTMLElement>(root, "[data-rewrite-diff-before]");
   const diffAfter = queryRequired<HTMLElement>(root, "[data-rewrite-diff-after]");
@@ -156,6 +161,8 @@ export function findQuickActionElements(root: HTMLElement): QuickActionElements 
     !formalityOptionSelect ||
     !socialMediaButton ||
     !socialMediaOptionSelect ||
+    !mediumButton ||
+    !mediumOptionSelect ||
     !diffPanel ||
     !diffBefore ||
     !diffAfter ||
@@ -176,6 +183,8 @@ export function findQuickActionElements(root: HTMLElement): QuickActionElements 
     formalityOptionSelect,
     socialMediaButton,
     socialMediaOptionSelect,
+    mediumButton,
+    mediumOptionSelect,
     diffPanel,
     diffBefore,
     diffAfter,

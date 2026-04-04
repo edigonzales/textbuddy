@@ -5,12 +5,14 @@ import app.textbuddy.integration.llm.BulletPointsLlmClient;
 import app.textbuddy.integration.docling.DoclingClient;
 import app.textbuddy.integration.llm.FormalityLlmClient;
 import app.textbuddy.integration.llm.LlmClientFacade;
+import app.textbuddy.integration.llm.MediumLlmClient;
 import app.textbuddy.integration.llm.PlainLanguageLlmClient;
 import app.textbuddy.integration.llm.ProofreadLlmClient;
 import app.textbuddy.integration.llm.SocialMediaLlmClient;
 import app.textbuddy.integration.llm.SummarizeLlmClient;
 import app.textbuddy.integration.llm.WordSynonymLlmClient;
 import app.textbuddy.quickaction.FormalityPrompt;
+import app.textbuddy.quickaction.MediumPrompt;
 import app.textbuddy.quickaction.SocialMediaPrompt;
 import app.textbuddy.quickaction.SummarizePrompt;
 import org.springframework.context.annotation.Bean;
@@ -165,6 +167,58 @@ public class AdapterStubConfiguration {
             };
 
             return splitIntoChunks(rewritten, 22);
+        };
+    }
+
+    @Bean
+    MediumLlmClient mediumLlmClient() {
+        return (text, language, prompt) -> {
+            String normalized = normalize(text);
+
+            if (normalized.isBlank()) {
+                return List.of();
+            }
+
+            List<String> sentences = splitIntoBulletPointItems(normalized);
+            String lead = firstItem(sentences);
+            String support = itemAt(sentences, 1, firstItem(sentences));
+            String closing = itemAt(sentences, sentences.size() - 1, firstItem(sentences));
+
+            String rewritten = switch (prompt) {
+                case EMAIL -> """
+                        Betreff: Projektupdate
+
+                        Hallo Team,
+
+                        %s %s
+
+                        Viele Gruesse
+                        """.formatted(lead, support);
+                case OFFICIAL_LETTER -> """
+                        Offizielles Schreiben
+
+                        Sehr geehrte Damen und Herren,
+
+                        %s %s
+
+                        Mit freundlichen Gruessen
+                        """.formatted(lead, support);
+                case PRESENTATION -> """
+                        Praesentation
+                        - Titel: %s
+                        - Kernpunkt: %s
+                        - Naechster Schritt: %s
+                        """.formatted(lead, support, closing);
+                case REPORT -> """
+                        Bericht
+
+                        Zusammenfassung: %s
+                        Details: %s
+                        Abschluss: %s
+                        """.formatted(lead, support, closing);
+            };
+
+            return splitIntoChunks(rewritten.stripTrailing(), 24);
         };
     }
 

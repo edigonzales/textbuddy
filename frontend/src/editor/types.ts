@@ -33,6 +33,8 @@ export interface QuickActionElements {
   formalityOptionSelect: HTMLSelectElement;
   socialMediaButton: HTMLButtonElement;
   socialMediaOptionSelect: HTMLSelectElement;
+  mediumButton: HTMLButtonElement;
+  mediumOptionSelect: HTMLSelectElement;
   diffPanel: HTMLElement;
   diffBefore: HTMLElement;
   diffAfter: HTMLElement;

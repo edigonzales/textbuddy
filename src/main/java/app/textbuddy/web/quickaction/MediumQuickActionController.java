@@ -1,0 +1,65 @@
+package app.textbuddy.web.quickaction;
+
+import app.textbuddy.quickaction.MediumPrompt;
+import app.textbuddy.quickaction.MediumQuickActionRequest;
+import app.textbuddy.quickaction.MediumQuickActionService;
+import app.textbuddy.quickaction.QuickActionSsePayloadFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+@RestController
+@RequestMapping("/api/quick-actions")
+public class MediumQuickActionController {
+
+    private static final String DEFAULT_ERROR_MESSAGE = "Medium-Stream konnte nicht gestartet werden.";
+    private static final String MISSING_OPTION_MESSAGE = "Medium-Option ist erforderlich.";
+    private static final String INVALID_OPTION_MESSAGE = "Medium-Option ist ungueltig.";
+
+    private final MediumQuickActionService mediumQuickActionService;
+    private final QuickActionSsePayloadFactory payloadFactory;
+
+    public MediumQuickActionController(
+            MediumQuickActionService mediumQuickActionService,
+            QuickActionSsePayloadFactory payloadFactory
+    ) {
+        this.mediumQuickActionService = mediumQuickActionService;
+        this.payloadFactory = payloadFactory;
+    }
+
+    @PostMapping(path = "/medium/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamMedium(@RequestBody MediumQuickActionRequest request) {
+        validateOption(request);
+
+        SseEmitter emitter = new SseEmitter(0L);
+        QuickActionSseEmitterWriter writer = new QuickActionSseEmitterWriter(emitter, payloadFactory);
+
+        Thread.startVirtualThread(() -> {
+            try {
+                mediumQuickActionService.stream(request, writer);
+            } catch (RuntimeException exception) {
+                writer.error(DEFAULT_ERROR_MESSAGE);
+            }
+        });
+
+        return emitter;
+    }
+
+    private void validateOption(MediumQuickActionRequest request) {
+        String option = request == null ? null : request.option();
+        String normalized = option == null ? "" : option.trim();
+
+        if (normalized.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MISSING_OPTION_MESSAGE);
+        }
+
+        if (MediumPrompt.fromOption(normalized).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, INVALID_OPTION_MESSAGE);
+        }
+    }
+}

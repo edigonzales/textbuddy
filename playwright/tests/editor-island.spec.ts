@@ -295,7 +295,7 @@ test("plain language streams into the editor, shows a diff and supports full und
   const editor = page.getByTestId("editor-input");
   const mirror = page.getByTestId("editor-mirror");
 
-  await expect(page.locator("[data-quick-action]")).toHaveCount(6);
+  await expect(page.locator("[data-quick-action]")).toHaveCount(7);
 
   await editor.click();
   await page.keyboard.type("Der komplizierte Sachverhalt ist relevant.");
@@ -719,6 +719,80 @@ test("social media streams multiple channel variants with the selected option", 
   await expect(mirror).toHaveValue("LinkedIn-Post: Produktstart ist live.\n\nTakeaway: Team ist bereit.");
   await expect(page.getByTestId("rewrite-diff-after")).toContainText("LinkedIn-Post: Produktstart ist live.");
   await expect(page.getByTestId("rewrite-diff-after")).toContainText("Takeaway: Team ist bereit.");
+});
+
+test("medium streams multiple medium variants with the selected option", async ({ page }) => {
+  const requestBodies: QuickActionRequestPayload[] = [];
+
+  await page.route("**/api/quick-actions/medium/stream", async (route) => {
+    const payload = route.request().postDataJSON() as QuickActionRequestPayload;
+
+    requestBodies.push(payload);
+
+    const responseText =
+      payload.option === "report"
+        ? "Bericht\n\nZusammenfassung: Projekt ist freigegeben.\nDetails: Team startet am Montag.\nAbschluss: Umsetzung beginnt sofort."
+        : "Betreff: Projektupdate\n\nHallo Team,\n\nProjekt ist freigegeben. Team startet am Montag.\n\nViele Gruesse";
+
+    await route.fulfill({
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream",
+      },
+      body: createSseBody([
+        {
+          event: "chunk",
+          payload: {
+            text: responseText.slice(0, 24),
+          },
+        },
+        {
+          event: "chunk",
+          payload: {
+            text: responseText.slice(24),
+          },
+        },
+        {
+          event: "complete",
+          payload: {
+            text: responseText,
+          },
+        },
+      ]),
+    });
+  });
+
+  await page.goto("/");
+
+  const editor = page.getByTestId("editor-input");
+  const mirror = page.getByTestId("editor-mirror");
+  const optionSelect = page.getByTestId("quick-action-medium-option");
+
+  await editor.click();
+  await page.keyboard.type("Projekt ist freigegeben. Team startet am Montag.");
+  await expect(optionSelect).toHaveValue("email");
+  await page.getByTestId("quick-action-medium").click();
+
+  await expect.poll(() => requestBodies.at(-1)?.option).toBe("email");
+  await expect(page.getByTestId("quick-action-status")).toContainText("Medium abgeschlossen");
+  await expect(mirror).toHaveValue(
+    "Betreff: Projektupdate\n\nHallo Team,\n\nProjekt ist freigegeben. Team startet am Montag.\n\nViele Gruesse",
+  );
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+
+  await page.getByTestId("rewrite-diff-undo").click();
+
+  await expect(mirror).toHaveValue("Projekt ist freigegeben. Team startet am Montag.");
+  await optionSelect.selectOption("report");
+  await page.getByTestId("quick-action-medium").click();
+
+  await expect.poll(() => requestBodies.at(-1)?.option).toBe("report");
+  await expect(page.getByTestId("quick-action-status")).toContainText("Medium abgeschlossen");
+  await expect(mirror).toHaveValue(
+    "Bericht\n\nZusammenfassung: Projekt ist freigegeben.\nDetails: Team startet am Montag.\nAbschluss: Umsetzung beginnt sofort.",
+  );
+  await expect(page.getByTestId("rewrite-diff-after")).toContainText("Bericht");
+  await expect(page.getByTestId("rewrite-diff-after")).toContainText("Abschluss: Umsetzung beginnt sofort.");
 });
 
 test("incomplete sentences keep word mode without sentence action", async ({ page }) => {
