@@ -28,8 +28,8 @@
 | 14 | done | Quick Action Custom |
 | 15 | done | Advisor Catalog and PDF |
 | 16 | done | Advisor Validation |
-| 17 | ready | Document Import |
-| 18 | pending | Auth and Polish |
+| 17 | done | Document Import |
+| 18 | ready | Auth and Polish |
 
 ## Empfohlene Reihenfolge
 
@@ -71,3 +71,5 @@
 - Slice 15 Build/Test-Handoff: Unit-Test deckt das Repository-Laden ab, MockMvc prueft beide GET-Endpunkte und die erweiterte Home-Shell, Playwright validiert Dokumentliste plus PDF-Erreichbarkeit; `./gradlew test`, `./gradlew build` und `npm test` unter `playwright/` sind gruen. Naechster Slice ist `16 Advisor Validation`.
 - Slice 16 abgeschlossen: `POST /api/advisor/validate` laedt statische Dokumentregeln aus den Advisor-Metadaten, prueft sie in kleinen Batches ueber einen dedizierten LLM-Adapter und streamt Treffer als `validation`-Events per `SseEmitter`; das Advisor-Panel startet die Pruefung direkt aus der Dokumentauswahl, dedupliziert clientseitig ueber `stableKey` und zeigt eine laufende Trefferliste mit Dokument- und Seitenbezug.
 - Slice 16 Build/Test-Handoff: Unit-Tests decken Batch-Aufteilung und Regel-Streaming in `DefaultAdvisorValidationService` ab, MockMvc prueft den neuen SSE-Endpoint, Frontend-Unit-Tests validieren die clientseitige Deduplizierung, und Playwright deckt Start, Event-Empfang, Deduplizierung sowie die Auswahl eines gestreamten Treffers im Browser ab; `./gradlew build` und `npm test` unter `playwright/` sind gruen. Naechster Slice ist `17 Document Import`.
+- Slice 17 abgeschlossen: `POST /api/convert/doc` nimmt Multipart-Uploads entgegen, `DefaultDocumentConversionService` validiert das Dateiformat gegen einen gemeinsamen Formatkatalog, `DoclingClient` liefert HTML ueber einen konfigurierbaren Docling-v1-Adapter oder einen lokalen Stub, und die Tiptap-Insel importiert das HTML jetzt per Upload-Button oder Drag-and-Drop direkt in den Editor.
+- Slice 17 Build/Test-Handoff: Unit-Tests decken Dateiformatvalidierung in `DefaultDocumentConversionService` ab, MockMvc prueft den neuen Multipart-Endpoint, die Home-Shell rendert Upload-Panel und identische Formatliste, und Playwright validiert Upload, HTML-Import, saubere Ablehnung nicht unterstuetzter Formate sowie alle bestehenden Editor-Pfade weiter; `./gradlew build` und `npm test -- editor-island.spec.ts` unter `playwright/` sind gruen. Naechster Slice ist `18 Auth and Polish`.

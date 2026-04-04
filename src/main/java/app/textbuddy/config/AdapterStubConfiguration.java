@@ -6,7 +6,6 @@ import app.textbuddy.integration.llm.AdvisorValidationLlmClient;
 import app.textbuddy.integration.llm.BulletPointsLlmClient;
 import app.textbuddy.integration.llm.CharacterSpeechLlmClient;
 import app.textbuddy.integration.llm.CustomLlmClient;
-import app.textbuddy.integration.docling.DoclingClient;
 import app.textbuddy.integration.llm.FormalityLlmClient;
 import app.textbuddy.integration.llm.LlmClientFacade;
 import app.textbuddy.integration.llm.MediumLlmClient;
@@ -380,12 +379,6 @@ public class AdapterStubConfiguration {
                     "passenderes " + normalizedWord,
                     "konkreteres " + normalizedWord
             );
-        };
-    }
-
-    @Bean
-    DoclingClient doclingClient() {
-        return new DoclingClient() {
         };
     }
 

@@ -1,0 +1,229 @@
+import type { Editor } from "@tiptap/core";
+
+import { setEditorHtml } from "./editor-content";
+import type { DocumentImportElements } from "./types";
+
+const IDLE_MESSAGE = "Bereit fuer Upload oder Drag-and-Drop.";
+const DEFAULT_ERROR_MESSAGE = "Dokument konnte nicht importiert werden.";
+
+interface DocumentConversionResponse {
+  html: string;
+}
+
+function extractAcceptTokens(accept: string): string[] {
+  return accept
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter((value) => value.length > 0);
+}
+
+function fileMatchesToken(file: File, token: string): boolean {
+  const filename = file.name.trim().toLowerCase();
+  const contentType = file.type.trim().toLowerCase();
+
+  if (token.startsWith(".")) {
+    return filename.endsWith(token);
+  }
+
+  if (token.endsWith("/*")) {
+    const prefix = token.slice(0, token.length - 1);
+    return contentType.startsWith(prefix);
+  }
+
+  return contentType === token;
+}
+
+function isSupportedFile(file: File, accept: string): boolean {
+  const tokens = extractAcceptTokens(accept);
+
+  if (tokens.length === 0) {
+    return true;
+  }
+
+  return tokens.some((token) => fileMatchesToken(file, token));
+}
+
+async function extractErrorMessage(response: Response): Promise<string> {
+  const contentType = response.headers.get("content-type") ?? "";
+
+  if (contentType.includes("json")) {
+    const payload = (await response.json()) as Record<string, unknown>;
+    const detail = payload.detail;
+    const message = payload.message;
+
+    if (typeof detail === "string" && detail.trim().length > 0) {
+      return detail;
+    }
+
+    if (typeof message === "string" && message.trim().length > 0) {
+      return message;
+    }
+  }
+
+  const text = (await response.text()).trim();
+  return text || DEFAULT_ERROR_MESSAGE;
+}
+
+export function mountDocumentImport(editor: Editor, elements: DocumentImportElements): void {
+  let activeRequest: AbortController | null = null;
+
+  function setPanelState(
+    state: "idle" | "loading" | "success" | "error",
+    message: string,
+  ): void {
+    elements.panel.dataset.documentImportState = state;
+    elements.status.textContent = message;
+  }
+
+  function setBusy(busy: boolean): void {
+    elements.button.disabled = busy;
+    elements.input.disabled = busy;
+    elements.dropzone.dataset.busy = busy ? "true" : "false";
+  }
+
+  function openFilePicker(): void {
+    if (elements.input.disabled) {
+      return;
+    }
+
+    elements.input.click();
+  }
+
+  async function importFile(file: File): Promise<void> {
+    activeRequest?.abort();
+
+    if (!isSupportedFile(file, elements.input.accept)) {
+      setPanelState(
+        "error",
+        `Nicht unterstuetztes Format. Erlaubt sind: ${elements.labels}.`,
+      );
+      elements.input.value = "";
+      return;
+    }
+
+    const controller = new AbortController();
+    const formData = new FormData();
+
+    formData.append("file", file);
+    activeRequest = controller;
+    setBusy(true);
+    setPanelState("loading", `Konvertiere ${file.name}...`);
+
+    try {
+      const response = await fetch("/api/convert/doc", {
+        method: "POST",
+        body: formData,
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(await extractErrorMessage(response));
+      }
+
+      const payload = (await response.json()) as DocumentConversionResponse;
+
+      setEditorHtml(editor, payload.html ?? "");
+      editor.commands.focus("start");
+      setPanelState("success", `${file.name} wurde importiert.`);
+    } catch (error) {
+      if (controller.signal.aborted) {
+        return;
+      }
+
+      const message =
+        error instanceof Error && error.message.trim().length > 0
+          ? error.message
+          : DEFAULT_ERROR_MESSAGE;
+      setPanelState("error", message);
+    } finally {
+      if (activeRequest === controller) {
+        activeRequest = null;
+      }
+
+      setBusy(false);
+      elements.dropzone.dataset.dragging = "false";
+      elements.input.value = "";
+    }
+  }
+
+  elements.button.addEventListener("click", () => {
+    openFilePicker();
+  });
+
+  elements.dropzone.addEventListener("click", (event) => {
+    if (event.target === elements.input) {
+      return;
+    }
+
+    openFilePicker();
+  });
+
+  elements.dropzone.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    openFilePicker();
+  });
+
+  elements.input.addEventListener("change", () => {
+    const [file] = Array.from(elements.input.files ?? []);
+
+    if (!file) {
+      return;
+    }
+
+    void importFile(file);
+  });
+
+  elements.dropzone.addEventListener("dragenter", (event) => {
+    event.preventDefault();
+
+    if (elements.input.disabled) {
+      return;
+    }
+
+    elements.dropzone.dataset.dragging = "true";
+  });
+
+  elements.dropzone.addEventListener("dragover", (event) => {
+    event.preventDefault();
+
+    if (elements.input.disabled) {
+      return;
+    }
+
+    elements.dropzone.dataset.dragging = "true";
+  });
+
+  elements.dropzone.addEventListener("dragleave", (event) => {
+    const nextTarget = event.relatedTarget;
+
+    if (nextTarget instanceof Node && elements.dropzone.contains(nextTarget)) {
+      return;
+    }
+
+    elements.dropzone.dataset.dragging = "false";
+  });
+
+  elements.dropzone.addEventListener("drop", (event) => {
+    event.preventDefault();
+    elements.dropzone.dataset.dragging = "false";
+
+    if (elements.input.disabled) {
+      return;
+    }
+
+    const [file] = Array.from(event.dataTransfer?.files ?? []);
+
+    if (!file) {
+      return;
+    }
+
+    void importFile(file);
+  });
+
+  setBusy(false);
+  setPanelState("idle", IDLE_MESSAGE);
+}

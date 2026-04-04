@@ -5,7 +5,7 @@ plugins {
 
 group = 'app.textbuddy'
 version = '0.0.1-SNAPSHOT'
-description = 'Slice 16 advisor validation for Textbuddy'
+description = 'Slice 17 document import for Textbuddy'
 
 ext {
     jteVersion = '3.2.3'

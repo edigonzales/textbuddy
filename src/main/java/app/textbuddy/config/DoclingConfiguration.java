@@ -1,7 +1,29 @@
 package app.textbuddy.config;
 
+import app.textbuddy.integration.docling.DoclingClient;
+import app.textbuddy.integration.docling.HttpDoclingClient;
+import app.textbuddy.integration.docling.StubDoclingClient;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestClient;
 
 @Configuration(proxyBeanMethods = false)
 public class DoclingConfiguration {
+
+    @Bean
+    DoclingClient doclingClient(
+            @Value("${textbuddy.docling.base-url:}") String baseUrl,
+            @Value("${textbuddy.docling.api-key:}") String apiKey
+    ) {
+        if (baseUrl == null || baseUrl.isBlank()) {
+            return new StubDoclingClient();
+        }
+
+        RestClient restClient = RestClient.builder()
+                .baseUrl(baseUrl.strip())
+                .build();
+
+        return new HttpDoclingClient(restClient, apiKey);
+    }
 }

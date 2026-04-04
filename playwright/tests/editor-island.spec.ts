@@ -121,6 +121,77 @@ test("typing updates mirror and undo redo state", async ({ page }) => {
   await expect(wordCount).toHaveText("2");
 });
 
+test("document import uploads supported files and injects html into the editor", async ({
+  page,
+}) => {
+  let requestCount = 0;
+  let releaseUpload: (() => void) | null = null;
+
+  await page.route("**/api/convert/doc", async (route) => {
+    requestCount += 1;
+
+    await new Promise<void>((resolve) => {
+      releaseUpload = resolve;
+    });
+
+    await route.fulfill({
+      json: {
+        html: "<h1>Import Titel</h1><p>Erste Zeile.</p><ul><li>Listenpunkt</li></ul>",
+      },
+    });
+  });
+
+  await page.goto("/");
+
+  const importInput = page.getByTestId("document-import-input");
+  const importStatus = page.getByTestId("document-import-status");
+  const editor = page.getByTestId("editor-input");
+  const mirror = page.getByTestId("editor-mirror");
+
+  await importInput.setInputFiles({
+    name: "import.docx",
+    mimeType:
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    buffer: Buffer.from("dummy"),
+  });
+
+  await expect(importStatus).toContainText("Konvertiere import.docx...");
+
+  releaseUpload?.();
+
+  await expect(importStatus).toContainText("import.docx wurde importiert.");
+  await expect(editor).toContainText("Import Titel");
+  await expect(editor).toContainText("Erste Zeile.");
+  await expect(editor).toContainText("Listenpunkt");
+  await expect(mirror).toHaveValue(/Import Titel[\s\S]*Erste Zeile\.[\s\S]*Listenpunkt/);
+  expect(requestCount).toBe(1);
+});
+
+test("document import rejects unsupported formats before upload", async ({ page }) => {
+  let requestCount = 0;
+
+  await page.route("**/api/convert/doc", async (route) => {
+    requestCount += 1;
+    await route.abort();
+  });
+
+  await page.goto("/");
+
+  const importInput = page.getByTestId("document-import-input");
+  const importStatus = page.getByTestId("document-import-status");
+  const mirror = page.getByTestId("editor-mirror");
+
+  await importInput.setInputFiles({
+    name: "payload.exe",
+    mimeType: "application/octet-stream",
+    buffer: Buffer.from("noop"),
+  });
+
+  await expect(importStatus).toContainText("Nicht unterstuetztes Format.");
+  await expect(mirror).toHaveValue("");
+  expect(requestCount).toBe(0);
+});
+
 test("text correction marks problems and applies a suggestion", async ({ page }) => {
   await page.goto("/");
 

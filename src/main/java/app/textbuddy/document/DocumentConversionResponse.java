@@ -1,4 +1,10 @@
 package app.textbuddy.document;
 
-public record DocumentConversionResponse() {
+import java.util.Objects;
+
+public record DocumentConversionResponse(String html) {
+
+    public DocumentConversionResponse {
+        html = Objects.requireNonNullElse(html, "");
+    }
 }

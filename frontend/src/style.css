@@ -63,7 +63,8 @@
 }
 
 #editor-island-root .quick-action-panel,
-#editor-island-root .rewrite-diff-panel {
+#editor-island-root .rewrite-diff-panel,
+#editor-island-root .document-import-panel {
   display: grid;
   gap: 0.9rem;
   padding: 1rem;
@@ -73,7 +74,8 @@
 }
 
 #editor-island-root .quick-action-panel-head,
-#editor-island-root .rewrite-diff-head {
+#editor-island-root .rewrite-diff-head,
+#editor-island-root .document-import-head {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -93,6 +95,102 @@
   background: rgba(15, 109, 104, 0.08);
   color: #164d53;
   font-weight: 600;
+}
+
+#editor-island-root .document-import-status {
+  margin: 0;
+  min-width: min(18rem, 100%);
+  padding: 0.8rem 0.95rem;
+  border-radius: 16px;
+  background: rgba(15, 109, 104, 0.08);
+  color: #164d53;
+  font-weight: 600;
+}
+
+#editor-island-root .document-import-panel[data-document-import-state="loading"] .document-import-status {
+  background: rgba(161, 110, 27, 0.12);
+  color: #7f4d14;
+}
+
+#editor-island-root .document-import-panel[data-document-import-state="success"] .document-import-status {
+  background: rgba(84, 138, 33, 0.12);
+  color: #386114;
+}
+
+#editor-island-root .document-import-panel[data-document-import-state="error"] .document-import-status {
+  background: rgba(178, 59, 59, 0.12);
+  color: #8d2f2f;
+}
+
+#editor-island-root .document-import-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.85rem;
+  align-items: stretch;
+}
+
+#editor-island-root .document-import-dropzone {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1.2rem 1.25rem;
+  border-radius: 18px;
+  border: 1px dashed rgba(15, 109, 104, 0.35);
+  background:
+    linear-gradient(135deg, rgba(15, 109, 104, 0.08), rgba(255, 255, 255, 0.92));
+  color: #164d53;
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    background 140ms ease;
+}
+
+#editor-island-root .document-import-dropzone:hover,
+#editor-island-root .document-import-dropzone:focus-visible,
+#editor-island-root .document-import-dropzone[data-dragging="true"] {
+  transform: translateY(-1px);
+  border-color: rgba(15, 109, 104, 0.58);
+  box-shadow: 0 14px 32px rgba(28, 39, 48, 0.1);
+  outline: none;
+}
+
+#editor-island-root .document-import-dropzone[data-busy="true"] {
+  cursor: progress;
+  opacity: 0.8;
+}
+
+#editor-island-root .document-import-dropzone strong {
+  font-size: 1rem;
+}
+
+#editor-island-root .document-import-dropzone span {
+  color: #4d646c;
+}
+
+#editor-island-root .document-import-format-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.2rem;
+}
+
+#editor-island-root .document-import-format {
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(15, 109, 104, 0.12);
+  color: #0f6d68;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+#editor-island-root .document-import-input {
+  display: none;
+}
+
+#editor-island-root .document-import-button {
+  min-width: 11rem;
+  align-self: start;
 }
 
 #editor-island-root .quick-action-panel[data-quick-action-state="streaming"] .quick-action-status {
@@ -239,8 +337,46 @@
   margin-bottom: 0;
 }
 
+#editor-island-root .editor-input h1,
+#editor-island-root .editor-input h2,
+#editor-island-root .editor-input h3,
+#editor-island-root .editor-input h4,
+#editor-island-root .editor-input h5,
+#editor-island-root .editor-input h6 {
+  margin: 0 0 0.75rem;
+  line-height: 1.15;
+  color: #164d53;
+}
+
+#editor-island-root .editor-input ul,
+#editor-island-root .editor-input ol {
+  margin: 0 0 0.85rem 1.35rem;
+  padding: 0;
+}
+
+#editor-island-root .editor-input li + li {
+  margin-top: 0.35rem;
+}
+
+#editor-island-root .editor-input blockquote {
+  margin: 0 0 0.85rem;
+  padding-left: 1rem;
+  border-left: 3px solid rgba(15, 109, 104, 0.24);
+  color: #4d646c;
+}
+
 #editor-island-root .editor-input:focus-visible {
   outline: none;
+}
+
+@media (max-width: 900px) {
+  #editor-island-root .document-import-body {
+    grid-template-columns: 1fr;
+  }
+
+  #editor-island-root .document-import-button {
+    width: 100%;
+  }
 }
 
 #editor-island-root .rewrite-bubble {

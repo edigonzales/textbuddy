@@ -21,6 +21,15 @@ export interface EditorElements {
   redoButton: HTMLButtonElement;
 }
 
+export interface DocumentImportElements {
+  panel: HTMLElement;
+  status: HTMLElement;
+  dropzone: HTMLElement;
+  button: HTMLButtonElement;
+  input: HTMLInputElement;
+  labels: string;
+}
+
 export interface QuickActionElements {
   panel: HTMLElement;
   status: HTMLElement;

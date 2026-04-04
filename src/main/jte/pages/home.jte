@@ -10,8 +10,8 @@
             <p>${page.subtitle()}</p>
         </div>
         <div class="status-strip">
-            <div class="status-pill">Slice 16 haelt die bestehenden neun SSE-Quick-Actions aktiv und erweitert den statischen Advisor-Katalog um die eigentliche Validierung ueber <code>POST /api/advisor/validate</code>.</div>
-            <div class="status-pill">Der Advisor prueft Editor-Text jetzt in kleinen Regelbatches, streamt Treffer ueber <code>SseEmitter</code> und zeigt Dokument- sowie Seitenbezug direkt im Panel.</div>
+            <div class="status-pill">Slice 17 erweitert die bestehende Editor-Insel um Dokumentimport ueber <code>POST /api/convert/doc</code> und uebernimmt das von Docling gelieferte HTML direkt in Tiptap.</div>
+            <div class="status-pill">Upload-Button, Drag-and-Drop-Zone und die sichtbare Formatliste nutzen jetzt dieselbe unterstuetzte Dateiauswahl wie die serverseitige Validierung.</div>
         </div>
     </header>
 
@@ -20,7 +20,7 @@
             <div class="panel-body">
                 <p class="eyebrow">Arbeitsfläche</p>
                 <h2>Quick Actions + Rewrite Bubble</h2>
-                <p class="panel-copy">Die Insel kombiniert weiter Wort-/Satz-Rewrite im Bubble-Menue und bietet jetzt neun streamingfaehige Volltext-Rewrites fuer Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom mit aktionsspezifischer Variantenwahl beziehungsweise freiem Arbeitsauftrag.</p>
+                <p class="panel-copy">Die Insel kombiniert weiter Wort-/Satz-Rewrite im Bubble-Menue, behaelt alle neun streamingfaehigen Volltext-Rewrites und importiert jetzt Dokumente per Upload oder Drag-and-Drop direkt in denselben Editor.</p>
 
                 <div id="editor-island-root" class="editor-root" data-testid="editor-island-root">
                     <div class="chip-row">
@@ -39,14 +39,64 @@
                         <span class="chip">Character Speech waehlt zwischen direkter und indirekter Rede</span>
                         <span class="chip">Custom nimmt einen freien Arbeitsauftrag im Rewrite-Bereich entgegen</span>
                         <span class="chip">Rewrite-Diff und kompletter Undo bauen auf derselben Streaming-Basis auf</span>
+                        <span class="chip">Dokumentimport gleicht Upload-Formate zwischen UI und Backend ab</span>
                     </div>
+
+                    <section
+                        class="document-import-panel"
+                        data-document-import-panel
+                        data-document-import-state="idle"
+                        data-document-import-labels="${String.join(", ", page.documentImportFormats())}"
+                        data-testid="document-import-panel"
+                    >
+                        <div class="document-import-head">
+                            <div>
+                                <p class="eyebrow">Document Import</p>
+                                <h3>Upload oder Drag-and-Drop</h3>
+                                <p class="panel-copy">Unterstuetzte Dokumente werden an Docling gesendet. Das zurueckgelieferte HTML landet direkt in der bestehenden Tiptap-Insel, ohne Upload-Persistenz ausserhalb des aktuellen Requests.</p>
+                            </div>
+
+                            <p class="document-import-status" data-document-import-status data-testid="document-import-status" aria-live="polite">Bereit fuer Upload oder Drag-and-Drop.</p>
+                        </div>
+
+                        <div class="document-import-body">
+                            <div
+                                class="document-import-dropzone"
+                                data-document-import-dropzone
+                                data-dragging="false"
+                                data-busy="false"
+                                data-testid="document-import-dropzone"
+                                role="button"
+                                tabindex="0"
+                                aria-controls="document-import-input"
+                            >
+                                <input
+                                    id="document-import-input"
+                                    class="document-import-input"
+                                    data-document-import-input
+                                    data-testid="document-import-input"
+                                    type="file"
+                                    accept="${page.documentImportAccept()}"
+                                >
+                                <strong>Dokument hier ablegen</strong>
+                                <span>Ziehe eine Datei auf diese Flaeche oder waehle sie ueber den Upload-Button aus.</span>
+                                <div class="document-import-format-list" data-testid="document-import-format-list">
+                                    @for (var format : page.documentImportFormats())
+                                        <span class="document-import-format">${format}</span>
+                                    @endfor
+                                </div>
+                            </div>
+
+                            <button type="button" class="editor-button document-import-button" data-document-import-button data-testid="document-import-button">Upload starten</button>
+                        </div>
+                    </section>
 
                     <section class="quick-action-panel" data-quick-action-panel data-testid="quick-action-panel" data-quick-action-state="idle">
                         <div class="quick-action-panel-head">
                             <div>
                                 <p class="eyebrow">Quick Actions</p>
                                 <h3>Rewrite mit Streaming</h3>
-                                <p class="panel-copy">Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom bleiben auch in Slice 16 aktiv. Summarize, Formality, Social Media, Medium und Character Speech nutzen eigene Varianten-Menues, Custom nutzt ein freies Prompt-Feld, weitere Quick Actions bleiben bis zu ihren eigenen Slices verborgen.</p>
+                                <p class="panel-copy">Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom bleiben auch in Slice 17 aktiv. Summarize, Formality, Social Media, Medium und Character Speech nutzen eigene Varianten-Menues, Custom nutzt ein freies Prompt-Feld, weitere Quick Actions bleiben bis zu ihren eigenen Slices verborgen.</p>
                             </div>
 
                             <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" aria-live="polite">Bereit fuer Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom.</p>

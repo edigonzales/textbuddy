@@ -1,6 +1,7 @@
 import type {
   AdvisorValidationElements,
   CorrectionElements,
+  DocumentImportElements,
   EditorElements,
   QuickActionElements,
   RewriteBubbleElements,
@@ -77,6 +78,32 @@ export function findCorrectionElements(): CorrectionElements | null {
     dictionaryInput,
     dictionaryList,
     dictionaryEmpty,
+  };
+}
+
+export function findDocumentImportElements(root: HTMLElement): DocumentImportElements | null {
+  const panel = queryRequired<HTMLElement>(root, "[data-document-import-panel]");
+
+  if (!panel) {
+    return null;
+  }
+
+  const status = queryRequired<HTMLElement>(panel, "[data-document-import-status]");
+  const dropzone = queryRequired<HTMLElement>(panel, "[data-document-import-dropzone]");
+  const button = queryRequired<HTMLButtonElement>(panel, "[data-document-import-button]");
+  const input = queryRequired<HTMLInputElement>(panel, "[data-document-import-input]");
+
+  if (!status || !dropzone || !button || !input) {
+    return null;
+  }
+
+  return {
+    panel,
+    status,
+    dropzone,
+    button,
+    input,
+    labels: panel.dataset.documentImportLabels ?? "",
   };
 }
 

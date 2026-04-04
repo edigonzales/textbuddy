@@ -4,10 +4,12 @@ import StarterKit from "@tiptap/starter-kit";
 import { TextCorrectionDecorationExtension } from "./correction-mark-extension";
 import {
   findCorrectionElements,
+  findDocumentImportElements,
   findEditorElements,
   findQuickActionElements,
   findRewriteBubbleElements,
 } from "./dom";
+import { mountDocumentImport } from "./document-import";
 import { dispatchSelectionChanged, dispatchTextChanged } from "./events";
 import { countWords, getPlainText, plainTextToHtml } from "./plain-text";
 import { mountQuickActionStream } from "./quick-action-stream";
@@ -54,6 +56,7 @@ export function mountEditorIsland(): void {
     return;
   }
 
+  const documentImportElements = findDocumentImportElements(elements.root);
   const rewriteBubbleElements = findRewriteBubbleElements(elements.root);
   const quickActionElements = findQuickActionElements(elements.root);
 
@@ -61,21 +64,11 @@ export function mountEditorIsland(): void {
     element: elements.surface,
     extensions: [
       StarterKit.configure({
-        blockquote: false,
-        bold: false,
-        bulletList: false,
         code: false,
         codeBlock: false,
         dropcursor: false,
         gapcursor: false,
-        heading: false,
-        horizontalRule: false,
-        italic: false,
         link: false,
-        listItem: false,
-        listKeymap: false,
-        orderedList: false,
-        strike: false,
         underline: false,
       }),
       TextCorrectionDecorationExtension,
@@ -114,6 +107,10 @@ export function mountEditorIsland(): void {
   elements.redoButton.addEventListener("click", () => {
     editor.chain().focus().redo().run();
   });
+
+  if (documentImportElements) {
+    mountDocumentImport(editor, documentImportElements);
+  }
 
   if (correctionElements) {
     mountTextCorrectionBridge(editor, elements.root, correctionElements);
