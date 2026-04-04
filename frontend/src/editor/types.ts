@@ -37,6 +37,8 @@ export interface QuickActionElements {
   mediumOptionSelect: HTMLSelectElement;
   characterSpeechButton: HTMLButtonElement;
   characterSpeechOptionSelect: HTMLSelectElement;
+  customButton: HTMLButtonElement;
+  customPromptInput: HTMLTextAreaElement;
   diffPanel: HTMLElement;
   diffBefore: HTMLElement;
   diffAfter: HTMLElement;

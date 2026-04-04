@@ -10,8 +10,8 @@
             <p>${page.subtitle()}</p>
         </div>
         <div class="status-strip">
-            <div class="status-pill">Slice 13 haelt jetzt <code>POST /api/quick-actions/plain-language/stream</code>, <code>POST /api/quick-actions/bullet-points/stream</code>, <code>POST /api/quick-actions/proofread/stream</code>, <code>POST /api/quick-actions/summarize/stream</code>, <code>POST /api/quick-actions/formality/stream</code>, <code>POST /api/quick-actions/social-media/stream</code>, <code>POST /api/quick-actions/medium/stream</code> und <code>POST /api/quick-actions/character-speech/stream</code> als aktive SSE-Quick-Actions bereit.</div>
-            <div class="status-pill">Character Speech bringt ein eigenes Varianten-Dropdown fuer <code>direct_speech</code> und <code>indirect_speech</code>, waehrend Summarize, Formality, Social Media und Medium ihre Menues behalten und alle fuenf auf derselben Diff- und Undo-Infrastruktur bleiben.</div>
+            <div class="status-pill">Slice 14 haelt jetzt <code>POST /api/quick-actions/plain-language/stream</code>, <code>POST /api/quick-actions/bullet-points/stream</code>, <code>POST /api/quick-actions/proofread/stream</code>, <code>POST /api/quick-actions/summarize/stream</code>, <code>POST /api/quick-actions/formality/stream</code>, <code>POST /api/quick-actions/social-media/stream</code>, <code>POST /api/quick-actions/medium/stream</code>, <code>POST /api/quick-actions/character-speech/stream</code> und <code>POST /api/quick-actions/custom/stream</code> als aktive SSE-Quick-Actions bereit.</div>
+            <div class="status-pill">Custom bringt ein freies Prompt-Feld mit Pflichtvalidierung, waehrend Summarize, Formality, Social Media, Medium und Character Speech ihre Menues behalten und alle sechs auf derselben Diff- und Undo-Infrastruktur bleiben.</div>
         </div>
     </header>
 
@@ -20,7 +20,7 @@
             <div class="panel-body">
                 <p class="eyebrow">Arbeitsfläche</p>
                 <h2>Quick Actions + Rewrite Bubble</h2>
-                <p class="panel-copy">Die Insel kombiniert weiter Wort-/Satz-Rewrite im Bubble-Menue und bietet jetzt acht streamingfaehige Volltext-Rewrites fuer Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium und Character Speech mit aktionsspezifischer Variantenwahl.</p>
+                <p class="panel-copy">Die Insel kombiniert weiter Wort-/Satz-Rewrite im Bubble-Menue und bietet jetzt neun streamingfaehige Volltext-Rewrites fuer Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom mit aktionsspezifischer Variantenwahl beziehungsweise freiem Arbeitsauftrag.</p>
 
                 <div id="editor-island-root" class="editor-root" data-testid="editor-island-root">
                     <div class="chip-row">
@@ -37,6 +37,7 @@
                         <span class="chip">Social Media waehlt zwischen Bluesky, Instagram und LinkedIn</span>
                         <span class="chip">Medium waehlt zwischen E-Mail, offiziellem Schreiben, Praesentation und Bericht</span>
                         <span class="chip">Character Speech waehlt zwischen direkter und indirekter Rede</span>
+                        <span class="chip">Custom nimmt einen freien Arbeitsauftrag im Rewrite-Bereich entgegen</span>
                         <span class="chip">Rewrite-Diff und kompletter Undo bauen auf derselben Streaming-Basis auf</span>
                     </div>
 
@@ -45,10 +46,10 @@
                             <div>
                                 <p class="eyebrow">Quick Actions</p>
                                 <h3>Rewrite mit Streaming</h3>
-                                <p class="panel-copy">Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium und Character Speech sind in Slice 13 aktiv. Summarize, Formality, Social Media, Medium und Character Speech nutzen eigene Varianten-Menues, weitere Quick Actions bleiben bis zu ihren eigenen Slices verborgen.</p>
+                                <p class="panel-copy">Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom sind in Slice 14 aktiv. Summarize, Formality, Social Media, Medium und Character Speech nutzen eigene Varianten-Menues, Custom nutzt ein freies Prompt-Feld, weitere Quick Actions bleiben bis zu ihren eigenen Slices verborgen.</p>
                             </div>
 
-                            <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" aria-live="polite">Bereit fuer Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium und Character Speech.</p>
+                            <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" aria-live="polite">Bereit fuer Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom.</p>
                         </div>
 
                         <div class="quick-action-row">
@@ -110,6 +111,13 @@
                                     </select>
                                 </label>
                                 <button type="button" class="quick-action-button" data-quick-action="character-speech" data-testid="quick-action-character-speech">Character Speech</button>
+                            </div>
+                            <div class="quick-action-menu quick-action-menu-wide" data-testid="quick-action-custom-menu">
+                                <label class="quick-action-select-shell" for="quick-action-custom-prompt">
+                                    <span class="quick-action-select-label">Custom-Auftrag</span>
+                                    <textarea id="quick-action-custom-prompt" class="quick-action-textarea" data-quick-action-prompt="custom" data-testid="quick-action-custom-prompt" rows="3" maxlength="400" placeholder="Beschreibe frei, wie der Volltext umgeschrieben werden soll."></textarea>
+                                </label>
+                                <button type="button" class="quick-action-button" data-quick-action="custom" data-testid="quick-action-custom">Custom</button>
                             </div>
                         </div>
                     </section>
@@ -210,8 +218,8 @@
 
                 <div class="stack-list problems-footnotes">
                     <div class="stack-item">
-                        <strong>Neu in Slice 13</strong>
-                        Character Speech streamt jetzt ueber <code>POST /api/quick-actions/character-speech/stream</code>, verlangt die Variante <code>direct_speech</code> oder <code>indirect_speech</code> im Request und nutzt dieselbe Streaming-, Diff- und Undo-Infrastruktur wie die anderen Volltext-Rewrites.
+                        <strong>Neu in Slice 14</strong>
+                        Custom streamt jetzt ueber <code>POST /api/quick-actions/custom/stream</code>, verlangt den freien Request-Prompt <code>prompt</code>, validiert leere oder unzulaessige Eingaben und nutzt dieselbe Streaming-, Diff- und Undo-Infrastruktur wie die anderen Volltext-Rewrites.
                     </div>
                     <div class="stack-item">
                         <strong>Bewusst noch nicht aktiv</strong>

@@ -3,6 +3,7 @@ package app.textbuddy.config;
 import app.textbuddy.integration.advisor.AdvisorDocumentRepository;
 import app.textbuddy.integration.llm.BulletPointsLlmClient;
 import app.textbuddy.integration.llm.CharacterSpeechLlmClient;
+import app.textbuddy.integration.llm.CustomLlmClient;
 import app.textbuddy.integration.docling.DoclingClient;
 import app.textbuddy.integration.llm.FormalityLlmClient;
 import app.textbuddy.integration.llm.LlmClientFacade;
@@ -13,6 +14,7 @@ import app.textbuddy.integration.llm.SocialMediaLlmClient;
 import app.textbuddy.integration.llm.SummarizeLlmClient;
 import app.textbuddy.integration.llm.WordSynonymLlmClient;
 import app.textbuddy.quickaction.CharacterSpeechPrompt;
+import app.textbuddy.quickaction.CustomQuickActionPrompt;
 import app.textbuddy.quickaction.FormalityPrompt;
 import app.textbuddy.quickaction.MediumPrompt;
 import app.textbuddy.quickaction.SocialMediaPrompt;
@@ -254,6 +256,28 @@ public class AdapterStubConfiguration {
                         stripTrailingSentencePunctuation(support)
                 );
             };
+
+            return splitIntoChunks(rewritten.stripTrailing(), 24);
+        };
+    }
+
+    @Bean
+    CustomLlmClient customLlmClient() {
+        return (text, language, prompt) -> {
+            String normalized = normalize(text);
+
+            if (normalized.isBlank()) {
+                return List.of();
+            }
+
+            String rewritten = """
+                    Custom Rewrite
+
+                    Auftrag: %s
+
+                    Ergebnis:
+                    %s
+                    """.formatted(prompt.userPrompt(), normalized);
 
             return splitIntoChunks(rewritten.stripTrailing(), 24);
         };

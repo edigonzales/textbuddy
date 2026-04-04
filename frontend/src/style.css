@@ -122,6 +122,11 @@
   min-width: min(100%, 18rem);
 }
 
+#editor-island-root .quick-action-menu-wide {
+  flex: 1 1 100%;
+  min-width: min(100%, 28rem);
+}
+
 #editor-island-root .quick-action-select-shell {
   display: grid;
   gap: 0.4rem;
@@ -143,7 +148,8 @@
   font-weight: 700;
 }
 
-#editor-island-root .quick-action-select {
+#editor-island-root .quick-action-select,
+#editor-island-root .quick-action-textarea {
   width: 100%;
   padding: 0.82rem 0.95rem;
   border: 1px solid rgba(15, 109, 104, 0.18);
@@ -152,6 +158,16 @@
   color: #164d53;
   font: inherit;
   box-shadow: 0 12px 30px rgba(28, 39, 48, 0.08);
+}
+
+#editor-island-root .quick-action-textarea {
+  min-height: 6.25rem;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+#editor-island-root .quick-action-textarea::placeholder {
+  color: #7c8f95;
 }
 
 #editor-island-root .quick-action-button {
@@ -181,7 +197,8 @@
   background: rgba(255, 255, 255, 0.6);
 }
 
-#editor-island-root .quick-action-select:disabled {
+#editor-island-root .quick-action-select:disabled,
+#editor-island-root .quick-action-textarea:disabled {
   color: rgba(22, 77, 83, 0.42);
   box-shadow: none;
   background: rgba(255, 255, 255, 0.6);
@@ -440,6 +457,7 @@
   #editor-island-root .quick-action-menu,
   #editor-island-root .quick-action-button,
   #editor-island-root .quick-action-select,
+  #editor-island-root .quick-action-textarea,
   #editor-island-root .rewrite-diff-undo {
     width: 100%;
   }

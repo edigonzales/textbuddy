@@ -13,8 +13,10 @@ import type {
 } from "./types";
 
 const IDLE_MESSAGE =
-  "Bereit fuer Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium und Character Speech.";
+  "Bereit fuer Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom.";
 const UNDONE_MESSAGE = "Rewrite wurde rueckgaengig gemacht.";
+const CUSTOM_PROMPT_MAX_LENGTH = 400;
+const DISALLOWED_CUSTOM_PROMPT_CHARACTERS = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/;
 
 type QuickActionKey =
   | "plain-language"
@@ -24,12 +26,14 @@ type QuickActionKey =
   | "formality"
   | "social-media"
   | "medium"
-  | "character-speech";
+  | "character-speech"
+  | "custom";
 
 interface QuickActionRequestBody {
   text: string;
   language: string;
   option?: string;
+  prompt?: string;
 }
 
 interface QuickActionDefinition {
@@ -69,6 +73,26 @@ function renderDiffTokens(container: HTMLElement, tokens: readonly RewriteDiffTo
 
       return span;
     }),
+  );
+}
+
+function normalizeCustomPrompt(value: string): string {
+  return value
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .join("\n")
+    .trim();
+}
+
+function hasValidCustomPrompt(value: string): boolean {
+  const normalized = normalizeCustomPrompt(value);
+
+  return (
+    normalized.length > 0 &&
+    normalized.length <= CUSTOM_PROMPT_MAX_LENGTH &&
+    !DISALLOWED_CUSTOM_PROMPT_CHARACTERS.test(normalized)
   );
 }
 
@@ -162,6 +186,18 @@ export function mountQuickActionStream(
         option: elements.characterSpeechOptionSelect.value,
       }),
     },
+    custom: {
+      button: elements.customButton,
+      endpoint: "/api/quick-actions/custom/stream",
+      streamingMessage: "Custom streamt gerade...",
+      successMessage: "Custom abgeschlossen.",
+      errorMessage: "Custom konnte gerade nicht abgeschlossen werden.",
+      buildRequestBody: (text) => ({
+        text,
+        language: "auto",
+        prompt: normalizeCustomPrompt(elements.customPromptInput.value),
+      }),
+    },
   };
 
   function setPanelState(
@@ -181,14 +217,18 @@ export function mountQuickActionStream(
   function syncActionAvailability(): void {
     const disabled = activeStream !== null || getPlainText(editor).trim().length === 0;
 
-    Object.values(quickActions).forEach((action) => {
-      action.button.disabled = disabled;
+    Object.entries(quickActions).forEach(([actionKey, action]) => {
+      action.button.disabled =
+        actionKey === "custom"
+          ? disabled || !hasValidCustomPrompt(elements.customPromptInput.value)
+          : disabled;
     });
     elements.summarizeOptionSelect.disabled = disabled;
     elements.formalityOptionSelect.disabled = disabled;
     elements.socialMediaOptionSelect.disabled = disabled;
     elements.mediumOptionSelect.disabled = disabled;
     elements.characterSpeechOptionSelect.disabled = disabled;
+    elements.customPromptInput.disabled = activeStream !== null;
   }
 
   function applyEditorText(text: string): void {
@@ -339,6 +379,14 @@ export function mountQuickActionStream(
 
   elements.characterSpeechButton.addEventListener("click", () => {
     void runQuickAction("character-speech");
+  });
+
+  elements.customButton.addEventListener("click", () => {
+    void runQuickAction("custom");
+  });
+
+  elements.customPromptInput.addEventListener("input", () => {
+    syncActionAvailability();
   });
 
   elements.diffUndoButton.addEventListener("click", () => {

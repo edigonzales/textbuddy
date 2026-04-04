@@ -25,8 +25,8 @@
 | 11 | done | Quick Action Social Media |
 | 12 | done | Quick Action Medium |
 | 13 | done | Quick Action Character Speech |
-| 14 | ready | Quick Action Custom |
-| 15 | pending | Advisor Catalog and PDF |
+| 14 | done | Quick Action Custom |
+| 15 | ready | Advisor Catalog and PDF |
 | 16 | pending | Advisor Validation |
 | 17 | pending | Document Import |
 | 18 | pending | Auth and Polish |
@@ -65,3 +65,5 @@
 - Slice 12 Build/Test-Handoff: Unit-Tests decken Medium-Optionsvalidierung und Service-Mapping ab, MockMvc prueft den neuen Streaming-Endpoint inklusive Pflichtfeld `option`, und Playwright validiert mindestens zwei Medium-Typen im Browser; naechster Slice ist `13 Quick Action Character Speech`.
 - Slice 13 abgeschlossen: `POST /api/quick-actions/character-speech/stream` nutzt einen eigenen Character-Speech-Service mit festem Options-Mapping fuer `direct_speech` und `indirect_speech`; die Toolbar bietet dafuer ein eigenes Dropdown, waehrend Streaming, Diff und kompletter Undo unveraendert wiederverwendet werden.
 - Slice 13 Build/Test-Handoff: Unit-Tests decken Character-Speech-Optionsvalidierung und Service-Mapping ab, MockMvc prueft den neuen Streaming-Endpoint inklusive Pflichtfeld `option`, und Playwright validiert beide Varianten im Browser; naechster Slice ist `14 Quick Action Custom`.
+- Slice 14 abgeschlossen: `POST /api/quick-actions/custom/stream` nutzt einen eigenen Custom-Service mit dedizierter Prompt-Aufbereitung und Request-Validierung fuer das Pflichtfeld `prompt`; die Toolbar bietet dafuer ein freies Prompt-Feld, waehrend Streaming, Diff und kompletter Undo unveraendert wiederverwendet werden.
+- Slice 14 Build/Test-Handoff: Unit-Tests decken Prompt-Aufbereitung, Request-Validierung und Service-Fehlerpfade ab, MockMvc prueft den neuen Streaming-Endpoint inklusive Pflichtfeld `prompt`, und Playwright validiert Custom-Prompt, Stream und Ergebnis im Browser; naechster Slice ist `15 Advisor Catalog and PDF`.

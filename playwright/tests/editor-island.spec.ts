@@ -18,6 +18,7 @@ interface QuickActionRequestPayload {
   text: string;
   language: string;
   option?: string;
+  prompt?: string;
 }
 
 function createCorrectionResponse(text: string) {
@@ -295,7 +296,7 @@ test("plain language streams into the editor, shows a diff and supports full und
   const editor = page.getByTestId("editor-input");
   const mirror = page.getByTestId("editor-mirror");
 
-  await expect(page.locator("[data-quick-action]")).toHaveCount(8);
+  await expect(page.locator("[data-quick-action]")).toHaveCount(9);
 
   await editor.click();
   await page.keyboard.type("Der komplizierte Sachverhalt ist relevant.");
@@ -875,6 +876,75 @@ test("character speech streams both direct and indirect variants with the select
   await expect(page.getByTestId("rewrite-diff-after")).toContainText(
     "Danach erklaerte die andere Figur, dass Team startet am Montag.",
   );
+});
+
+test("custom quick action sends the custom prompt and streams the result", async ({ page }) => {
+  const requestBodies: QuickActionRequestPayload[] = [];
+
+  await page.route("**/api/quick-actions/custom/stream", async (route) => {
+    const payload = route.request().postDataJSON() as QuickActionRequestPayload;
+
+    requestBodies.push(payload);
+
+    const responseText = `Custom Rewrite\n\nAuftrag: ${payload.prompt}\n\nErgebnis:\nProjektstart ist morgen.`;
+
+    await route.fulfill({
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream",
+      },
+      body: createSseBody([
+        {
+          event: "chunk",
+          payload: {
+            text: responseText.slice(0, 24),
+          },
+        },
+        {
+          event: "chunk",
+          payload: {
+            text: responseText.slice(24),
+          },
+        },
+        {
+          event: "complete",
+          payload: {
+            text: responseText,
+          },
+        },
+      ]),
+    });
+  });
+
+  await page.goto("/");
+
+  const editor = page.getByTestId("editor-input");
+  const mirror = page.getByTestId("editor-mirror");
+  const promptInput = page.getByTestId("quick-action-custom-prompt");
+  const customButton = page.getByTestId("quick-action-custom");
+
+  await editor.click();
+  await page.keyboard.type("Projektstart ist morgen.");
+  await expect(customButton).toBeDisabled();
+
+  await promptInput.fill("Formuliere den Text als interne Ankuendigung.");
+  await expect(customButton).toBeEnabled();
+  await customButton.click();
+
+  await expect.poll(() => requestBodies.at(-1)?.text).toBe("Projektstart ist morgen.");
+  await expect.poll(() => requestBodies.at(-1)?.language).toBe("auto");
+  await expect.poll(() => requestBodies.at(-1)?.prompt).toBe(
+    "Formuliere den Text als interne Ankuendigung.",
+  );
+  await expect(page.getByTestId("quick-action-status")).toContainText("Custom abgeschlossen");
+  await expect(mirror).toHaveValue(
+    "Custom Rewrite\n\nAuftrag: Formuliere den Text als interne Ankuendigung.\n\nErgebnis:\nProjektstart ist morgen.",
+  );
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+  await expect(page.getByTestId("rewrite-diff-after")).toContainText(
+    "Auftrag: Formuliere den Text als interne Ankuendigung.",
+  );
+  await expect(page.getByTestId("rewrite-diff-after")).toContainText("Projektstart ist morgen.");
 });
 
 test("incomplete sentences keep word mode without sentence action", async ({ page }) => {
