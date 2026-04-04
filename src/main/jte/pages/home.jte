@@ -10,8 +10,8 @@
             <p>${page.subtitle()}</p>
         </div>
         <div class="status-strip">
-            <div class="status-pill">Slice 14 haelt jetzt <code>POST /api/quick-actions/plain-language/stream</code>, <code>POST /api/quick-actions/bullet-points/stream</code>, <code>POST /api/quick-actions/proofread/stream</code>, <code>POST /api/quick-actions/summarize/stream</code>, <code>POST /api/quick-actions/formality/stream</code>, <code>POST /api/quick-actions/social-media/stream</code>, <code>POST /api/quick-actions/medium/stream</code>, <code>POST /api/quick-actions/character-speech/stream</code> und <code>POST /api/quick-actions/custom/stream</code> als aktive SSE-Quick-Actions bereit.</div>
-            <div class="status-pill">Custom bringt ein freies Prompt-Feld mit Pflichtvalidierung, waehrend Summarize, Formality, Social Media, Medium und Character Speech ihre Menues behalten und alle sechs auf derselben Diff- und Undo-Infrastruktur bleiben.</div>
+            <div class="status-pill">Slice 15 haelt die bestehenden neun SSE-Quick-Actions unveraendert aktiv und ergaenzt den statischen Advisor-Katalog ueber <code>GET /api/advisor/docs</code> sowie die PDF-Auslieferung ueber <code>GET /api/advisor/doc/{name}</code>.</div>
+            <div class="status-pill">Der Advisor erlaubt jetzt Mehrfachauswahl und direkte PDF-Links. Die eigentliche Validierung gegen Regelwerke bleibt bewusst bis Slice 16 verborgen.</div>
         </div>
     </header>
 
@@ -46,7 +46,7 @@
                             <div>
                                 <p class="eyebrow">Quick Actions</p>
                                 <h3>Rewrite mit Streaming</h3>
-                                <p class="panel-copy">Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom sind in Slice 14 aktiv. Summarize, Formality, Social Media, Medium und Character Speech nutzen eigene Varianten-Menues, Custom nutzt ein freies Prompt-Feld, weitere Quick Actions bleiben bis zu ihren eigenen Slices verborgen.</p>
+                                <p class="panel-copy">Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom bleiben auch in Slice 15 aktiv. Summarize, Formality, Social Media, Medium und Character Speech nutzen eigene Varianten-Menues, Custom nutzt ein freies Prompt-Feld, weitere Quick Actions bleiben bis zu ihren eigenen Slices verborgen.</p>
                             </div>
 
                             <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" aria-live="polite">Bereit fuer Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom.</p>
@@ -181,52 +181,99 @@
             </div>
         </section>
 
-        <aside class="panel correction-panel" data-testid="correction-panel" data-correction-panel data-correction-state="idle">
-            <div class="panel-body">
-                <p class="eyebrow">Problems Panel</p>
-                <h2>Textkorrektur</h2>
-                <p class="panel-copy">Die Insel steuert Sprache, lokales Woerterbuch und differenzierte Re-Checks. Der Server bleibt beim bestehenden Korrektur-Endpoint.</p>
+        <aside class="workspace-sidebar">
+            <section class="panel correction-panel" data-testid="correction-panel" data-correction-panel data-correction-state="idle">
+                <div class="panel-body">
+                    <p class="eyebrow">Problems Panel</p>
+                    <h2>Textkorrektur</h2>
+                    <p class="panel-copy">Die Insel steuert Sprache, lokales Woerterbuch und differenzierte Re-Checks. Der Server bleibt beim bestehenden Korrektur-Endpoint.</p>
 
-                <div class="correction-controls" data-testid="correction-controls">
-                    <label class="control-stack" for="correction-language">
-                        <span class="control-label">Korrektursprache</span>
-                        <select id="correction-language" class="control-select" data-correction-language data-testid="correction-language">
-                            <option value="auto" selected>Automatisch</option>
-                            <option value="de-DE">Deutsch</option>
-                            <option value="en-US">Englisch</option>
-                        </select>
-                    </label>
+                    <div class="correction-controls" data-testid="correction-controls">
+                        <label class="control-stack" for="correction-language">
+                            <span class="control-label">Korrektursprache</span>
+                            <select id="correction-language" class="control-select" data-correction-language data-testid="correction-language">
+                                <option value="auto" selected>Automatisch</option>
+                                <option value="de-DE">Deutsch</option>
+                                <option value="en-US">Englisch</option>
+                            </select>
+                        </label>
 
-                    <div class="dictionary-shell" data-testid="dictionary-shell">
-                        <div class="dictionary-head">
-                            <strong>Lokales Woerterbuch</strong>
-                            <span>Nur browserlokal, ohne Serverpersistenz</span>
+                        <div class="dictionary-shell" data-testid="dictionary-shell">
+                            <div class="dictionary-head">
+                                <strong>Lokales Woerterbuch</strong>
+                                <span>Nur browserlokal, ohne Serverpersistenz</span>
+                            </div>
+
+                            <form class="dictionary-form" data-dictionary-form data-testid="dictionary-form">
+                                <input type="text" class="dictionary-input" data-dictionary-input data-testid="dictionary-input" placeholder="Wort hinzufuegen" autocomplete="off" />
+                                <button type="submit" class="dictionary-submit" data-testid="dictionary-submit">Hinzufuegen</button>
+                            </form>
+
+                            <p class="dictionary-empty" data-dictionary-empty data-testid="dictionary-empty">Noch keine lokalen Woerter gespeichert.</p>
+                            <ul class="dictionary-list" data-dictionary-list data-testid="dictionary-list"></ul>
                         </div>
+                    </div>
 
-                        <form class="dictionary-form" data-dictionary-form data-testid="dictionary-form">
-                            <input type="text" class="dictionary-input" data-dictionary-input data-testid="dictionary-input" placeholder="Wort hinzufuegen" autocomplete="off" />
-                            <button type="submit" class="dictionary-submit" data-testid="dictionary-submit">Hinzufuegen</button>
-                        </form>
+                    <p class="problem-status" data-correction-status data-testid="correction-status">Schreibe Text, um Korrekturen zu sehen.</p>
+                    <div class="problem-list" data-correction-list data-testid="correction-problem-list"></div>
 
-                        <p class="dictionary-empty" data-dictionary-empty data-testid="dictionary-empty">Noch keine lokalen Woerter gespeichert.</p>
-                        <ul class="dictionary-list" data-dictionary-list data-testid="dictionary-list"></ul>
+                    <div class="stack-list problems-footnotes">
+                        <div class="stack-item">
+                            <strong>Neu in Slice 15</strong>
+                            Der Advisor-Katalog ist jetzt sichtbar, liest statische JSON-Metadaten und verlinkt PDFs ueber <code>GET /api/advisor/doc/{name}</code>. Die Korrektur-Insel bleibt dabei unveraendert auf dem bestehenden Endpoint.
+                        </div>
+                        <div class="stack-item">
+                            <strong>Bewusst noch nicht aktiv</strong>
+                            Keine Advisor-Validierung, kein Upload in den Advisor-Bestand und keine weiteren Quick Actions ausserhalb der bereits freigeschalteten Aktionen.
+                        </div>
                     </div>
                 </div>
+            </section>
 
-                <p class="problem-status" data-correction-status data-testid="correction-status">Schreibe Text, um Korrekturen zu sehen.</p>
-                <div class="problem-list" data-correction-list data-testid="correction-problem-list"></div>
+            <section class="panel advisor-panel" data-testid="advisor-panel">
+                <div class="panel-body">
+                    <p class="eyebrow">Advisor Catalog</p>
+                    <h2>Referenzdokumente</h2>
+                    <p class="panel-copy">Slice 15 liefert den statischen Advisor-Bestand sichtbar aus. Mehrfachauswahl ist bereits moeglich, die fachliche Validierung folgt erst im naechsten Slice.</p>
 
-                <div class="stack-list problems-footnotes">
-                    <div class="stack-item">
-                        <strong>Neu in Slice 14</strong>
-                        Custom streamt jetzt ueber <code>POST /api/quick-actions/custom/stream</code>, verlangt den freien Request-Prompt <code>prompt</code>, validiert leere oder unzulaessige Eingaben und nutzt dieselbe Streaming-, Diff- und Undo-Infrastruktur wie die anderen Volltext-Rewrites.
+                    <p class="advisor-status" data-testid="advisor-status">
+                        ${page.advisorDocs().size()} Dokumente verfuegbar. Waehle beliebig viele Referenzen aus und oeffne die PDFs direkt im Browser oder per Download.
+                    </p>
+
+                    <div class="advisor-list" data-testid="advisor-doc-list">
+                        @for (var advisorDoc : page.advisorDocs())
+                            <article class="advisor-item" data-testid="advisor-doc-item">
+                                <label class="advisor-select">
+                                    <input type="checkbox" name="advisor-docs" value="${advisorDoc.name()}" data-testid="advisor-doc-checkbox">
+                                    <span>Auswaehlen</span>
+                                </label>
+
+                                <div class="advisor-copy">
+                                    <strong data-testid="advisor-doc-title">${advisorDoc.title()}</strong>
+                                    <p>${advisorDoc.summary()}</p>
+                                    <span class="advisor-source">${advisorDoc.source()}</span>
+                                </div>
+
+                                <div class="advisor-links">
+                                    <a class="advisor-link" href="${advisorDoc.documentUrl()}" target="_blank" rel="noopener noreferrer" data-testid="advisor-doc-open">PDF anzeigen</a>
+                                    <a class="advisor-link advisor-link-secondary" href="${advisorDoc.documentUrl()}" download="${advisorDoc.name()}.pdf" data-testid="advisor-doc-download">PDF laden</a>
+                                </div>
+                            </article>
+                        @endfor
                     </div>
-                    <div class="stack-item">
-                        <strong>Bewusst noch nicht aktiv</strong>
-                        Keine weiteren Quick Actions, kein Advisor und kein Upload ausserhalb des bereits vorhandenen Bubble-Kontexts.
+
+                    <div class="stack-list advisor-footnotes">
+                        <div class="stack-item">
+                            <strong>Mehrfachauswahl vorbereitet</strong>
+                            Die Checkboxen markieren bereits mehrere Referenzdokumente parallel. Erst Slice 16 nutzt diese Auswahl fuer die eigentliche Advisor-Pruefung.
+                        </div>
+                        <div class="stack-item">
+                            <strong>Bewusst statisch</strong>
+                            Der Katalog liest nur projektinterne Demo-Metadaten und PDFs aus <code>src/main/resources/advisor</code>. Uploads erweitern diesen Bestand weiterhin nicht.
+                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
         </aside>
     </main>
 </div>

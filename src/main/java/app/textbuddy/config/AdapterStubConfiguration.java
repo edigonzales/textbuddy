@@ -1,6 +1,5 @@
 package app.textbuddy.config;
 
-import app.textbuddy.integration.advisor.AdvisorDocumentRepository;
 import app.textbuddy.integration.llm.BulletPointsLlmClient;
 import app.textbuddy.integration.llm.CharacterSpeechLlmClient;
 import app.textbuddy.integration.llm.CustomLlmClient;
@@ -356,12 +355,6 @@ public class AdapterStubConfiguration {
     @Bean
     DoclingClient doclingClient() {
         return new DoclingClient() {
-        };
-    }
-
-    @Bean
-    AdvisorDocumentRepository advisorDocumentRepository() {
-        return new AdvisorDocumentRepository() {
         };
     }
 

@@ -1,11 +1,20 @@
 package app.textbuddy.web.page;
 
-public record HomePageModel(String title, String subtitle) {
+import app.textbuddy.advisor.AdvisorDocsResponseItem;
 
-    public static HomePageModel defaultPage() {
+import java.util.List;
+
+public record HomePageModel(
+        String title,
+        String subtitle,
+        List<AdvisorDocsResponseItem> advisorDocs
+) {
+
+    public static HomePageModel defaultPage(List<AdvisorDocsResponseItem> advisorDocs) {
         return new HomePageModel(
                 "Textbuddy Workspace",
-                "Slice 14 erweitert die Rewrite-Toolbar um eine freie Custom Quick Action mit Pflicht-Prompt und nutzt weiter dieselbe SSE-, Diff- und Undo-Infrastruktur."
+                "Slice 15 macht den statischen Advisor-Katalog sichtbar, liefert PDF-Referenzen ueber Spring MVC aus und behaelt die bestehende Editor-, Rewrite- und Korrektur-Infrastruktur unveraendert bei.",
+                List.copyOf(advisorDocs)
         );
     }
 }

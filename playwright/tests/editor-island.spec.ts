@@ -248,6 +248,35 @@ test("sentence mode is reachable without word focus", async ({ page }) => {
   await expect(page.getByTestId("rewrite-secondary-action")).toBeHidden();
 });
 
+test("advisor catalog shows multiple selectable documents and serves reachable PDFs", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/");
+
+  const advisorItems = page.getByTestId("advisor-doc-item");
+  const advisorCheckboxes = page.getByTestId("advisor-doc-checkbox");
+  const advisorTitles = page.getByTestId("advisor-doc-title");
+
+  await expect(page.getByTestId("advisor-panel")).toBeVisible();
+  await expect(advisorItems).toHaveCount(5);
+  await expect(advisorTitles.nth(0)).toHaveText("Empfehlungen zu Anglizismen");
+  await expect(advisorTitles.nth(3)).toHaveText("Schreibweisungen");
+
+  await advisorCheckboxes.nth(1).check();
+  await advisorCheckboxes.nth(3).check();
+
+  await expect(advisorCheckboxes.nth(1)).toBeChecked();
+  await expect(advisorCheckboxes.nth(3)).toBeChecked();
+
+  const response = await request.get("/api/advisor/doc/schreibweisungen");
+  const body = await response.body();
+
+  expect(response.ok()).toBeTruthy();
+  expect(response.headers()["content-type"]).toContain("application/pdf");
+  expect(body.toString("utf-8")).toContain("%PDF-1.4");
+});
+
 test("plain language streams into the editor, shows a diff and supports full undo", async ({
   page,
 }) => {

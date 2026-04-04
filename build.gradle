@@ -5,7 +5,7 @@ plugins {
 
 group = 'app.textbuddy'
 version = '0.0.1-SNAPSHOT'
-description = 'Slice 14 quick action custom for Textbuddy'
+description = 'Slice 15 advisor catalog and pdf for Textbuddy'
 
 ext {
     jteVersion = '3.2.3'
@@ -29,6 +29,7 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation "gg.jte:jte-spring-boot-starter-4:${jteVersion}"
     implementation "org.webjars.npm:htmx.org:${htmxVersion}"
 

@@ -90,6 +90,12 @@ a {
     margin-top: 1.25rem;
 }
 
+.workspace-sidebar {
+    display: grid;
+    gap: 1.25rem;
+    align-content: start;
+}
+
 .panel {
     border: 1px solid var(--border);
     border-radius: 28px;
@@ -408,6 +414,98 @@ a {
 
 .problems-footnotes {
     margin-top: 1rem;
+}
+
+.advisor-panel {
+    align-self: start;
+}
+
+.advisor-status {
+    margin: 1rem 0 0;
+    padding: 0.9rem 1rem;
+    border-radius: 16px;
+    background: rgba(15, 109, 104, 0.08);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.advisor-list {
+    display: grid;
+    gap: 0.9rem;
+    margin-top: 1rem;
+}
+
+.advisor-item {
+    display: grid;
+    gap: 0.8rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--surface-strong);
+}
+
+.advisor-select {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: fit-content;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.advisor-select input {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--accent);
+}
+
+.advisor-copy {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.advisor-copy p {
+    margin: 0;
+    color: var(--muted);
+}
+
+.advisor-source {
+    font-size: 0.9rem;
+    color: var(--accent);
+}
+
+.advisor-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+}
+
+.advisor-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 8.75rem;
+    padding: 0.72rem 0.95rem;
+    border-radius: 14px;
+    border: 1px solid rgba(15, 109, 104, 0.18);
+    background: rgba(15, 109, 104, 0.12);
+    color: var(--accent);
+    font-weight: 700;
+    text-decoration: none;
+    transition:
+            transform 140ms ease,
+            border-color 140ms ease,
+            box-shadow 140ms ease;
+}
+
+.advisor-link:hover {
+    transform: translateY(-1px);
+    border-color: rgba(15, 109, 104, 0.42);
+    box-shadow: 0 12px 24px rgba(28, 39, 48, 0.08);
+}
+
+.advisor-link-secondary {
+    background: rgba(255, 255, 255, 0.92);
 }
 
 @media (max-width: 900px) {

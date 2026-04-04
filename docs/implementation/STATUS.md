@@ -26,8 +26,8 @@
 | 12 | done | Quick Action Medium |
 | 13 | done | Quick Action Character Speech |
 | 14 | done | Quick Action Custom |
-| 15 | ready | Advisor Catalog and PDF |
-| 16 | pending | Advisor Validation |
+| 15 | done | Advisor Catalog and PDF |
+| 16 | ready | Advisor Validation |
 | 17 | pending | Document Import |
 | 18 | pending | Auth and Polish |
 
@@ -67,3 +67,5 @@
 - Slice 13 Build/Test-Handoff: Unit-Tests decken Character-Speech-Optionsvalidierung und Service-Mapping ab, MockMvc prueft den neuen Streaming-Endpoint inklusive Pflichtfeld `option`, und Playwright validiert beide Varianten im Browser; naechster Slice ist `14 Quick Action Custom`.
 - Slice 14 abgeschlossen: `POST /api/quick-actions/custom/stream` nutzt einen eigenen Custom-Service mit dedizierter Prompt-Aufbereitung und Request-Validierung fuer das Pflichtfeld `prompt`; die Toolbar bietet dafuer ein freies Prompt-Feld, waehrend Streaming, Diff und kompletter Undo unveraendert wiederverwendet werden.
 - Slice 14 Build/Test-Handoff: Unit-Tests decken Prompt-Aufbereitung, Request-Validierung und Service-Fehlerpfade ab, MockMvc prueft den neuen Streaming-Endpoint inklusive Pflichtfeld `prompt`, und Playwright validiert Custom-Prompt, Stream und Ergebnis im Browser; naechster Slice ist `15 Advisor Catalog and PDF`.
+- Slice 15 abgeschlossen: `GET /api/advisor/docs` liefert einen statischen dateibasierten Advisor-Katalog aus JSON-Metadaten, `GET /api/advisor/doc/{name}` liefert die zugehoerigen Demo-PDFs inline aus, und die Home-Shell zeigt dafuer ein Advisor-Panel mit Mehrfachauswahl sowie PDF-Links.
+- Slice 15 Build/Test-Handoff: Unit-Test deckt das Repository-Laden ab, MockMvc prueft beide GET-Endpunkte und die erweiterte Home-Shell, Playwright validiert Dokumentliste plus PDF-Erreichbarkeit; `./gradlew test`, `./gradlew build` und `npm test` unter `playwright/` sind gruen. Naechster Slice ist `16 Advisor Validation`.
