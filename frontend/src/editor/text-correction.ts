@@ -1,9 +1,11 @@
 import type { Editor } from "@tiptap/core";
 
+import { isApiLocked } from "./auth";
 import {
   plainTextRangeToDocumentRange,
   setTextCorrections,
 } from "./correction-mark-extension";
+import { extractErrorMessage } from "./http-error";
 import {
   createLocalDictionaryStore,
   filterCorrectionBlocksByDictionary,
@@ -30,6 +32,7 @@ const IDLE_MESSAGE = "Schreibe Text, um Korrekturen zu sehen.";
 const DEBOUNCE_MESSAGE = "Pruefung nach Tipp-Pause...";
 const LOADING_MESSAGE = "Pruefe geaenderte Segmente...";
 const ERROR_MESSAGE = "Korrekturen konnten gerade nicht geladen werden.";
+const AUTH_REQUIRED_MESSAGE = "Mit OIDC anmelden, um Korrekturen zu laden.";
 const STREAMING_MESSAGE = "Rewrite-Stream laeuft gerade.";
 
 interface SegmentCorrectionState extends TextCorrectionSegment {
@@ -319,6 +322,12 @@ export function mountTextCorrectionBridge(
   }
 
   function refreshRenderedState(): void {
+    if (isApiLocked(root)) {
+      clearCorrections();
+      setPanelState("error", AUTH_REQUIRED_MESSAGE);
+      return;
+    }
+
     if (!currentText.trim()) {
       clearCorrections();
       setPanelState("idle", IDLE_MESSAGE);
@@ -427,7 +436,12 @@ export function mountTextCorrectionBridge(
       });
 
       if (!response.ok) {
-        throw new Error(`Text correction request failed with status ${response.status}`);
+        throw new Error(
+          await extractErrorMessage(
+            response,
+            `Text correction request failed with status ${response.status}`,
+          ),
+        );
       }
 
       const payload = (await response.json()) as TextCorrectionResponse;
@@ -471,7 +485,13 @@ export function mountTextCorrectionBridge(
         return;
       }
 
-      renderProblems(originalText, "error", ERROR_MESSAGE);
+      renderProblems(
+        originalText,
+        "error",
+        error instanceof Error && error.message.trim().length > 0
+          ? error.message
+          : ERROR_MESSAGE,
+      );
     }
   }
 
@@ -495,6 +515,13 @@ export function mountTextCorrectionBridge(
     }
 
     abortInFlightRequests();
+
+    if (isApiLocked(root)) {
+      currentText = nextText;
+      clearCorrections();
+      setPanelState("error", AUTH_REQUIRED_MESSAGE);
+      return;
+    }
 
     if (!nextText.trim()) {
       currentText = nextText;
@@ -602,5 +629,5 @@ export function mountTextCorrectionBridge(
   });
 
   renderDictionaryWords();
-  setPanelState("idle", IDLE_MESSAGE);
+  setPanelState("idle", isApiLocked(root) ? AUTH_REQUIRED_MESSAGE : IDLE_MESSAGE);
 }

@@ -3,6 +3,7 @@ import type {
   QuickActionSseCompletePayload,
   QuickActionSseErrorPayload,
 } from "./types";
+import { extractErrorMessage } from "./http-error";
 
 interface QuickActionSseCallbacks {
   body: unknown;
@@ -58,7 +59,7 @@ export async function postQuickActionSse(
   });
 
   if (!response.ok) {
-    throw new Error(`SSE request failed with status ${response.status}`);
+    throw new Error(await extractErrorMessage(response, `SSE request failed with status ${response.status}`));
   }
 
   if (!response.body) {

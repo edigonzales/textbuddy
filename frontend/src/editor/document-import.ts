@@ -1,10 +1,13 @@
 import type { Editor } from "@tiptap/core";
 
+import { isApiLocked } from "./auth";
 import { setEditorHtml } from "./editor-content";
+import { extractErrorMessage } from "./http-error";
 import type { DocumentImportElements } from "./types";
 
 const IDLE_MESSAGE = "Bereit fuer Upload oder Drag-and-Drop.";
 const DEFAULT_ERROR_MESSAGE = "Dokument konnte nicht importiert werden.";
+const AUTH_REQUIRED_MESSAGE = "Mit OIDC anmelden, um Dokumente zu importieren.";
 
 interface DocumentConversionResponse {
   html: string;
@@ -43,28 +46,11 @@ function isSupportedFile(file: File, accept: string): boolean {
   return tokens.some((token) => fileMatchesToken(file, token));
 }
 
-async function extractErrorMessage(response: Response): Promise<string> {
-  const contentType = response.headers.get("content-type") ?? "";
-
-  if (contentType.includes("json")) {
-    const payload = (await response.json()) as Record<string, unknown>;
-    const detail = payload.detail;
-    const message = payload.message;
-
-    if (typeof detail === "string" && detail.trim().length > 0) {
-      return detail;
-    }
-
-    if (typeof message === "string" && message.trim().length > 0) {
-      return message;
-    }
-  }
-
-  const text = (await response.text()).trim();
-  return text || DEFAULT_ERROR_MESSAGE;
-}
-
-export function mountDocumentImport(editor: Editor, elements: DocumentImportElements): void {
+export function mountDocumentImport(
+  editor: Editor,
+  root: HTMLElement,
+  elements: DocumentImportElements,
+): void {
   let activeRequest: AbortController | null = null;
 
   function setPanelState(
@@ -76,9 +62,12 @@ export function mountDocumentImport(editor: Editor, elements: DocumentImportElem
   }
 
   function setBusy(busy: boolean): void {
-    elements.button.disabled = busy;
-    elements.input.disabled = busy;
+    const authLocked = isApiLocked(root);
+
+    elements.button.disabled = busy || authLocked;
+    elements.input.disabled = busy || authLocked;
     elements.dropzone.dataset.busy = busy ? "true" : "false";
+    elements.dropzone.dataset.authLocked = authLocked ? "true" : "false";
   }
 
   function openFilePicker(): void {
@@ -117,7 +106,7 @@ export function mountDocumentImport(editor: Editor, elements: DocumentImportElem
       });
 
       if (!response.ok) {
-        throw new Error(await extractErrorMessage(response));
+        throw new Error(await extractErrorMessage(response, DEFAULT_ERROR_MESSAGE));
       }
 
       const payload = (await response.json()) as DocumentConversionResponse;
@@ -225,5 +214,11 @@ export function mountDocumentImport(editor: Editor, elements: DocumentImportElem
   });
 
   setBusy(false);
+
+  if (isApiLocked(root)) {
+    setPanelState("error", AUTH_REQUIRED_MESSAGE);
+    return;
+  }
+
   setPanelState("idle", IDLE_MESSAGE);
 }

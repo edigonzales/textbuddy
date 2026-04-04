@@ -1,5 +1,6 @@
 import type { Editor } from "@tiptap/core";
 
+import { isApiLocked } from "./auth";
 import { setEditorPlainText } from "./editor-content";
 import { getPlainText } from "./plain-text";
 import { postQuickActionSse } from "./quick-action-sse";
@@ -15,6 +16,7 @@ import type {
 const IDLE_MESSAGE =
   "Bereit fuer Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom.";
 const UNDONE_MESSAGE = "Rewrite wurde rueckgaengig gemacht.";
+const AUTH_REQUIRED_MESSAGE = "Mit OIDC anmelden, um Quick Actions zu starten.";
 const CUSTOM_PROMPT_MAX_LENGTH = 400;
 const DISALLOWED_CUSTOM_PROMPT_CHARACTERS = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/;
 
@@ -215,7 +217,8 @@ export function mountQuickActionStream(
   }
 
   function syncActionAvailability(): void {
-    const disabled = activeStream !== null || getPlainText(editor).trim().length === 0;
+    const disabled =
+      activeStream !== null || getPlainText(editor).trim().length === 0 || isApiLocked(root);
 
     Object.entries(quickActions).forEach(([actionKey, action]) => {
       action.button.disabled =
@@ -228,7 +231,7 @@ export function mountQuickActionStream(
     elements.socialMediaOptionSelect.disabled = disabled;
     elements.mediumOptionSelect.disabled = disabled;
     elements.characterSpeechOptionSelect.disabled = disabled;
-    elements.customPromptInput.disabled = activeStream !== null;
+    elements.customPromptInput.disabled = activeStream !== null || isApiLocked(root);
   }
 
   function applyEditorText(text: string): void {
@@ -267,6 +270,12 @@ export function mountQuickActionStream(
   async function runQuickAction(actionKey: QuickActionKey): Promise<void> {
     const originalText = getPlainText(editor);
     const action = quickActions[actionKey];
+
+    if (isApiLocked(root)) {
+      setPanelState("error", AUTH_REQUIRED_MESSAGE);
+      syncActionAvailability();
+      return;
+    }
 
     if (!originalText.trim()) {
       syncActionAvailability();
@@ -344,7 +353,12 @@ export function mountQuickActionStream(
       applyEditorText(snapshot.original);
       activeStream = null;
       clearDiff();
-      setPanelState("error", action.errorMessage);
+      setPanelState(
+        "error",
+        error instanceof Error && error.message.trim().length > 0
+          ? error.message
+          : action.errorMessage,
+      );
       syncActionAvailability();
     }
   }
@@ -406,12 +420,12 @@ export function mountQuickActionStream(
 
     if (completedRewrite) {
       clearDiff();
-      setPanelState("idle", IDLE_MESSAGE);
+      setPanelState("idle", isApiLocked(root) ? AUTH_REQUIRED_MESSAGE : IDLE_MESSAGE);
     }
 
     syncActionAvailability();
   });
 
   syncActionAvailability();
-  resetToIdle(IDLE_MESSAGE);
+  resetToIdle(isApiLocked(root) ? AUTH_REQUIRED_MESSAGE : IDLE_MESSAGE);
 }

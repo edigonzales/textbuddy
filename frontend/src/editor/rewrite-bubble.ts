@@ -1,9 +1,11 @@
 import type { Editor } from "@tiptap/core";
 
+import { isApiLocked } from "./auth";
 import {
   documentPositionToPlainTextOffset,
   plainTextRangeToDocumentRange,
 } from "./correction-mark-extension";
+import { extractErrorMessage } from "./http-error";
 import { getPlainText } from "./plain-text";
 import {
   resolveRewriteBubbleState,
@@ -264,6 +266,11 @@ export function mountRewriteBubble(
   }
 
   function syncActiveContext(): void {
+    if (isApiLocked(root)) {
+      hideBubble();
+      return;
+    }
+
     const nextContext = resolveActiveContext(editor);
 
     if (!nextContext) {
@@ -345,7 +352,12 @@ export function mountRewriteBubble(
       });
 
       if (!response.ok) {
-        throw new Error(`Word synonym request failed with status ${response.status}`);
+        throw new Error(
+          await extractErrorMessage(
+            response,
+            `Word synonym request failed with status ${response.status}`,
+          ),
+        );
       }
 
       const payload = (await response.json()) as WordSynonymResponse;
@@ -389,7 +401,12 @@ export function mountRewriteBubble(
         return;
       }
 
-      setOverlayState("error", WORD_ERROR_MESSAGE);
+      setOverlayState(
+        "error",
+        error instanceof Error && error.message.trim().length > 0
+          ? error.message
+          : WORD_ERROR_MESSAGE,
+      );
       positionBubble();
     } finally {
       if (inFlightRequest === controller) {
@@ -431,7 +448,12 @@ export function mountRewriteBubble(
       });
 
       if (!response.ok) {
-        throw new Error(`Sentence rewrite request failed with status ${response.status}`);
+        throw new Error(
+          await extractErrorMessage(
+            response,
+            `Sentence rewrite request failed with status ${response.status}`,
+          ),
+        );
       }
 
       const payload = (await response.json()) as SentenceRewriteResponse;
@@ -472,7 +494,12 @@ export function mountRewriteBubble(
         return;
       }
 
-      setOverlayState("error", SENTENCE_ERROR_MESSAGE);
+      setOverlayState(
+        "error",
+        error instanceof Error && error.message.trim().length > 0
+          ? error.message
+          : SENTENCE_ERROR_MESSAGE,
+      );
       positionBubble();
     } finally {
       if (inFlightRequest === controller) {

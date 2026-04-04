@@ -7,19 +7,22 @@ import java.util.List;
 public record HomePageModel(
         String title,
         String subtitle,
+        HomeAuthModel auth,
         List<AdvisorDocsResponseItem> advisorDocs,
         List<String> documentImportFormats,
         String documentImportAccept
 ) {
 
     public static HomePageModel defaultPage(
+            HomeAuthModel auth,
             List<AdvisorDocsResponseItem> advisorDocs,
             List<String> documentImportFormats,
             String documentImportAccept
     ) {
         return new HomePageModel(
                 "Textbuddy Workspace",
-                "Slice 17 importiert Dokumente jetzt per Upload oder Drag-and-Drop, konvertiert sie ueber Docling nach HTML und uebernimmt das Ergebnis direkt in die bestehende Editor-Insel.",
+                "Slice 18 schliesst die Anwendung mit schaltbarer OIDC-Grundintegration, konsistenter Fehlerbehandlung, Logging-Politur und final aktivierten Kernfunktionen ab.",
+                auth,
                 List.copyOf(advisorDocs),
                 List.copyOf(documentImportFormats),
                 documentImportAccept

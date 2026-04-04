@@ -4,6 +4,8 @@ import app.textbuddy.quickaction.CharacterSpeechPrompt;
 import app.textbuddy.quickaction.CharacterSpeechQuickActionService;
 import app.textbuddy.quickaction.QuickActionSsePayloadFactory;
 import app.textbuddy.quickaction.QuickActionStreamRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +19,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RequestMapping("/api/quick-actions")
 public class CharacterSpeechQuickActionController {
 
+    private static final Logger log = LoggerFactory.getLogger(CharacterSpeechQuickActionController.class);
     private static final String DEFAULT_ERROR_MESSAGE = "Character-Speech-Stream konnte nicht gestartet werden.";
     private static final String MISSING_OPTION_MESSAGE = "Character-Speech-Option ist erforderlich.";
     private static final String INVALID_OPTION_MESSAGE = "Character-Speech-Option ist ungueltig.";
@@ -43,6 +46,7 @@ public class CharacterSpeechQuickActionController {
             try {
                 characterSpeechQuickActionService.stream(request, writer);
             } catch (RuntimeException exception) {
+                log.error("Character Speech stream failed.", exception);
                 writer.error(DEFAULT_ERROR_MESSAGE);
             }
         });

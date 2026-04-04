@@ -160,6 +160,12 @@
   opacity: 0.8;
 }
 
+#editor-island-root .document-import-dropzone[data-auth-locked="true"] {
+  cursor: not-allowed;
+  opacity: 0.72;
+  box-shadow: none;
+}
+
 #editor-island-root .document-import-dropzone strong {
   font-size: 1rem;
 }

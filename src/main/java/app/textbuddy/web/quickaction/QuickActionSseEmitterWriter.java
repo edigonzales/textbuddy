@@ -2,6 +2,8 @@ package app.textbuddy.web.quickaction;
 
 import app.textbuddy.quickaction.QuickActionSsePayloadFactory;
 import app.textbuddy.quickaction.QuickActionStreamHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -9,6 +11,8 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 
 final class QuickActionSseEmitterWriter implements QuickActionStreamHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(QuickActionSseEmitterWriter.class);
 
     private final SseEmitter emitter;
     private final QuickActionSsePayloadFactory payloadFactory;
@@ -29,6 +33,7 @@ final class QuickActionSseEmitterWriter implements QuickActionStreamHandler {
             send("complete", payloadFactory.complete(text));
             emitter.complete();
         } catch (RuntimeException exception) {
+            log.warn("Failed to finish quick action SSE response.", exception);
             emitter.completeWithError(exception);
         }
     }
@@ -39,6 +44,7 @@ final class QuickActionSseEmitterWriter implements QuickActionStreamHandler {
             send("error", payloadFactory.error(message));
             emitter.complete();
         } catch (RuntimeException exception) {
+            log.warn("Failed to send quick action SSE error response.", exception);
             emitter.completeWithError(exception);
         }
     }

@@ -14,9 +14,10 @@ public class AdvisorDocumentConfiguration {
 
     @Bean
     AdvisorDocumentRepository advisorDocumentRepository(
-            ApplicationContext applicationContext
+            ApplicationContext applicationContext,
+            ObjectMapper objectMapper
     ) {
-        return new ClasspathAdvisorDocumentRepository(applicationContext, new ObjectMapper());
+        return new ClasspathAdvisorDocumentRepository(applicationContext, objectMapper);
     }
 
     @Bean

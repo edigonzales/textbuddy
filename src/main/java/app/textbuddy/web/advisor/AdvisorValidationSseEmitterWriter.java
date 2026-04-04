@@ -2,6 +2,8 @@ package app.textbuddy.web.advisor;
 
 import app.textbuddy.advisor.AdvisorValidationEvent;
 import app.textbuddy.advisor.AdvisorValidationStreamHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -10,6 +12,8 @@ import java.io.UncheckedIOException;
 import java.util.Map;
 
 final class AdvisorValidationSseEmitterWriter implements AdvisorValidationStreamHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(AdvisorValidationSseEmitterWriter.class);
 
     private final SseEmitter emitter;
 
@@ -33,6 +37,7 @@ final class AdvisorValidationSseEmitterWriter implements AdvisorValidationStream
             send("error", Map.of("message", message));
             emitter.complete();
         } catch (RuntimeException exception) {
+            log.warn("Failed to send advisor SSE error response.", exception);
             emitter.completeWithError(exception);
         }
     }

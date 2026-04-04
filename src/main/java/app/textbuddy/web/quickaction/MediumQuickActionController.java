@@ -4,6 +4,8 @@ import app.textbuddy.quickaction.MediumPrompt;
 import app.textbuddy.quickaction.MediumQuickActionRequest;
 import app.textbuddy.quickaction.MediumQuickActionService;
 import app.textbuddy.quickaction.QuickActionSsePayloadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +19,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RequestMapping("/api/quick-actions")
 public class MediumQuickActionController {
 
+    private static final Logger log = LoggerFactory.getLogger(MediumQuickActionController.class);
     private static final String DEFAULT_ERROR_MESSAGE = "Medium-Stream konnte nicht gestartet werden.";
     private static final String MISSING_OPTION_MESSAGE = "Medium-Option ist erforderlich.";
     private static final String INVALID_OPTION_MESSAGE = "Medium-Option ist ungueltig.";
@@ -43,6 +46,7 @@ public class MediumQuickActionController {
             try {
                 mediumQuickActionService.stream(request, writer);
             } catch (RuntimeException exception) {
+                log.error("Medium stream failed.", exception);
                 writer.error(DEFAULT_ERROR_MESSAGE);
             }
         });

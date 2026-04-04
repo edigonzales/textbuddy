@@ -2,6 +2,7 @@ import type {
   AdvisorValidationErrorPayload,
   AdvisorValidationEventPayload,
 } from "./types";
+import { extractErrorMessage } from "./http-error";
 
 interface AdvisorValidationSseCallbacks {
   body: unknown;
@@ -56,7 +57,7 @@ export async function postAdvisorValidationSse(
   });
 
   if (!response.ok) {
-    throw new Error(`SSE request failed with status ${response.status}`);
+    throw new Error(await extractErrorMessage(response, `SSE request failed with status ${response.status}`));
   }
 
   if (!response.body) {

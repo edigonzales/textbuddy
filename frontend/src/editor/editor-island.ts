@@ -109,7 +109,7 @@ export function mountEditorIsland(): void {
   });
 
   if (documentImportElements) {
-    mountDocumentImport(editor, documentImportElements);
+    mountDocumentImport(editor, elements.root, documentImportElements);
   }
 
   if (correctionElements) {

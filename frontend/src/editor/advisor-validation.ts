@@ -1,3 +1,4 @@
+import { isApiLocked } from "./auth";
 import { appendUniqueAdvisorValidationEvent, createAdvisorValidationKey } from "./advisor-validation-state";
 import { findAdvisorValidationElements } from "./dom";
 import { postAdvisorValidationSse } from "./advisor-validation-sse";
@@ -6,6 +7,7 @@ import type { AdvisorValidationEventPayload } from "./types";
 const RUNNING_LABEL = "Pruefung laeuft...";
 const IDLE_LABEL = "Pruefung starten";
 const DEFAULT_ERROR_MESSAGE = "Advisor-Pruefung konnte nicht abgeschlossen werden.";
+const AUTH_REQUIRED_MESSAGE = "Mit OIDC anmelden, um die Advisor-Pruefung zu starten.";
 const EMPTY_RESULTS_MESSAGE =
   "Noch keine Advisor-Treffer. Starte die Pruefung mit markierten Dokumenten.";
 
@@ -64,11 +66,17 @@ export function mountAdvisorValidation(): void {
 
     elements.validateButton.textContent = IDLE_LABEL;
     elements.validateButton.disabled =
+      isApiLocked(editorRoot) ||
       mirror.value.trim().length === 0 || selectedDocs().length === 0;
   }
 
   function syncIdleStatus(): void {
     if (activeValidation) {
+      return;
+    }
+
+    if (isApiLocked(editorRoot)) {
+      setPanelState("error", AUTH_REQUIRED_MESSAGE);
       return;
     }
 
@@ -175,6 +183,12 @@ export function mountAdvisorValidation(): void {
   }
 
   async function runValidation(): Promise<void> {
+    if (isApiLocked(editorRoot)) {
+      syncValidateButton();
+      setPanelState("error", AUTH_REQUIRED_MESSAGE);
+      return;
+    }
+
     const docs = selectedDocs();
     const text = mirror.value.trim();
 
@@ -263,7 +277,12 @@ export function mountAdvisorValidation(): void {
 
       activeValidation = null;
       syncValidateButton();
-      setPanelState("error", DEFAULT_ERROR_MESSAGE);
+      setPanelState(
+        "error",
+        error instanceof Error && error.message.trim().length > 0
+          ? error.message
+          : DEFAULT_ERROR_MESSAGE,
+      );
     }
   }
 

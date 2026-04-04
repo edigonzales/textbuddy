@@ -10,8 +10,26 @@
             <p>${page.subtitle()}</p>
         </div>
         <div class="status-strip">
-            <div class="status-pill">Slice 17 erweitert die bestehende Editor-Insel um Dokumentimport ueber <code>POST /api/convert/doc</code> und uebernimmt das von Docling gelieferte HTML direkt in Tiptap.</div>
-            <div class="status-pill">Upload-Button, Drag-and-Drop-Zone und die sichtbare Formatliste nutzen jetzt dieselbe unterstuetzte Dateiauswahl wie die serverseitige Validierung.</div>
+            <div class="status-pill" data-testid="release-status-pill">
+                Slice 18 kombiniert die vorhandenen Kernfeatures jetzt mit konfigurierbarer OIDC-Grundintegration, globalem Fehlerbild und einem produktionsnaeheren Startprofil.
+            </div>
+            <div class="status-pill" data-testid="auth-status-pill">
+                <strong>${page.auth().statusTitle()}</strong>
+                <span>${page.auth().statusMessage()}</span>
+            </div>
+            @if (page.auth().enabled() && page.auth().authenticated())
+                <div class="status-pill status-pill-account" data-testid="auth-account-pill">
+                    <strong data-testid="auth-user">${page.auth().userDisplayName()}</strong>
+                    <form method="post" action="/logout" class="auth-form" data-testid="auth-logout-form">
+                        <button type="submit" class="inline-action" data-testid="auth-logout">Abmelden</button>
+                    </form>
+                </div>
+            @elseif (page.auth().enabled())
+                <div class="status-pill status-pill-account" data-testid="auth-login-pill">
+                    <strong>Anmeldung</strong>
+                    <a class="inline-action" href="${page.auth().loginUrl()}" data-testid="auth-login-link">Mit OIDC anmelden</a>
+                </div>
+            @endif
         </div>
     </header>
 
@@ -20,9 +38,16 @@
             <div class="panel-body">
                 <p class="eyebrow">Arbeitsfläche</p>
                 <h2>Quick Actions + Rewrite Bubble</h2>
-                <p class="panel-copy">Die Insel kombiniert weiter Wort-/Satz-Rewrite im Bubble-Menue, behaelt alle neun streamingfaehigen Volltext-Rewrites und importiert jetzt Dokumente per Upload oder Drag-and-Drop direkt in denselben Editor.</p>
+                <p class="panel-copy">Die Insel kombiniert Wort-/Satz-Rewrite im Bubble-Menue, alle neun streamingfaehigen Volltext-Rewrites, Dokumentimport, Advisor-Pruefung und Auth-/Fehlerpolitur in einer gemeinsamen Arbeitsflaeche.</p>
 
-                <div id="editor-island-root" class="editor-root" data-testid="editor-island-root">
+                <div
+                    id="editor-island-root"
+                    class="editor-root"
+                    data-testid="editor-island-root"
+                    data-auth-enabled="${Boolean.toString(page.auth().enabled())}"
+                    data-authenticated="${Boolean.toString(page.auth().authenticated())}"
+                    data-auth-login-url="${page.auth().loginUrl()}"
+                >
                     <div class="chip-row">
                         <span class="chip">JTE rendert die Shell</span>
                         <span class="chip">Tiptap bearbeitet Plain Text</span>
@@ -40,6 +65,8 @@
                         <span class="chip">Custom nimmt einen freien Arbeitsauftrag im Rewrite-Bereich entgegen</span>
                         <span class="chip">Rewrite-Diff und kompletter Undo bauen auf derselben Streaming-Basis auf</span>
                         <span class="chip">Dokumentimport gleicht Upload-Formate zwischen UI und Backend ab</span>
+                        <span class="chip">API-Fehler liefern ein konsistentes Problem-JSON mit Trace-ID</span>
+                        <span class="chip">OIDC bleibt per Konfiguration aktivierbar, ohne den lokalen Start zu blockieren</span>
                     </div>
 
                     <section
@@ -53,7 +80,7 @@
                             <div>
                                 <p class="eyebrow">Document Import</p>
                                 <h3>Upload oder Drag-and-Drop</h3>
-                                <p class="panel-copy">Unterstuetzte Dokumente werden an Docling gesendet. Das zurueckgelieferte HTML landet direkt in der bestehenden Tiptap-Insel, ohne Upload-Persistenz ausserhalb des aktuellen Requests.</p>
+                                <p class="panel-copy">Unterstuetzte Dokumente werden an Docling gesendet. Das zurueckgelieferte HTML landet direkt in der bestehenden Tiptap-Insel, ohne Upload-Persistenz ausserhalb des aktuellen Requests. Bei aktiver OIDC-Konfiguration laeuft der Endpoint nur fuer angemeldete Sessions.</p>
                             </div>
 
                             <p class="document-import-status" data-document-import-status data-testid="document-import-status" aria-live="polite">Bereit fuer Upload oder Drag-and-Drop.</p>
@@ -96,7 +123,7 @@
                             <div>
                                 <p class="eyebrow">Quick Actions</p>
                                 <h3>Rewrite mit Streaming</h3>
-                                <p class="panel-copy">Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom bleiben auch in Slice 17 aktiv. Summarize, Formality, Social Media, Medium und Character Speech nutzen eigene Varianten-Menues, Custom nutzt ein freies Prompt-Feld, weitere Quick Actions bleiben bis zu ihren eigenen Slices verborgen.</p>
+                                <p class="panel-copy">Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom bleiben aktiv. Summarize, Formality, Social Media, Medium und Character Speech nutzen eigene Varianten-Menues, Custom nutzt ein freies Prompt-Feld, weitere Quick Actions werden bewusst nicht nachgezogen.</p>
                             </div>
 
                             <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" aria-live="polite">Bereit fuer Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom.</p>
@@ -269,12 +296,12 @@
 
                     <div class="stack-list problems-footnotes">
                         <div class="stack-item">
-                            <strong>Neu in Slice 16</strong>
-                            Der Advisor-Katalog nutzt jetzt dieselbe Arbeitsflaeche auch fuer eine echte Regelpruefung ueber <code>POST /api/advisor/validate</code>, waehrend die Korrektur-Insel auf ihrem bestehenden Endpoint bleibt.
+                            <strong>Produktionsnaeher statt groesser</strong>
+                            Fehlerseiten, API-Fehler und Trace-IDs ziehen jetzt dieselbe Betriebslogik durch die vorhandenen Korrektur-, Rewrite- und Importfluesse.
                         </div>
                         <div class="stack-item">
-                            <strong>Bewusst weiterhin offen</strong>
-                            Keine Uploads in den Advisor-Bestand, kein Auth-Layer und keine weiteren Quick Actions ausserhalb der bereits freigeschalteten Aktionen.
+                            <strong>Bewusst weiterhin begrenzt</strong>
+                            Keine Uploads in den Advisor-Bestand und keine weiteren Quick Actions ausserhalb der bereits freigeschalteten Aktionen.
                         </div>
                     </div>
                 </div>
@@ -284,7 +311,7 @@
                 <div class="panel-body">
                     <p class="eyebrow">Advisor Catalog</p>
                     <h2>Referenzdokumente</h2>
-                    <p class="panel-copy">Slice 16 validiert den aktuellen Editor-Text jetzt gegen statische Dokumentregeln. Die Auswahl bleibt mehrfach moeglich, Treffer laufen waehrend des Streams direkt in die Ergebnisliste.</p>
+                    <p class="panel-copy">Die Auswahl bleibt mehrfach moeglich, Treffer laufen waehrend des Streams direkt in die Ergebnisliste und nutzen dasselbe konsistente Fehler- und Auth-Verhalten wie die uebrigen API-Flows.</p>
 
                     <div class="advisor-toolbar">
                         <p class="advisor-status" data-advisor-status data-testid="advisor-status" aria-live="polite">
@@ -357,7 +384,7 @@
                         </div>
                         <div class="stack-item">
                             <strong>Bewusst statisch</strong>
-                            Der Katalog liest weiterhin nur projektinterne Demo-Metadaten und PDFs aus <code>src/main/resources/advisor</code>. Uploads erweitern diesen Bestand weiterhin nicht.
+                            Der Katalog liest weiterhin nur projektinterne Demo-Metadaten und PDFs aus <code>src/main/resources/advisor</code>. Uploads erweitern diesen Bestand nicht.
                         </div>
                     </div>
                 </div>

@@ -3,6 +3,8 @@ package app.textbuddy.web.quickaction;
 import app.textbuddy.quickaction.QuickActionService;
 import app.textbuddy.quickaction.QuickActionSsePayloadFactory;
 import app.textbuddy.quickaction.QuickActionStreamRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,6 +16,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RequestMapping("/api/quick-actions")
 public class BulletPointsQuickActionController {
 
+    private static final Logger log = LoggerFactory.getLogger(BulletPointsQuickActionController.class);
     private static final String DEFAULT_ERROR_MESSAGE = "Bullet-Points-Stream konnte nicht gestartet werden.";
 
     private final QuickActionService quickActionService;
@@ -36,6 +39,7 @@ public class BulletPointsQuickActionController {
             try {
                 quickActionService.streamBulletPoints(request, writer);
             } catch (RuntimeException exception) {
+                log.error("Bullet Points stream failed.", exception);
                 writer.error(DEFAULT_ERROR_MESSAGE);
             }
         });

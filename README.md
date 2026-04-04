@@ -1,6 +1,6 @@
 # textbuddy
 
-Dieses Repository enthält die planungs- und umsetzungsleitenden Unterlagen für eine schrittweise Neuimplementierung von TextMate mit:
+Dieses Repository enthält die planungs- und umsetzungsleitenden Unterlagen und die lauffaehige Referenzimplementierung fuer eine schrittweise Neuimplementierung von TextMate mit:
 
 - Gradle Groovy
 - Java 25
@@ -21,6 +21,68 @@ Wichtige Einstiegsdateien:
 - [Codex-Regeln](/Users/stefan/sources/textbuddy/docs/implementation/02-codex-rules.md)
 - [Slice-Index](/Users/stefan/sources/textbuddy/docs/implementation/03-slice-index.md)
 - [Status](/Users/stefan/sources/textbuddy/docs/implementation/STATUS.md)
+
+## Voraussetzungen
+
+- Java 25
+- Node.js 20+
+- ein aktuelles `npm`
+
+## Build und Start
+
+Lokaler Standardstart ohne Auth:
+
+```bash
+./gradlew bootRun
+```
+
+Danach ist die Anwendung unter [http://localhost:8080](http://localhost:8080) erreichbar.
+
+Kompletter Build mit Java- und Frontend-Tests:
+
+```bash
+./gradlew test
+```
+
+## Auth / OIDC
+
+Auth ist standardmaessig deaktiviert:
+
+- `textbuddy.auth.enabled=false`
+- Home-Seite bleibt offen
+- APIs sind direkt nutzbar
+
+OIDC-Grundintegration aktivierst du ueber Properties. Beispiel:
+
+```bash
+./gradlew bootRun --args='
+  --textbuddy.auth.enabled=true
+  --spring.security.oauth2.client.registration.demo.client-id=demo-client
+  --spring.security.oauth2.client.registration.demo.client-secret=demo-secret
+  --spring.security.oauth2.client.registration.demo.scope=openid,profile,email
+  --spring.security.oauth2.client.registration.demo.authorization-grant-type=authorization_code
+  --spring.security.oauth2.client.registration.demo.redirect-uri={baseUrl}/login/oauth2/code/{registrationId}
+  --spring.security.oauth2.client.provider.demo.authorization-uri=https://issuer.example.test/oauth2/authorize
+  --spring.security.oauth2.client.provider.demo.token-uri=https://issuer.example.test/oauth2/token
+  --spring.security.oauth2.client.provider.demo.user-info-uri=https://issuer.example.test/userinfo
+  --spring.security.oauth2.client.provider.demo.user-name-attribute=sub
+  --spring.security.oauth2.client.provider.demo.jwk-set-uri=https://issuer.example.test/oauth2/jwks
+'
+```
+
+Mit aktivierter Auth:
+
+- die Home-Seite zeigt den OIDC-Status
+- bestehende `/api/**`-Endpoints verlangen eine angemeldete Session
+- API-Fehler liefern ein konsistentes JSON-Fehlerformat inklusive `traceId`
+
+## Adapter-Konfiguration
+
+Fuer lokale Entwicklung laufen die externen Adapter standardmaessig im Stub-Modus.
+
+- `textbuddy.languagetool.base-url`: aktiviert den HTTP-LanguageTool-Client
+- `textbuddy.docling.base-url`: aktiviert den HTTP-Docling-Client
+- `textbuddy.docling.api-key`: optionaler API-Key fuer Docling
 
 ## Arbeitsmodus
 

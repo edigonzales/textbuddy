@@ -4,6 +4,8 @@ import app.textbuddy.quickaction.FormalityPrompt;
 import app.textbuddy.quickaction.FormalityQuickActionRequest;
 import app.textbuddy.quickaction.FormalityQuickActionService;
 import app.textbuddy.quickaction.QuickActionSsePayloadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +19,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RequestMapping("/api/quick-actions")
 public class FormalityQuickActionController {
 
+    private static final Logger log = LoggerFactory.getLogger(FormalityQuickActionController.class);
     private static final String DEFAULT_ERROR_MESSAGE = "Formality-Stream konnte nicht gestartet werden.";
     private static final String MISSING_OPTION_MESSAGE = "Formality-Option ist erforderlich.";
     private static final String INVALID_OPTION_MESSAGE = "Formality-Option ist ungueltig.";
@@ -43,6 +46,7 @@ public class FormalityQuickActionController {
             try {
                 formalityQuickActionService.stream(request, writer);
             } catch (RuntimeException exception) {
+                log.error("Formality stream failed.", exception);
                 writer.error(DEFAULT_ERROR_MESSAGE);
             }
         });
