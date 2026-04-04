@@ -1,5 +1,8 @@
 package app.textbuddy.config;
 
+import app.textbuddy.advisor.AdvisorRuleCheck;
+import app.textbuddy.advisor.AdvisorRuleMatch;
+import app.textbuddy.integration.llm.AdvisorValidationLlmClient;
 import app.textbuddy.integration.llm.BulletPointsLlmClient;
 import app.textbuddy.integration.llm.CharacterSpeechLlmClient;
 import app.textbuddy.integration.llm.CustomLlmClient;
@@ -22,11 +25,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Configuration(proxyBeanMethods = false)
@@ -283,6 +288,32 @@ public class AdapterStubConfiguration {
     }
 
     @Bean
+    AdvisorValidationLlmClient advisorValidationLlmClient() {
+        return (text, ruleChecks) -> {
+            String normalizedText = normalize(text);
+
+            if (normalizedText.isBlank() || ruleChecks == null || ruleChecks.isEmpty()) {
+                return List.of();
+            }
+
+            List<AdvisorRuleMatch> matches = new ArrayList<>();
+
+            for (AdvisorRuleCheck ruleCheck : ruleChecks) {
+                findFirstMatch(normalizedText, ruleCheck).ifPresent(match -> matches.add(new AdvisorRuleMatch(
+                        ruleCheck.documentName(),
+                        ruleCheck.ruleId(),
+                        match.matchedText(),
+                        excerptAround(normalizedText, match.startIndex(), match.endIndex()),
+                        ruleCheck.message() + " Gefunden: '" + match.matchedText() + "'.",
+                        ruleCheck.suggestion()
+                )));
+            }
+
+            return List.copyOf(matches);
+        };
+    }
+
+    @Bean
     SummarizeLlmClient summarizeLlmClient() {
         return (text, language, prompt) -> {
             String normalized = normalize(text);
@@ -468,5 +499,57 @@ public class AdapterStubConfiguration {
         }
 
         return normalized.substring(0, index).trim();
+    }
+
+    private static Optional<TextMatch> findFirstMatch(String text, AdvisorRuleCheck ruleCheck) {
+        return ruleCheck.matchTerms().stream()
+                .map(term -> findMatch(text, term))
+                .flatMap(Optional::stream)
+                .min(Comparator.comparingInt(TextMatch::startIndex));
+    }
+
+    private static Optional<TextMatch> findMatch(String text, String term) {
+        String normalizedText = normalize(text);
+        String normalizedTerm = normalize(term);
+
+        if (normalizedText.isBlank() || normalizedTerm.isBlank()) {
+            return Optional.empty();
+        }
+
+        String lowerText = normalizedText.toLowerCase(Locale.ROOT);
+        String lowerTerm = normalizedTerm.toLowerCase(Locale.ROOT);
+        int matchIndex = lowerText.indexOf(lowerTerm);
+
+        if (matchIndex < 0) {
+            return Optional.empty();
+        }
+
+        return Optional.of(new TextMatch(
+                normalizedText.substring(matchIndex, matchIndex + normalizedTerm.length()),
+                matchIndex,
+                matchIndex + normalizedTerm.length()
+        ));
+    }
+
+    private static String excerptAround(String text, int startIndex, int endIndex) {
+        int excerptStart = Math.max(0, startIndex - 32);
+        int excerptEnd = Math.min(text.length(), endIndex + 32);
+        String excerpt = text.substring(excerptStart, excerptEnd).trim();
+
+        if (excerptStart > 0) {
+            excerpt = "..." + excerpt;
+        }
+        if (excerptEnd < text.length()) {
+            excerpt = excerpt + "...";
+        }
+
+        return excerpt;
+    }
+
+    private record TextMatch(
+            String matchedText,
+            int startIndex,
+            int endIndex
+    ) {
     }
 }

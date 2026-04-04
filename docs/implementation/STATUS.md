@@ -27,8 +27,8 @@
 | 13 | done | Quick Action Character Speech |
 | 14 | done | Quick Action Custom |
 | 15 | done | Advisor Catalog and PDF |
-| 16 | ready | Advisor Validation |
-| 17 | pending | Document Import |
+| 16 | done | Advisor Validation |
+| 17 | ready | Document Import |
 | 18 | pending | Auth and Polish |
 
 ## Empfohlene Reihenfolge
@@ -69,3 +69,5 @@
 - Slice 14 Build/Test-Handoff: Unit-Tests decken Prompt-Aufbereitung, Request-Validierung und Service-Fehlerpfade ab, MockMvc prueft den neuen Streaming-Endpoint inklusive Pflichtfeld `prompt`, und Playwright validiert Custom-Prompt, Stream und Ergebnis im Browser; naechster Slice ist `15 Advisor Catalog and PDF`.
 - Slice 15 abgeschlossen: `GET /api/advisor/docs` liefert einen statischen dateibasierten Advisor-Katalog aus JSON-Metadaten, `GET /api/advisor/doc/{name}` liefert die zugehoerigen Demo-PDFs inline aus, und die Home-Shell zeigt dafuer ein Advisor-Panel mit Mehrfachauswahl sowie PDF-Links.
 - Slice 15 Build/Test-Handoff: Unit-Test deckt das Repository-Laden ab, MockMvc prueft beide GET-Endpunkte und die erweiterte Home-Shell, Playwright validiert Dokumentliste plus PDF-Erreichbarkeit; `./gradlew test`, `./gradlew build` und `npm test` unter `playwright/` sind gruen. Naechster Slice ist `16 Advisor Validation`.
+- Slice 16 abgeschlossen: `POST /api/advisor/validate` laedt statische Dokumentregeln aus den Advisor-Metadaten, prueft sie in kleinen Batches ueber einen dedizierten LLM-Adapter und streamt Treffer als `validation`-Events per `SseEmitter`; das Advisor-Panel startet die Pruefung direkt aus der Dokumentauswahl, dedupliziert clientseitig ueber `stableKey` und zeigt eine laufende Trefferliste mit Dokument- und Seitenbezug.
+- Slice 16 Build/Test-Handoff: Unit-Tests decken Batch-Aufteilung und Regel-Streaming in `DefaultAdvisorValidationService` ab, MockMvc prueft den neuen SSE-Endpoint, Frontend-Unit-Tests validieren die clientseitige Deduplizierung, und Playwright deckt Start, Event-Empfang, Deduplizierung sowie die Auswahl eines gestreamten Treffers im Browser ab; `./gradlew build` und `npm test` unter `playwright/` sind gruen. Naechster Slice ist `17 Document Import`.

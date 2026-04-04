@@ -10,8 +10,8 @@
             <p>${page.subtitle()}</p>
         </div>
         <div class="status-strip">
-            <div class="status-pill">Slice 15 haelt die bestehenden neun SSE-Quick-Actions unveraendert aktiv und ergaenzt den statischen Advisor-Katalog ueber <code>GET /api/advisor/docs</code> sowie die PDF-Auslieferung ueber <code>GET /api/advisor/doc/{name}</code>.</div>
-            <div class="status-pill">Der Advisor erlaubt jetzt Mehrfachauswahl und direkte PDF-Links. Die eigentliche Validierung gegen Regelwerke bleibt bewusst bis Slice 16 verborgen.</div>
+            <div class="status-pill">Slice 16 haelt die bestehenden neun SSE-Quick-Actions aktiv und erweitert den statischen Advisor-Katalog um die eigentliche Validierung ueber <code>POST /api/advisor/validate</code>.</div>
+            <div class="status-pill">Der Advisor prueft Editor-Text jetzt in kleinen Regelbatches, streamt Treffer ueber <code>SseEmitter</code> und zeigt Dokument- sowie Seitenbezug direkt im Panel.</div>
         </div>
     </header>
 
@@ -46,7 +46,7 @@
                             <div>
                                 <p class="eyebrow">Quick Actions</p>
                                 <h3>Rewrite mit Streaming</h3>
-                                <p class="panel-copy">Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom bleiben auch in Slice 15 aktiv. Summarize, Formality, Social Media, Medium und Character Speech nutzen eigene Varianten-Menues, Custom nutzt ein freies Prompt-Feld, weitere Quick Actions bleiben bis zu ihren eigenen Slices verborgen.</p>
+                                <p class="panel-copy">Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom bleiben auch in Slice 16 aktiv. Summarize, Formality, Social Media, Medium und Character Speech nutzen eigene Varianten-Menues, Custom nutzt ein freies Prompt-Feld, weitere Quick Actions bleiben bis zu ihren eigenen Slices verborgen.</p>
                             </div>
 
                             <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" aria-live="polite">Bereit fuer Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom.</p>
@@ -219,26 +219,29 @@
 
                     <div class="stack-list problems-footnotes">
                         <div class="stack-item">
-                            <strong>Neu in Slice 15</strong>
-                            Der Advisor-Katalog ist jetzt sichtbar, liest statische JSON-Metadaten und verlinkt PDFs ueber <code>GET /api/advisor/doc/{name}</code>. Die Korrektur-Insel bleibt dabei unveraendert auf dem bestehenden Endpoint.
+                            <strong>Neu in Slice 16</strong>
+                            Der Advisor-Katalog nutzt jetzt dieselbe Arbeitsflaeche auch fuer eine echte Regelpruefung ueber <code>POST /api/advisor/validate</code>, waehrend die Korrektur-Insel auf ihrem bestehenden Endpoint bleibt.
                         </div>
                         <div class="stack-item">
-                            <strong>Bewusst noch nicht aktiv</strong>
-                            Keine Advisor-Validierung, kein Upload in den Advisor-Bestand und keine weiteren Quick Actions ausserhalb der bereits freigeschalteten Aktionen.
+                            <strong>Bewusst weiterhin offen</strong>
+                            Keine Uploads in den Advisor-Bestand, kein Auth-Layer und keine weiteren Quick Actions ausserhalb der bereits freigeschalteten Aktionen.
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section class="panel advisor-panel" data-testid="advisor-panel">
+            <section class="panel advisor-panel" data-testid="advisor-panel" data-advisor-panel data-advisor-state="idle">
                 <div class="panel-body">
                     <p class="eyebrow">Advisor Catalog</p>
                     <h2>Referenzdokumente</h2>
-                    <p class="panel-copy">Slice 15 liefert den statischen Advisor-Bestand sichtbar aus. Mehrfachauswahl ist bereits moeglich, die fachliche Validierung folgt erst im naechsten Slice.</p>
+                    <p class="panel-copy">Slice 16 validiert den aktuellen Editor-Text jetzt gegen statische Dokumentregeln. Die Auswahl bleibt mehrfach moeglich, Treffer laufen waehrend des Streams direkt in die Ergebnisliste.</p>
 
-                    <p class="advisor-status" data-testid="advisor-status">
-                        ${page.advisorDocs().size()} Dokumente verfuegbar. Waehle beliebig viele Referenzen aus und oeffne die PDFs direkt im Browser oder per Download.
-                    </p>
+                    <div class="advisor-toolbar">
+                        <p class="advisor-status" data-advisor-status data-testid="advisor-status" aria-live="polite">
+                            ${page.advisorDocs().size()} Dokumente verfuegbar. Waehle Referenzen, schreibe Text im Editor und starte dann die Advisor-Pruefung.
+                        </p>
+                        <button type="button" class="advisor-validate" data-advisor-validate data-testid="advisor-validate">Pruefung starten</button>
+                    </div>
 
                     <div class="advisor-list" data-testid="advisor-doc-list">
                         @for (var advisorDoc : page.advisorDocs())
@@ -262,14 +265,49 @@
                         @endfor
                     </div>
 
+                    <section class="advisor-results-panel" data-testid="advisor-results-panel">
+                        <div class="advisor-results-head">
+                            <div>
+                                <p class="eyebrow">Validation Stream</p>
+                                <h3>Trefferliste</h3>
+                                <p class="panel-copy">Die Liste aktualisiert sich waehrend des Streams. Der Client dedupliziert Treffer ueber einen stabilen Schluessel.</p>
+                            </div>
+
+                            <span class="advisor-result-counter" data-advisor-result-count data-testid="advisor-result-count">0 Treffer</span>
+                        </div>
+
+                        <p class="advisor-results-empty" data-advisor-result-empty data-testid="advisor-result-empty">
+                            Noch keine Advisor-Treffer. Starte die Pruefung mit markierten Dokumenten.
+                        </p>
+
+                        <div class="advisor-results" data-advisor-result-list data-testid="advisor-result-list"></div>
+
+                        <section class="advisor-detail" data-advisor-result-detail data-testid="advisor-result-detail" hidden>
+                            <div class="advisor-detail-head">
+                                <div>
+                                    <p class="eyebrow">Ausgewaehlter Treffer</p>
+                                    <h3 data-advisor-result-detail-title data-testid="advisor-result-detail-title"></h3>
+                                </div>
+
+                                <a class="advisor-link" href="#" target="_blank" rel="noopener noreferrer" data-advisor-result-detail-link data-testid="advisor-result-detail-link">Dokument oeffnen</a>
+                            </div>
+
+                            <p class="advisor-detail-reference" data-advisor-result-detail-reference data-testid="advisor-result-detail-reference"></p>
+                            <p class="advisor-detail-match" data-advisor-result-detail-match data-testid="advisor-result-detail-match"></p>
+                            <p class="advisor-detail-message" data-advisor-result-detail-message data-testid="advisor-result-detail-message"></p>
+                            <blockquote class="advisor-detail-excerpt" data-advisor-result-detail-excerpt data-testid="advisor-result-detail-excerpt"></blockquote>
+                            <p class="advisor-detail-suggestion" data-advisor-result-detail-suggestion data-testid="advisor-result-detail-suggestion"></p>
+                        </section>
+                    </section>
+
                     <div class="stack-list advisor-footnotes">
                         <div class="stack-item">
-                            <strong>Mehrfachauswahl vorbereitet</strong>
-                            Die Checkboxen markieren bereits mehrere Referenzdokumente parallel. Erst Slice 16 nutzt diese Auswahl fuer die eigentliche Advisor-Pruefung.
+                            <strong>Mehrfachauswahl aktiv genutzt</strong>
+                            Die Checkboxen steuern jetzt direkt, welche Dokumentregeln in die Advisor-Pruefung einbezogen werden.
                         </div>
                         <div class="stack-item">
                             <strong>Bewusst statisch</strong>
-                            Der Katalog liest nur projektinterne Demo-Metadaten und PDFs aus <code>src/main/resources/advisor</code>. Uploads erweitern diesen Bestand weiterhin nicht.
+                            Der Katalog liest weiterhin nur projektinterne Demo-Metadaten und PDFs aus <code>src/main/resources/advisor</code>. Uploads erweitern diesen Bestand weiterhin nicht.
                         </div>
                     </div>
                 </div>

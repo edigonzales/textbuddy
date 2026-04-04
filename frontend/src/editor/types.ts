@@ -66,6 +66,24 @@ export interface CorrectionElements {
   dictionaryEmpty: HTMLElement;
 }
 
+export interface AdvisorValidationElements {
+  panel: HTMLElement;
+  status: HTMLElement;
+  validateButton: HTMLButtonElement;
+  docCheckboxes: HTMLInputElement[];
+  resultCount: HTMLElement;
+  resultList: HTMLElement;
+  resultEmpty: HTMLElement;
+  detailPanel: HTMLElement;
+  detailTitle: HTMLElement;
+  detailReference: HTMLElement;
+  detailMatch: HTMLElement;
+  detailMessage: HTMLElement;
+  detailExcerpt: HTMLElement;
+  detailSuggestion: HTMLElement;
+  detailLink: HTMLAnchorElement;
+}
+
 export interface CorrectionRange {
   offset: number;
   length: number;
@@ -103,6 +121,25 @@ export interface QuickActionSseCompletePayload {
 }
 
 export interface QuickActionSseErrorPayload {
+  message: string;
+}
+
+export interface AdvisorValidationEventPayload {
+  stableKey: string;
+  documentName: string;
+  documentTitle: string;
+  ruleId: string;
+  ruleTitle: string;
+  page: number;
+  pageLabel: string;
+  message: string;
+  matchedText: string;
+  excerpt: string;
+  suggestion: string;
+  referenceUrl: string;
+}
+
+export interface AdvisorValidationErrorPayload {
   message: string;
 }
 

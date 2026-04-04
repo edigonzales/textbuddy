@@ -1,0 +1,27 @@
+{
+  "order": 5,
+  "name": "merkblatt_behoerdenbriefe",
+  "title": "Merkblatt Behoerdenbriefe",
+  "summary": "Demo-Referenz fuer klar strukturierte Behoerdenbriefe, Lesefuehrung und adressatengerechte Sprache.",
+  "source": "Projektinterne Demoquelle",
+  "rules": [
+    {
+      "id": "beiliegend-modernisieren",
+      "title": "Beiliegend direkter formulieren",
+      "page": 5,
+      "instructions": "Pruefe typische Briefeinstiege auf eine klarere aktive Form.",
+      "message": "Die Einleitung kann direkter und klarer formuliert werden.",
+      "suggestion": "Benenne die Anlage direkt oder formuliere den Satz aktiv.",
+      "matchTerms": ["beiliegend", "anbei"]
+    },
+    {
+      "id": "obgenannt-vermeiden",
+      "title": "Obgenannt vermeiden",
+      "page": 9,
+      "instructions": "Pruefe schwer verstaendliche Verwaltungssprache auf konkrete Alternativen.",
+      "message": "Der Ausdruck ist fuer viele Leserinnen und Leser unklar.",
+      "suggestion": "Nutze konkrete Bezeichnungen statt verweisender Amtsprache.",
+      "matchTerms": ["obgenannt", "vorgenannt"]
+    }
+  ]
+}

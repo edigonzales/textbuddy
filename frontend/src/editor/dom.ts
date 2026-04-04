@@ -1,4 +1,5 @@
 import type {
+  AdvisorValidationElements,
   CorrectionElements,
   EditorElements,
   QuickActionElements,
@@ -76,6 +77,68 @@ export function findCorrectionElements(): CorrectionElements | null {
     dictionaryInput,
     dictionaryList,
     dictionaryEmpty,
+  };
+}
+
+export function findAdvisorValidationElements(): AdvisorValidationElements | null {
+  const panel = document.querySelector<HTMLElement>("[data-advisor-panel]");
+
+  if (!panel) {
+    return null;
+  }
+
+  const status = queryRequired<HTMLElement>(panel, "[data-advisor-status]");
+  const validateButton = queryRequired<HTMLButtonElement>(panel, "[data-advisor-validate]");
+  const resultCount = queryRequired<HTMLElement>(panel, "[data-advisor-result-count]");
+  const resultList = queryRequired<HTMLElement>(panel, "[data-advisor-result-list]");
+  const resultEmpty = queryRequired<HTMLElement>(panel, "[data-advisor-result-empty]");
+  const detailPanel = queryRequired<HTMLElement>(panel, "[data-advisor-result-detail]");
+  const detailTitle = queryRequired<HTMLElement>(panel, "[data-advisor-result-detail-title]");
+  const detailReference = queryRequired<HTMLElement>(panel, "[data-advisor-result-detail-reference]");
+  const detailMatch = queryRequired<HTMLElement>(panel, "[data-advisor-result-detail-match]");
+  const detailMessage = queryRequired<HTMLElement>(panel, "[data-advisor-result-detail-message]");
+  const detailExcerpt = queryRequired<HTMLElement>(panel, "[data-advisor-result-detail-excerpt]");
+  const detailSuggestion = queryRequired<HTMLElement>(panel, "[data-advisor-result-detail-suggestion]");
+  const detailLink = queryRequired<HTMLAnchorElement>(panel, "[data-advisor-result-detail-link]");
+  const docCheckboxes = Array.from(
+    panel.querySelectorAll<HTMLInputElement>("[data-testid='advisor-doc-checkbox']"),
+  );
+
+  if (
+    !status ||
+    !validateButton ||
+    !resultCount ||
+    !resultList ||
+    !resultEmpty ||
+    !detailPanel ||
+    !detailTitle ||
+    !detailReference ||
+    !detailMatch ||
+    !detailMessage ||
+    !detailExcerpt ||
+    !detailSuggestion ||
+    !detailLink ||
+    docCheckboxes.length === 0
+  ) {
+    return null;
+  }
+
+  return {
+    panel,
+    status,
+    validateButton,
+    docCheckboxes,
+    resultCount,
+    resultList,
+    resultEmpty,
+    detailPanel,
+    detailTitle,
+    detailReference,
+    detailMatch,
+    detailMessage,
+    detailExcerpt,
+    detailSuggestion,
+    detailLink,
   };
 }
 

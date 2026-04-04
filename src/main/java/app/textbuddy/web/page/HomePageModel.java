@@ -13,7 +13,7 @@ public record HomePageModel(
     public static HomePageModel defaultPage(List<AdvisorDocsResponseItem> advisorDocs) {
         return new HomePageModel(
                 "Textbuddy Workspace",
-                "Slice 15 macht den statischen Advisor-Katalog sichtbar, liefert PDF-Referenzen ueber Spring MVC aus und behaelt die bestehende Editor-, Rewrite- und Korrektur-Infrastruktur unveraendert bei.",
+                "Slice 16 validiert Editor-Texte jetzt gegen statische Advisor-Regeln, streamt Treffer ueber SseEmitter und behaelt die bestehende Editor-, Rewrite- und Korrektur-Infrastruktur bei.",
                 List.copyOf(advisorDocs)
         );
     }

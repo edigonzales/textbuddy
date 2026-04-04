@@ -1,4 +1,9 @@
 package app.textbuddy.advisor;
 
-public record AdvisorValidateRequest() {
+import java.util.List;
+
+public record AdvisorValidateRequest(
+        String text,
+        List<String> docs
+) {
 }

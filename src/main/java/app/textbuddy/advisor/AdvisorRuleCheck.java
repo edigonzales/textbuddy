@@ -1,17 +1,17 @@
 package app.textbuddy.advisor;
 
-public record AdvisorValidationEvent(
-        String stableKey,
+import java.util.List;
+
+public record AdvisorRuleCheck(
         String documentName,
         String documentTitle,
+        String referenceUrl,
         String ruleId,
         String ruleTitle,
         int page,
-        String pageLabel,
+        String instructions,
         String message,
-        String matchedText,
-        String excerpt,
         String suggestion,
-        String referenceUrl
+        List<String> matchTerms
 ) {
 }

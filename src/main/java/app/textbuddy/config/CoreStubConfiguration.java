@@ -9,12 +9,6 @@ import org.springframework.context.annotation.Configuration;
 public class CoreStubConfiguration {
 
     @Bean
-    AdvisorValidationService advisorValidationService() {
-        return new AdvisorValidationService() {
-        };
-    }
-
-    @Bean
     DocumentConversionService documentConversionService() {
         return new DocumentConversionService() {
         };

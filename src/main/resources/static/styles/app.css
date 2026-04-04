@@ -420,13 +420,65 @@ a {
     align-self: start;
 }
 
+.advisor-toolbar {
+    display: grid;
+    gap: 0.85rem;
+    margin-top: 1rem;
+}
+
 .advisor-status {
-    margin: 1rem 0 0;
+    margin: 0;
     padding: 0.9rem 1rem;
     border-radius: 16px;
     background: rgba(15, 109, 104, 0.08);
     color: var(--accent);
     font-weight: 600;
+}
+
+.advisor-validate {
+    justify-self: start;
+    min-width: min(100%, 15rem);
+    padding: 0.9rem 1rem;
+    border-radius: 16px;
+    border: 1px solid rgba(15, 109, 104, 0.18);
+    background: linear-gradient(135deg, rgba(15, 109, 104, 0.14), rgba(15, 109, 104, 0.24));
+    color: var(--accent);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+            transform 140ms ease,
+            border-color 140ms ease,
+            box-shadow 140ms ease;
+    box-shadow: 0 12px 24px rgba(28, 39, 48, 0.08);
+}
+
+.advisor-validate:hover:enabled {
+    transform: translateY(-1px);
+    border-color: rgba(15, 109, 104, 0.42);
+    box-shadow: 0 14px 28px rgba(28, 39, 48, 0.12);
+}
+
+.advisor-validate:disabled {
+    color: rgba(22, 77, 83, 0.42);
+    cursor: not-allowed;
+    box-shadow: none;
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.advisor-panel[data-advisor-state="streaming"] .advisor-status {
+    background: rgba(161, 110, 27, 0.12);
+    color: #7f4d14;
+}
+
+.advisor-panel[data-advisor-state="success"] .advisor-status {
+    background: rgba(84, 138, 33, 0.12);
+    color: #386114;
+}
+
+.advisor-panel[data-advisor-state="error"] .advisor-status {
+    background: rgba(178, 59, 59, 0.12);
+    color: #8d2f2f;
 }
 
 .advisor-list {
@@ -508,6 +560,129 @@ a {
     background: rgba(255, 255, 255, 0.92);
 }
 
+.advisor-results-panel,
+.advisor-detail {
+    display: grid;
+    gap: 0.9rem;
+    margin-top: 1.15rem;
+    padding: 1rem;
+    border-radius: 20px;
+    border: 1px solid rgba(15, 109, 104, 0.14);
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.advisor-results-head,
+.advisor-detail-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.8rem;
+    align-items: flex-start;
+}
+
+.advisor-results-head .panel-copy {
+    margin: 0.35rem 0 0;
+}
+
+.advisor-result-counter {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.6rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: 999px;
+    background: rgba(15, 109, 104, 0.08);
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.advisor-results-empty {
+    margin: 0;
+    color: var(--muted);
+}
+
+.advisor-results {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.advisor-result {
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.9);
+    transition:
+            border-color 140ms ease,
+            box-shadow 140ms ease,
+            transform 140ms ease;
+}
+
+.advisor-result[data-selected="true"] {
+    border-color: rgba(15, 109, 104, 0.4);
+    box-shadow: 0 14px 28px rgba(28, 39, 48, 0.08);
+}
+
+.advisor-result-button {
+    width: 100%;
+    display: grid;
+    gap: 0.35rem;
+    padding: 0.95rem 1rem;
+    border: 0;
+    border-radius: 18px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.advisor-result-button:hover {
+    transform: translateY(-1px);
+}
+
+.advisor-result-title {
+    color: var(--text);
+}
+
+.advisor-result-reference {
+    font-size: 0.92rem;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.advisor-result-excerpt {
+    color: var(--muted);
+    line-height: 1.45;
+}
+
+.advisor-detail {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.advisor-detail-reference,
+.advisor-detail-match,
+.advisor-detail-message,
+.advisor-detail-suggestion {
+    margin: 0;
+}
+
+.advisor-detail-reference,
+.advisor-detail-match {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.advisor-detail-message {
+    color: var(--text);
+}
+
+.advisor-detail-excerpt {
+    margin: 0;
+    padding: 0.95rem 1rem;
+    border-left: 4px solid rgba(15, 109, 104, 0.35);
+    border-radius: 0 16px 16px 0;
+    background: rgba(15, 109, 104, 0.06);
+    color: var(--muted);
+}
+
 @media (max-width: 900px) {
     .app-header,
     .workspace-grid {
@@ -521,5 +696,10 @@ a {
 
     .dictionary-form {
         grid-template-columns: 1fr;
+    }
+
+    .advisor-results-head,
+    .advisor-detail-head {
+        flex-direction: column;
     }
 }

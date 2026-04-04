@@ -21,6 +21,26 @@ interface QuickActionRequestPayload {
   prompt?: string;
 }
 
+interface AdvisorValidateRequestPayload {
+  text: string;
+  docs: string[];
+}
+
+interface AdvisorValidationEventPayload {
+  stableKey: string;
+  documentName: string;
+  documentTitle: string;
+  ruleId: string;
+  ruleTitle: string;
+  page: number;
+  pageLabel: string;
+  message: string;
+  matchedText: string;
+  excerpt: string;
+  suggestion: string;
+  referenceUrl: string;
+}
+
 function createCorrectionResponse(text: string) {
   const blocks = [];
   const tehOffset = text.indexOf("teh");
@@ -275,6 +295,108 @@ test("advisor catalog shows multiple selectable documents and serves reachable P
   expect(response.ok()).toBeTruthy();
   expect(response.headers()["content-type"]).toContain("application/pdf");
   expect(body.toString("utf-8")).toContain("%PDF-1.4");
+});
+
+test("advisor validation streams results and deduplicates them in the panel", async ({ page }) => {
+  const requestBodies: AdvisorValidateRequestPayload[] = [];
+
+  await page.route("**/api/advisor/validate", async (route) => {
+    const payload = route.request().postDataJSON() as AdvisorValidateRequestPayload;
+    const firstEvent: AdvisorValidationEventPayload = {
+      stableKey: "schreibweisungen::per-sofort-vermeiden::per-sofort",
+      documentName: "schreibweisungen",
+      documentTitle: "Schreibweisungen",
+      ruleId: "per-sofort-vermeiden",
+      ruleTitle: "Per sofort durch ab sofort ersetzen",
+      page: 7,
+      pageLabel: "Seite 7",
+      message: "Die Formulierung wirkt intern und wenig standardisiert.",
+      matchedText: "per sofort",
+      excerpt: "Bitte handeln Sie per sofort und laden Sie die Datei herunter.",
+      suggestion: "Nutze 'ab sofort'.",
+      referenceUrl: "/api/advisor/doc/schreibweisungen#page=7",
+    };
+
+    requestBodies.push(payload);
+    await route.fulfill({
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream",
+      },
+      body: createSseBody([
+        {
+          event: "validation",
+          payload: firstEvent,
+        },
+        {
+          event: "validation",
+          payload: {
+            ...firstEvent,
+            excerpt: "Duplikat, das im Client ignoriert werden soll.",
+          },
+        },
+        {
+          event: "validation",
+          payload: {
+            stableKey:
+              "empfehlungen-anglizismen-maerz-2020::downloaden-statt-herunterladen::downloaden",
+            documentName: "empfehlungen-anglizismen-maerz-2020",
+            documentTitle: "Empfehlungen zu Anglizismen",
+            ruleId: "downloaden-statt-herunterladen",
+            ruleTitle: "Deutsche Alternative fuer downloaden",
+            page: 6,
+            pageLabel: "Seite 6",
+            message: "Der Ausdruck wirkt als vermeidbarer Anglizismus.",
+            matchedText: "downloaden",
+            excerpt: "Bitte downloaden Sie das Formular per sofort.",
+            suggestion: "Nutze nach Moeglichkeit 'herunterladen'.",
+            referenceUrl: "/api/advisor/doc/empfehlungen-anglizismen-maerz-2020#page=6",
+          },
+        },
+      ]),
+    });
+  });
+
+  await page.goto("/");
+
+  const editor = page.getByTestId("editor-input");
+  const advisorCheckboxes = page.getByTestId("advisor-doc-checkbox");
+
+  await editor.click();
+  await page.keyboard.type("Bitte downloaden Sie das Formular per sofort.");
+
+  await advisorCheckboxes.nth(0).check();
+  await advisorCheckboxes.nth(3).check();
+  await page.getByTestId("advisor-validate").click();
+
+  await expect.poll(() => requestBodies.at(-1)?.text).toBe(
+    "Bitte downloaden Sie das Formular per sofort.",
+  );
+  await expect.poll(() => requestBodies.at(-1)?.docs).toEqual([
+    "empfehlungen-anglizismen-maerz-2020",
+    "schreibweisungen",
+  ]);
+  await expect(page.getByTestId("advisor-result-item")).toHaveCount(2);
+  await expect(page.getByTestId("advisor-result-count")).toHaveText("2 Treffer");
+  await expect(page.getByTestId("advisor-status")).toContainText("2 eindeutige Treffer");
+  await expect(page.getByTestId("advisor-result-detail-title")).toHaveText(
+    "Per sofort durch ab sofort ersetzen",
+  );
+  await expect(page.getByTestId("advisor-result-detail-reference")).toContainText("Schreibweisungen");
+  await expect(page.getByTestId("advisor-result-detail-reference")).toContainText("Seite 7");
+
+  await page.getByTestId("advisor-result-select").nth(1).click();
+
+  await expect(page.getByTestId("advisor-result-detail-title")).toHaveText(
+    "Deutsche Alternative fuer downloaden",
+  );
+  await expect(page.getByTestId("advisor-result-detail-reference")).toContainText(
+    "Empfehlungen zu Anglizismen",
+  );
+  await expect(page.getByTestId("advisor-result-detail-link")).toHaveAttribute(
+    "href",
+    "/api/advisor/doc/empfehlungen-anglizismen-maerz-2020#page=6",
+  );
 });
 
 test("plain language streams into the editor, shows a diff and supports full undo", async ({
