@@ -144,6 +144,14 @@ export function findQuickActionElements(root: HTMLElement): QuickActionElements 
     root,
     "[data-quick-action-option='medium']",
   );
+  const characterSpeechButton = queryRequired<HTMLButtonElement>(
+    root,
+    "[data-quick-action='character-speech']",
+  );
+  const characterSpeechOptionSelect = queryRequired<HTMLSelectElement>(
+    root,
+    "[data-quick-action-option='character-speech']",
+  );
   const diffPanel = queryRequired<HTMLElement>(root, "[data-rewrite-diff-panel]");
   const diffBefore = queryRequired<HTMLElement>(root, "[data-rewrite-diff-before]");
   const diffAfter = queryRequired<HTMLElement>(root, "[data-rewrite-diff-after]");
@@ -163,6 +171,8 @@ export function findQuickActionElements(root: HTMLElement): QuickActionElements 
     !socialMediaOptionSelect ||
     !mediumButton ||
     !mediumOptionSelect ||
+    !characterSpeechButton ||
+    !characterSpeechOptionSelect ||
     !diffPanel ||
     !diffBefore ||
     !diffAfter ||
@@ -185,6 +195,8 @@ export function findQuickActionElements(root: HTMLElement): QuickActionElements 
     socialMediaOptionSelect,
     mediumButton,
     mediumOptionSelect,
+    characterSpeechButton,
+    characterSpeechOptionSelect,
     diffPanel,
     diffBefore,
     diffAfter,

@@ -10,8 +10,8 @@
             <p>${page.subtitle()}</p>
         </div>
         <div class="status-strip">
-            <div class="status-pill">Slice 12 haelt jetzt <code>POST /api/quick-actions/plain-language/stream</code>, <code>POST /api/quick-actions/bullet-points/stream</code>, <code>POST /api/quick-actions/proofread/stream</code>, <code>POST /api/quick-actions/summarize/stream</code>, <code>POST /api/quick-actions/formality/stream</code>, <code>POST /api/quick-actions/social-media/stream</code> und <code>POST /api/quick-actions/medium/stream</code> als aktive SSE-Quick-Actions bereit.</div>
-            <div class="status-pill">Medium bringt ein eigenes Typ-Dropdown fuer <code>email</code>, <code>official_letter</code>, <code>presentation</code> und <code>report</code>, waehrend Summarize, Formality und Social Media ihre Varianten behalten und alle vier auf derselben Diff- und Undo-Infrastruktur bleiben.</div>
+            <div class="status-pill">Slice 13 haelt jetzt <code>POST /api/quick-actions/plain-language/stream</code>, <code>POST /api/quick-actions/bullet-points/stream</code>, <code>POST /api/quick-actions/proofread/stream</code>, <code>POST /api/quick-actions/summarize/stream</code>, <code>POST /api/quick-actions/formality/stream</code>, <code>POST /api/quick-actions/social-media/stream</code>, <code>POST /api/quick-actions/medium/stream</code> und <code>POST /api/quick-actions/character-speech/stream</code> als aktive SSE-Quick-Actions bereit.</div>
+            <div class="status-pill">Character Speech bringt ein eigenes Varianten-Dropdown fuer <code>direct_speech</code> und <code>indirect_speech</code>, waehrend Summarize, Formality, Social Media und Medium ihre Menues behalten und alle fuenf auf derselben Diff- und Undo-Infrastruktur bleiben.</div>
         </div>
     </header>
 
@@ -20,7 +20,7 @@
             <div class="panel-body">
                 <p class="eyebrow">Arbeitsfläche</p>
                 <h2>Quick Actions + Rewrite Bubble</h2>
-                <p class="panel-copy">Die Insel kombiniert weiter Wort-/Satz-Rewrite im Bubble-Menue und bietet jetzt sieben streamingfaehige Volltext-Rewrites fuer Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media und Medium mit aktionsspezifischer Variantenwahl.</p>
+                <p class="panel-copy">Die Insel kombiniert weiter Wort-/Satz-Rewrite im Bubble-Menue und bietet jetzt acht streamingfaehige Volltext-Rewrites fuer Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium und Character Speech mit aktionsspezifischer Variantenwahl.</p>
 
                 <div id="editor-island-root" class="editor-root" data-testid="editor-island-root">
                     <div class="chip-row">
@@ -36,6 +36,7 @@
                         <span class="chip">Formality waehlt zwischen formal und informal</span>
                         <span class="chip">Social Media waehlt zwischen Bluesky, Instagram und LinkedIn</span>
                         <span class="chip">Medium waehlt zwischen E-Mail, offiziellem Schreiben, Praesentation und Bericht</span>
+                        <span class="chip">Character Speech waehlt zwischen direkter und indirekter Rede</span>
                         <span class="chip">Rewrite-Diff und kompletter Undo bauen auf derselben Streaming-Basis auf</span>
                     </div>
 
@@ -44,10 +45,10 @@
                             <div>
                                 <p class="eyebrow">Quick Actions</p>
                                 <h3>Rewrite mit Streaming</h3>
-                                <p class="panel-copy">Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media und Medium sind in Slice 12 aktiv. Summarize, Formality, Social Media und Medium nutzen eigene Varianten-Menues, weitere Quick Actions bleiben bis zu ihren eigenen Slices verborgen.</p>
+                                <p class="panel-copy">Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium und Character Speech sind in Slice 13 aktiv. Summarize, Formality, Social Media, Medium und Character Speech nutzen eigene Varianten-Menues, weitere Quick Actions bleiben bis zu ihren eigenen Slices verborgen.</p>
                             </div>
 
-                            <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" aria-live="polite">Bereit fuer Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media und Medium.</p>
+                            <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" aria-live="polite">Bereit fuer Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium und Character Speech.</p>
                         </div>
 
                         <div class="quick-action-row">
@@ -99,6 +100,16 @@
                                     </select>
                                 </label>
                                 <button type="button" class="quick-action-button" data-quick-action="medium" data-testid="quick-action-medium">Medium</button>
+                            </div>
+                            <div class="quick-action-menu" data-testid="quick-action-character-speech-menu">
+                                <label class="quick-action-select-shell" for="quick-action-character-speech-option">
+                                    <span class="quick-action-select-label">Redeform</span>
+                                    <select id="quick-action-character-speech-option" class="quick-action-select" data-quick-action-option="character-speech" data-testid="quick-action-character-speech-option">
+                                        <option value="direct_speech" selected>Direkte Rede</option>
+                                        <option value="indirect_speech">Indirekte Rede</option>
+                                    </select>
+                                </label>
+                                <button type="button" class="quick-action-button" data-quick-action="character-speech" data-testid="quick-action-character-speech">Character Speech</button>
                             </div>
                         </div>
                     </section>
@@ -199,8 +210,8 @@
 
                 <div class="stack-list problems-footnotes">
                     <div class="stack-item">
-                        <strong>Neu in Slice 12</strong>
-                        Medium streamt jetzt ueber <code>POST /api/quick-actions/medium/stream</code>, verlangt einen festen Medium-Typ im Request und nutzt dieselbe Streaming-, Diff- und Undo-Infrastruktur wie die anderen Volltext-Rewrites.
+                        <strong>Neu in Slice 13</strong>
+                        Character Speech streamt jetzt ueber <code>POST /api/quick-actions/character-speech/stream</code>, verlangt die Variante <code>direct_speech</code> oder <code>indirect_speech</code> im Request und nutzt dieselbe Streaming-, Diff- und Undo-Infrastruktur wie die anderen Volltext-Rewrites.
                     </div>
                     <div class="stack-item">
                         <strong>Bewusst noch nicht aktiv</strong>

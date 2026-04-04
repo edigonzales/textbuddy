@@ -24,8 +24,8 @@
 | 10 | done | Quick Action Formality |
 | 11 | done | Quick Action Social Media |
 | 12 | done | Quick Action Medium |
-| 13 | ready | Quick Action Character Speech |
-| 14 | pending | Quick Action Custom |
+| 13 | done | Quick Action Character Speech |
+| 14 | ready | Quick Action Custom |
 | 15 | pending | Advisor Catalog and PDF |
 | 16 | pending | Advisor Validation |
 | 17 | pending | Document Import |
@@ -63,3 +63,5 @@
 - Slice 11 Build/Test-Handoff: Unit-Tests decken Kanal-Mapping und Service-Validierung ab, MockMvc prueft den neuen Social-Media-Endpoint inklusive Pflichtfeld `option`, und Playwright validiert mindestens zwei Kanaele im Browser; `./gradlew test`, `npm test` unter `playwright/` und `./gradlew build` sind gruen. Naechster Slice ist `12 Quick Action Medium`.
 - Slice 12 abgeschlossen: `POST /api/quick-actions/medium/stream` nutzt einen eigenen Medium-Service mit festem Typ-Mapping fuer `email`, `official_letter`, `presentation` und `report`; die Toolbar bietet dafuer ein eigenes Dropdown, waehrend Streaming, Diff und kompletter Undo unveraendert wiederverwendet werden.
 - Slice 12 Build/Test-Handoff: Unit-Tests decken Medium-Optionsvalidierung und Service-Mapping ab, MockMvc prueft den neuen Streaming-Endpoint inklusive Pflichtfeld `option`, und Playwright validiert mindestens zwei Medium-Typen im Browser; naechster Slice ist `13 Quick Action Character Speech`.
+- Slice 13 abgeschlossen: `POST /api/quick-actions/character-speech/stream` nutzt einen eigenen Character-Speech-Service mit festem Options-Mapping fuer `direct_speech` und `indirect_speech`; die Toolbar bietet dafuer ein eigenes Dropdown, waehrend Streaming, Diff und kompletter Undo unveraendert wiederverwendet werden.
+- Slice 13 Build/Test-Handoff: Unit-Tests decken Character-Speech-Optionsvalidierung und Service-Mapping ab, MockMvc prueft den neuen Streaming-Endpoint inklusive Pflichtfeld `option`, und Playwright validiert beide Varianten im Browser; naechster Slice ist `14 Quick Action Custom`.

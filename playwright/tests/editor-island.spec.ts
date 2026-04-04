@@ -295,7 +295,7 @@ test("plain language streams into the editor, shows a diff and supports full und
   const editor = page.getByTestId("editor-input");
   const mirror = page.getByTestId("editor-mirror");
 
-  await expect(page.locator("[data-quick-action]")).toHaveCount(7);
+  await expect(page.locator("[data-quick-action]")).toHaveCount(8);
 
   await editor.click();
   await page.keyboard.type("Der komplizierte Sachverhalt ist relevant.");
@@ -793,6 +793,88 @@ test("medium streams multiple medium variants with the selected option", async (
   );
   await expect(page.getByTestId("rewrite-diff-after")).toContainText("Bericht");
   await expect(page.getByTestId("rewrite-diff-after")).toContainText("Abschluss: Umsetzung beginnt sofort.");
+});
+
+test("character speech streams both direct and indirect variants with the selected option", async ({
+  page,
+}) => {
+  const requestBodies: QuickActionRequestPayload[] = [];
+
+  await page.route("**/api/quick-actions/character-speech/stream", async (route) => {
+    const payload = route.request().postDataJSON() as QuickActionRequestPayload;
+
+    requestBodies.push(payload);
+
+    const responseText =
+      payload.option === "indirect_speech"
+        ? "Indirekte Rede\n\nDie Figur sagte, dass Projekt ist freigegeben.\nDanach erklaerte die andere Figur, dass Team startet am Montag."
+        : 'Direkte Rede\n\n"Projekt ist freigegeben.", sagte die Figur.\n"Team startet am Montag.", antwortete die andere Figur.';
+
+    await route.fulfill({
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream",
+      },
+      body: createSseBody([
+        {
+          event: "chunk",
+          payload: {
+            text: responseText.slice(0, 24),
+          },
+        },
+        {
+          event: "chunk",
+          payload: {
+            text: responseText.slice(24),
+          },
+        },
+        {
+          event: "complete",
+          payload: {
+            text: responseText,
+          },
+        },
+      ]),
+    });
+  });
+
+  await page.goto("/");
+
+  const editor = page.getByTestId("editor-input");
+  const mirror = page.getByTestId("editor-mirror");
+  const optionSelect = page.getByTestId("quick-action-character-speech-option");
+
+  await editor.click();
+  await page.keyboard.type("Projekt ist freigegeben. Team startet am Montag.");
+  await expect(optionSelect).toHaveValue("direct_speech");
+  await page.getByTestId("quick-action-character-speech").click();
+
+  await expect.poll(() => requestBodies.at(-1)?.option).toBe("direct_speech");
+  await expect(page.getByTestId("quick-action-status")).toContainText(
+    "Character Speech abgeschlossen",
+  );
+  await expect(mirror).toHaveValue(
+    'Direkte Rede\n\n"Projekt ist freigegeben.", sagte die Figur.\n"Team startet am Montag.", antwortete die andere Figur.',
+  );
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+
+  await page.getByTestId("rewrite-diff-undo").click();
+
+  await expect(mirror).toHaveValue("Projekt ist freigegeben. Team startet am Montag.");
+  await optionSelect.selectOption("indirect_speech");
+  await page.getByTestId("quick-action-character-speech").click();
+
+  await expect.poll(() => requestBodies.at(-1)?.option).toBe("indirect_speech");
+  await expect(page.getByTestId("quick-action-status")).toContainText(
+    "Character Speech abgeschlossen",
+  );
+  await expect(mirror).toHaveValue(
+    "Indirekte Rede\n\nDie Figur sagte, dass Projekt ist freigegeben.\nDanach erklaerte die andere Figur, dass Team startet am Montag.",
+  );
+  await expect(page.getByTestId("rewrite-diff-after")).toContainText("Indirekte Rede");
+  await expect(page.getByTestId("rewrite-diff-after")).toContainText(
+    "Danach erklaerte die andere Figur, dass Team startet am Montag.",
+  );
 });
 
 test("incomplete sentences keep word mode without sentence action", async ({ page }) => {

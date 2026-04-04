@@ -2,6 +2,7 @@ package app.textbuddy.config;
 
 import app.textbuddy.integration.advisor.AdvisorDocumentRepository;
 import app.textbuddy.integration.llm.BulletPointsLlmClient;
+import app.textbuddy.integration.llm.CharacterSpeechLlmClient;
 import app.textbuddy.integration.docling.DoclingClient;
 import app.textbuddy.integration.llm.FormalityLlmClient;
 import app.textbuddy.integration.llm.LlmClientFacade;
@@ -11,6 +12,7 @@ import app.textbuddy.integration.llm.ProofreadLlmClient;
 import app.textbuddy.integration.llm.SocialMediaLlmClient;
 import app.textbuddy.integration.llm.SummarizeLlmClient;
 import app.textbuddy.integration.llm.WordSynonymLlmClient;
+import app.textbuddy.quickaction.CharacterSpeechPrompt;
 import app.textbuddy.quickaction.FormalityPrompt;
 import app.textbuddy.quickaction.MediumPrompt;
 import app.textbuddy.quickaction.SocialMediaPrompt;
@@ -223,6 +225,41 @@ public class AdapterStubConfiguration {
     }
 
     @Bean
+    CharacterSpeechLlmClient characterSpeechLlmClient() {
+        return (text, language, prompt) -> {
+            String normalized = normalize(text);
+
+            if (normalized.isBlank()) {
+                return List.of();
+            }
+
+            List<String> sentences = splitIntoBulletPointItems(normalized);
+            String lead = firstItem(sentences);
+            String support = itemAt(sentences, 1, firstItem(sentences));
+
+            String rewritten = switch (prompt) {
+                case DIRECT_SPEECH -> """
+                        Direkte Rede
+
+                        "%s", sagte die Figur.
+                        "%s", antwortete die andere Figur.
+                        """.formatted(lead, support);
+                case INDIRECT_SPEECH -> """
+                        Indirekte Rede
+
+                        Die Figur sagte, dass %s.
+                        Danach erklaerte die andere Figur, dass %s.
+                        """.formatted(
+                        stripTrailingSentencePunctuation(lead),
+                        stripTrailingSentencePunctuation(support)
+                );
+            };
+
+            return splitIntoChunks(rewritten.stripTrailing(), 24);
+        };
+    }
+
+    @Bean
     SummarizeLlmClient summarizeLlmClient() {
         return (text, language, prompt) -> {
             String normalized = normalize(text);
@@ -397,5 +434,22 @@ public class AdapterStubConfiguration {
         }
 
         return List.copyOf(chunks);
+    }
+
+    private static String stripTrailingSentencePunctuation(String value) {
+        String normalized = normalize(value);
+        int index = normalized.length();
+
+        while (index > 0) {
+            char character = normalized.charAt(index - 1);
+
+            if (character != '.' && character != '!' && character != '?' && character != ';') {
+                break;
+            }
+
+            index -= 1;
+        }
+
+        return normalized.substring(0, index).trim();
     }
 }

@@ -35,6 +35,8 @@ export interface QuickActionElements {
   socialMediaOptionSelect: HTMLSelectElement;
   mediumButton: HTMLButtonElement;
   mediumOptionSelect: HTMLSelectElement;
+  characterSpeechButton: HTMLButtonElement;
+  characterSpeechOptionSelect: HTMLSelectElement;
   diffPanel: HTMLElement;
   diffBefore: HTMLElement;
   diffAfter: HTMLElement;
