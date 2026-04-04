@@ -22,8 +22,8 @@
 | 08 | done | Quick Action Proofread |
 | 09 | done | Quick Action Summarize |
 | 10 | done | Quick Action Formality |
-| 11 | ready | Quick Action Social Media |
-| 12 | pending | Quick Action Medium |
+| 11 | done | Quick Action Social Media |
+| 12 | ready | Quick Action Medium |
 | 13 | pending | Quick Action Character Speech |
 | 14 | pending | Quick Action Custom |
 | 15 | pending | Advisor Catalog and PDF |
@@ -59,3 +59,5 @@
 - Slice 09 Build/Test-Handoff: Parameterisierte Unit-Tests decken das Options-Mapping ab, MockMvc prueft den Summarize-Endpoint inklusive Pflichtfeld `option`, und Playwright validiert mindestens zwei Summarize-Varianten im Browser; naechster Slice ist `10 Quick Action Formality`.
 - Slice 10 abgeschlossen: `POST /api/quick-actions/formality/stream` nutzt einen eigenen Formality-Service mit dediziertem Request-Typ und festem Options-Mapping fuer `formal` und `informal`; die Toolbar bietet dafuer ein eigenes Dropdown, waehrend Streaming, Diff und kompletter Undo unveraendert wiederverwendet werden.
 - Slice 10 Build/Test-Handoff: Unit-Tests decken Formality-Optionsvalidierung und Service-Mapping ab, MockMvc prueft den neuen Streaming-Endpoint inklusive Pflichtfeld `option`, und Playwright validiert beide Varianten im Browser; naechster Slice ist `11 Quick Action Social Media`.
+- Slice 11 abgeschlossen: `POST /api/quick-actions/social-media/stream` nutzt einen eigenen Social-Media-Service mit festem Kanal-Mapping fuer `bluesky`, `instagram` und `linkedin`; die Toolbar bietet dafuer ein eigenes Dropdown, waehrend Streaming, Diff und kompletter Undo unveraendert wiederverwendet werden.
+- Slice 11 Build/Test-Handoff: Unit-Tests decken Kanal-Mapping und Service-Validierung ab, MockMvc prueft den neuen Social-Media-Endpoint inklusive Pflichtfeld `option`, und Playwright validiert mindestens zwei Kanaele im Browser; `./gradlew test`, `npm test` unter `playwright/` und `./gradlew build` sind gruen. Naechster Slice ist `12 Quick Action Medium`.

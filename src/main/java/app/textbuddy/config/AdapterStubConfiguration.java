@@ -7,9 +7,11 @@ import app.textbuddy.integration.llm.FormalityLlmClient;
 import app.textbuddy.integration.llm.LlmClientFacade;
 import app.textbuddy.integration.llm.PlainLanguageLlmClient;
 import app.textbuddy.integration.llm.ProofreadLlmClient;
+import app.textbuddy.integration.llm.SocialMediaLlmClient;
 import app.textbuddy.integration.llm.SummarizeLlmClient;
 import app.textbuddy.integration.llm.WordSynonymLlmClient;
 import app.textbuddy.quickaction.FormalityPrompt;
+import app.textbuddy.quickaction.SocialMediaPrompt;
 import app.textbuddy.quickaction.SummarizePrompt;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -137,6 +139,29 @@ public class AdapterStubConfiguration {
                         .replace("benoetigen", "brauchen")
                         .replace("benoetige", "brauch")
                         .replace("Vielen Dank", "Danke");
+            };
+
+            return splitIntoChunks(rewritten, 22);
+        };
+    }
+
+    @Bean
+    SocialMediaLlmClient socialMediaLlmClient() {
+        return (text, language, prompt) -> {
+            String normalized = normalize(text);
+
+            if (normalized.isBlank()) {
+                return List.of();
+            }
+
+            List<String> sentences = splitIntoBulletPointItems(normalized);
+            String lead = firstItem(sentences);
+            String support = itemAt(sentences, 1, firstItem(sentences));
+
+            String rewritten = switch (prompt) {
+                case BLUESKY -> "Bluesky-Post: " + lead + " Fokus: " + support;
+                case INSTAGRAM -> "Instagram-Caption: " + lead + " " + support + " #textbuddy #launch";
+                case LINKEDIN -> "LinkedIn-Post: " + lead + "\n\nTakeaway: " + support;
             };
 
             return splitIntoChunks(rewritten, 22);

@@ -10,8 +10,8 @@
             <p>${page.subtitle()}</p>
         </div>
         <div class="status-strip">
-            <div class="status-pill">Slice 10 haelt jetzt <code>POST /api/quick-actions/plain-language/stream</code>, <code>POST /api/quick-actions/bullet-points/stream</code>, <code>POST /api/quick-actions/proofread/stream</code>, <code>POST /api/quick-actions/summarize/stream</code> und <code>POST /api/quick-actions/formality/stream</code> als aktive SSE-Quick-Actions bereit.</div>
-            <div class="status-pill">Formality bringt ein eigenes Varianten-Dropdown fuer <code>formal</code> und <code>informal</code>, waehrend Summarize seine Varianten behaelt und beide auf derselben Diff- und Undo-Infrastruktur bleiben.</div>
+            <div class="status-pill">Slice 11 haelt jetzt <code>POST /api/quick-actions/plain-language/stream</code>, <code>POST /api/quick-actions/bullet-points/stream</code>, <code>POST /api/quick-actions/proofread/stream</code>, <code>POST /api/quick-actions/summarize/stream</code>, <code>POST /api/quick-actions/formality/stream</code> und <code>POST /api/quick-actions/social-media/stream</code> als aktive SSE-Quick-Actions bereit.</div>
+            <div class="status-pill">Social Media bringt ein eigenes Kanal-Dropdown fuer <code>bluesky</code>, <code>instagram</code> und <code>linkedin</code>, waehrend Summarize und Formality ihre Varianten behalten und alle drei auf derselben Diff- und Undo-Infrastruktur bleiben.</div>
         </div>
     </header>
 
@@ -20,7 +20,7 @@
             <div class="panel-body">
                 <p class="eyebrow">Arbeitsfläche</p>
                 <h2>Quick Actions + Rewrite Bubble</h2>
-                <p class="panel-copy">Die Insel kombiniert weiter Wort-/Satz-Rewrite im Bubble-Menue und bietet jetzt fuenf streamingfaehige Volltext-Rewrites fuer Plain Language, Bullet Points, Proofread, Summarize und Formality mit aktionsspezifischer Variantenwahl.</p>
+                <p class="panel-copy">Die Insel kombiniert weiter Wort-/Satz-Rewrite im Bubble-Menue und bietet jetzt sechs streamingfaehige Volltext-Rewrites fuer Plain Language, Bullet Points, Proofread, Summarize, Formality und Social Media mit aktionsspezifischer Variantenwahl.</p>
 
                 <div id="editor-island-root" class="editor-root" data-testid="editor-island-root">
                     <div class="chip-row">
@@ -34,6 +34,7 @@
                         <span class="chip">Proofread nutzt dieselbe Streaming- und Diff-Infrastruktur</span>
                         <span class="chip">Summarize waehlt seine Variante ueber ein eigenes Dropdown</span>
                         <span class="chip">Formality waehlt zwischen formal und informal</span>
+                        <span class="chip">Social Media waehlt zwischen Bluesky, Instagram und LinkedIn</span>
                         <span class="chip">Rewrite-Diff und kompletter Undo bauen auf derselben Streaming-Basis auf</span>
                     </div>
 
@@ -42,10 +43,10 @@
                             <div>
                                 <p class="eyebrow">Quick Actions</p>
                                 <h3>Rewrite mit Streaming</h3>
-                                <p class="panel-copy">Plain Language, Bullet Points, Proofread, Summarize und Formality sind in Slice 10 aktiv. Summarize und Formality nutzen eigene Varianten-Menues, weitere Quick Actions bleiben bis zu ihren eigenen Slices verborgen.</p>
+                                <p class="panel-copy">Plain Language, Bullet Points, Proofread, Summarize, Formality und Social Media sind in Slice 11 aktiv. Summarize, Formality und Social Media nutzen eigene Varianten-Menues, weitere Quick Actions bleiben bis zu ihren eigenen Slices verborgen.</p>
                             </div>
 
-                            <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" aria-live="polite">Bereit fuer Plain Language, Bullet Points, Proofread, Summarize und Formality.</p>
+                            <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" aria-live="polite">Bereit fuer Plain Language, Bullet Points, Proofread, Summarize, Formality und Social Media.</p>
                         </div>
 
                         <div class="quick-action-row">
@@ -74,6 +75,17 @@
                                     </select>
                                 </label>
                                 <button type="button" class="quick-action-button" data-quick-action="formality" data-testid="quick-action-formality">Formality</button>
+                            </div>
+                            <div class="quick-action-menu" data-testid="quick-action-social-media-menu">
+                                <label class="quick-action-select-shell" for="quick-action-social-media-option">
+                                    <span class="quick-action-select-label">Social-Media-Kanal</span>
+                                    <select id="quick-action-social-media-option" class="quick-action-select" data-quick-action-option="social-media" data-testid="quick-action-social-media-option">
+                                        <option value="bluesky" selected>Bluesky</option>
+                                        <option value="instagram">Instagram</option>
+                                        <option value="linkedin">LinkedIn</option>
+                                    </select>
+                                </label>
+                                <button type="button" class="quick-action-button" data-quick-action="social-media" data-testid="quick-action-social-media">Social Media</button>
                             </div>
                         </div>
                     </section>
@@ -174,8 +186,8 @@
 
                 <div class="stack-list problems-footnotes">
                     <div class="stack-item">
-                        <strong>Neu in Slice 10</strong>
-                        Formality streamt jetzt ueber <code>POST /api/quick-actions/formality/stream</code>, verlangt eine feste Option im Request und nutzt dieselbe Streaming-, Diff- und Undo-Infrastruktur wie die anderen Volltext-Rewrites.
+                        <strong>Neu in Slice 11</strong>
+                        Social Media streamt jetzt ueber <code>POST /api/quick-actions/social-media/stream</code>, verlangt einen festen Zielkanal im Request und nutzt dieselbe Streaming-, Diff- und Undo-Infrastruktur wie die anderen Volltext-Rewrites.
                     </div>
                     <div class="stack-item">
                         <strong>Bewusst noch nicht aktiv</strong>

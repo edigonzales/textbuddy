@@ -295,7 +295,7 @@ test("plain language streams into the editor, shows a diff and supports full und
   const editor = page.getByTestId("editor-input");
   const mirror = page.getByTestId("editor-mirror");
 
-  await expect(page.locator("[data-quick-action]")).toHaveCount(5);
+  await expect(page.locator("[data-quick-action]")).toHaveCount(6);
 
   await editor.click();
   await page.keyboard.type("Der komplizierte Sachverhalt ist relevant.");
@@ -647,6 +647,78 @@ test("formality streams both formal and informal variants with the selected opti
   await expect(page.getByTestId("rewrite-diff-after")).toContainText(
     "Lockerer formuliert: Hallo, wir brauchen schnell deine Rueckmeldung.",
   );
+});
+
+test("social media streams multiple channel variants with the selected option", async ({
+  page,
+}) => {
+  const requestBodies: QuickActionRequestPayload[] = [];
+
+  await page.route("**/api/quick-actions/social-media/stream", async (route) => {
+    const payload = route.request().postDataJSON() as QuickActionRequestPayload;
+
+    requestBodies.push(payload);
+
+    const responseText =
+      payload.option === "linkedin"
+        ? "LinkedIn-Post: Produktstart ist live.\n\nTakeaway: Team ist bereit."
+        : "Bluesky-Post: Produktstart ist live. Fokus: Team ist bereit.";
+
+    await route.fulfill({
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream",
+      },
+      body: createSseBody([
+        {
+          event: "chunk",
+          payload: {
+            text: responseText.slice(0, 24),
+          },
+        },
+        {
+          event: "chunk",
+          payload: {
+            text: responseText.slice(24),
+          },
+        },
+        {
+          event: "complete",
+          payload: {
+            text: responseText,
+          },
+        },
+      ]),
+    });
+  });
+
+  await page.goto("/");
+
+  const editor = page.getByTestId("editor-input");
+  const mirror = page.getByTestId("editor-mirror");
+  const optionSelect = page.getByTestId("quick-action-social-media-option");
+
+  await editor.click();
+  await page.keyboard.type("Produktstart ist live. Team ist bereit.");
+  await expect(optionSelect).toHaveValue("bluesky");
+  await page.getByTestId("quick-action-social-media").click();
+
+  await expect.poll(() => requestBodies.at(-1)?.option).toBe("bluesky");
+  await expect(page.getByTestId("quick-action-status")).toContainText("Social Media abgeschlossen");
+  await expect(mirror).toHaveValue("Bluesky-Post: Produktstart ist live. Fokus: Team ist bereit.");
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+
+  await page.getByTestId("rewrite-diff-undo").click();
+
+  await expect(mirror).toHaveValue("Produktstart ist live. Team ist bereit.");
+  await optionSelect.selectOption("linkedin");
+  await page.getByTestId("quick-action-social-media").click();
+
+  await expect.poll(() => requestBodies.at(-1)?.option).toBe("linkedin");
+  await expect(page.getByTestId("quick-action-status")).toContainText("Social Media abgeschlossen");
+  await expect(mirror).toHaveValue("LinkedIn-Post: Produktstart ist live.\n\nTakeaway: Team ist bereit.");
+  await expect(page.getByTestId("rewrite-diff-after")).toContainText("LinkedIn-Post: Produktstart ist live.");
+  await expect(page.getByTestId("rewrite-diff-after")).toContainText("Takeaway: Team ist bereit.");
 });
 
 test("incomplete sentences keep word mode without sentence action", async ({ page }) => {
