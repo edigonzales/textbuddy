@@ -20,9 +20,16 @@ Es soll eine neue Anwendung entstehen, die die fachlichen Kernfunktionen von Tex
   - **HTMX** für einfache servergetriebene Interaktionen und Fragmentupdates
   - **Tiptap-JavaScript-Insel** für alle editornahen High-UX-Funktionen
 - **LLM und externe Dienste**
-  - **Spring AI 2.x**-Linie verwenden, kompatibel zu Spring Boot 4.x
-  - LanguageTool als externer HTTP-Dienst
-  - Docling als externer HTTP-Dienst für Dokumentkonvertierung
+  - LLM über einen zentral gekapselten **OpenAI-kompatiblen Provider-Adapter**
+  - LanguageTool standardmäßig **eingebettet in der JVM**, optionaler HTTP-Fallback nur für Sonderfälle
+  - Dokumentimport standardmäßig **eingebettet** und ohne externen Docling-Server, optionaler HTTP-Fallback nur für Sonderfälle
+
+## Sprach- und Textregel
+
+- In allen deutschsprachigen, nutzersichtbaren Texten werden echte Umlaute verwendet: `ä`, `ö`, `ü`, `Ä`, `Ö`, `Ü`
+- Schreibweisen wie `ae`, `oe`, `ue` sind für UI-Texte, Fehlermeldungen, Prompts und JTE-Texte nicht mehr zulässig
+- Technische Kennungen, API-Feldnamen, Endpoints, Dateinamen, CSS-Klassen und Test-IDs bleiben ASCII
+- Schweizer Rechtschreibung mit `ss` bleibt der Standard
 
 ## Fachliche Kernfunktionen
 
@@ -79,7 +86,7 @@ Es soll eine neue Anwendung entstehen, die die fachlichen Kernfunktionen von Tex
 ### Satz-Rewrite
 
 - `POST /api/sentence-rewrite`
-  - Request: `{ sentence: string, context: string }`
+  - Request: `{ sentence: string, context?: string }`
   - Response: `{ sentence: string, options: string[] }`
 
 ### Wort-Synonyme

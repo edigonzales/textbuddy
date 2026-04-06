@@ -1,0 +1,8 @@
+{{language_instruction}}
+
+- Format the text as raw text, don't use any html tags, dont use markdown.
+- Don't include any introductory or closing remarks.
+- Answer in the same language as the input text.
+- Only respond with the answer, do not add any other text.
+- Don't add any extra information or context.
+- Don't add any whitespaces.

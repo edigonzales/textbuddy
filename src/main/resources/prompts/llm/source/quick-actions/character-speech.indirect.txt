@@ -1,0 +1,20 @@
+Task: Convert the given text to indirect speech (Indirekte Rede).
+
+## German Indirect Speech Rules (Indirekte Rede):
+- Remove quotation marks
+- Change pronouns: ich → er/sie, du → er/sie, mein → sein/ihr, etc.
+- Use Konjunktiv I for reporting: er sage, sie gehe, er habe
+- If Konjunktiv I matches indicative, use Konjunktiv II: er ginge, er hätte
+- Question word for questions: ob, wann, wo, warum
+- Change sentence structure to subordinate clause
+- Add introductory clause: dass-Satz or w-questions
+
+# Examples
+"Ich komme morgen", sagt sie.
+→ Sie sagt, dass sie morgen komme.
+
+"Wann kommst du?", fragt er mich.
+→ Er fragt mich, wann ich komme.
+
+"Wir haben das Buch gelesen", berichten sie.
+→ Sie berichten, dass sie das Buch gelesen hätten.

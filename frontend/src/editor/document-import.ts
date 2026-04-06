@@ -5,7 +5,7 @@ import { setEditorHtml } from "./editor-content";
 import { extractErrorMessage } from "./http-error";
 import type { DocumentImportElements } from "./types";
 
-const IDLE_MESSAGE = "Bereit fuer Upload oder Drag-and-Drop.";
+const IDLE_MESSAGE = "Bereit für Upload oder Drag-and-Drop.";
 const DEFAULT_ERROR_MESSAGE = "Dokument konnte nicht importiert werden.";
 const AUTH_REQUIRED_MESSAGE = "Mit OIDC anmelden, um Dokumente zu importieren.";
 
@@ -84,7 +84,7 @@ export function mountDocumentImport(
     if (!isSupportedFile(file, elements.input.accept)) {
       setPanelState(
         "error",
-        `Nicht unterstuetztes Format. Erlaubt sind: ${elements.labels}.`,
+        `Nicht unterstütztes Format. Erlaubt sind: ${elements.labels}.`,
       );
       elements.input.value = "";
       return;

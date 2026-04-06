@@ -119,7 +119,7 @@ class CustomQuickActionServiceTest {
 
         assertThat(called).isFalse();
         assertThat(handler.completedText).isNull();
-        assertThat(handler.errorMessage).isEqualTo("Custom-Prompt ist ungueltig.");
+        assertThat(handler.errorMessage).isEqualTo("Custom-Prompt ist ungültig.");
     }
 
     @Test

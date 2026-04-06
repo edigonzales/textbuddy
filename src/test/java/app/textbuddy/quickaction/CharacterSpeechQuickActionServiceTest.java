@@ -99,7 +99,7 @@ class CharacterSpeechQuickActionServiceTest {
 
         assertThat(called).isFalse();
         assertThat(handler.completedText).isNull();
-        assertThat(handler.errorMessage).isEqualTo("Character-Speech-Option ist ungueltig.");
+        assertThat(handler.errorMessage).isEqualTo("Character-Speech-Option ist ungültig.");
     }
 
     @Test

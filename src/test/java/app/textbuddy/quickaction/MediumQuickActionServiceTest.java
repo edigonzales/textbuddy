@@ -20,8 +20,10 @@ class MediumQuickActionServiceTest {
     @MethodSource("supportedPrompts")
     void mapsEachSupportedOptionToItsPrompt(String option, MediumPrompt expectedPrompt) {
         AtomicReference<MediumPrompt> capturedPrompt = new AtomicReference<>();
-        MediumLlmClient mediumLlmClient = (text, language, prompt) -> {
+        AtomicReference<MediumCurrentUser> capturedCurrentUser = new AtomicReference<>();
+        MediumLlmClient mediumLlmClient = (text, language, prompt, currentUser) -> {
             capturedPrompt.set(prompt);
+            capturedCurrentUser.set(currentUser);
             return List.of(prompt.instruction());
         };
         MediumQuickActionService service = new MediumQuickActionService(mediumLlmClient);
@@ -29,10 +31,12 @@ class MediumQuickActionServiceTest {
 
         service.stream(
                 new MediumQuickActionRequest("Projekt ist freigegeben. Umsetzung startet jetzt.", "de-DE", option),
+                new MediumCurrentUser("Ada", "Lovelace", "ada@example.org"),
                 handler
         );
 
         assertThat(capturedPrompt.get()).isEqualTo(expectedPrompt);
+        assertThat(capturedCurrentUser.get().fullName()).isEqualTo("Ada Lovelace");
         assertThat(handler.completedText).isEqualTo(expectedPrompt.instruction());
         assertThat(handler.errorMessage).isNull();
     }
@@ -47,14 +51,14 @@ class MediumQuickActionServiceTest {
     @Test
     void skipsBlankMediumRequestsWithoutCallingTheLlm() {
         AtomicBoolean called = new AtomicBoolean(false);
-        MediumLlmClient mediumLlmClient = (text, language, prompt) -> {
+        MediumLlmClient mediumLlmClient = (text, language, prompt, currentUser) -> {
             called.set(true);
             return List.of();
         };
         MediumQuickActionService service = new MediumQuickActionService(mediumLlmClient);
         RecordingQuickActionStreamHandler handler = new RecordingQuickActionStreamHandler();
 
-        service.stream(new MediumQuickActionRequest("   ", "de-DE", "email"), handler);
+        service.stream(new MediumQuickActionRequest("   ", "de-DE", "email"), MediumCurrentUser.placeholder(), handler);
 
         assertThat(called).isFalse();
         assertThat(handler.chunks).isEmpty();
@@ -65,7 +69,7 @@ class MediumQuickActionServiceTest {
     @Test
     void reportsAMissingOptionWithoutCallingTheLlm() {
         AtomicBoolean called = new AtomicBoolean(false);
-        MediumLlmClient mediumLlmClient = (text, language, prompt) -> {
+        MediumLlmClient mediumLlmClient = (text, language, prompt, currentUser) -> {
             called.set(true);
             return List.of();
         };
@@ -74,6 +78,7 @@ class MediumQuickActionServiceTest {
 
         service.stream(
                 new MediumQuickActionRequest("Projekt ist freigegeben. Umsetzung startet jetzt.", "de-DE", null),
+                MediumCurrentUser.placeholder(),
                 handler
         );
 
@@ -85,7 +90,7 @@ class MediumQuickActionServiceTest {
     @Test
     void reportsAnInvalidOptionWithoutCallingTheLlm() {
         AtomicBoolean called = new AtomicBoolean(false);
-        MediumLlmClient mediumLlmClient = (text, language, prompt) -> {
+        MediumLlmClient mediumLlmClient = (text, language, prompt, currentUser) -> {
             called.set(true);
             return List.of();
         };
@@ -94,17 +99,18 @@ class MediumQuickActionServiceTest {
 
         service.stream(
                 new MediumQuickActionRequest("Projekt ist freigegeben. Umsetzung startet jetzt.", "de-DE", "memo"),
+                MediumCurrentUser.placeholder(),
                 handler
         );
 
         assertThat(called).isFalse();
         assertThat(handler.completedText).isNull();
-        assertThat(handler.errorMessage).isEqualTo("Medium-Option ist ungueltig.");
+        assertThat(handler.errorMessage).isEqualTo("Medium-Option ist ungültig.");
     }
 
     @Test
     void reportsAMediumSpecificErrorWhenStreamingFails() {
-        MediumLlmClient mediumLlmClient = (text, language, prompt) -> {
+        MediumLlmClient mediumLlmClient = (text, language, prompt, currentUser) -> {
             throw new IllegalStateException("boom");
         };
         MediumQuickActionService service = new MediumQuickActionService(mediumLlmClient);
@@ -112,12 +118,32 @@ class MediumQuickActionServiceTest {
 
         service.stream(
                 new MediumQuickActionRequest("Projekt ist freigegeben. Umsetzung startet jetzt.", "de-DE", "report"),
+                MediumCurrentUser.placeholder(),
                 handler
         );
 
         assertThat(handler.chunks).isEmpty();
         assertThat(handler.completedText).isNull();
         assertThat(handler.errorMessage).isEqualTo("Medium-Text konnte nicht erstellt werden.");
+    }
+
+    @Test
+    void fallsBackToPlaceholdersWhenNoUserContextIsProvided() {
+        AtomicReference<MediumCurrentUser> capturedCurrentUser = new AtomicReference<>();
+        MediumLlmClient mediumLlmClient = (text, language, prompt, currentUser) -> {
+            capturedCurrentUser.set(currentUser);
+            return List.of("ok");
+        };
+        MediumQuickActionService service = new MediumQuickActionService(mediumLlmClient);
+        RecordingQuickActionStreamHandler handler = new RecordingQuickActionStreamHandler();
+
+        service.stream(
+                new MediumQuickActionRequest("Projekt ist freigegeben. Umsetzung startet jetzt.", "de-DE", "email"),
+                null,
+                handler
+        );
+
+        assertThat(capturedCurrentUser.get()).isEqualTo(MediumCurrentUser.placeholder());
     }
 
     private static Stream<Object[]> supportedPrompts() {

@@ -12,7 +12,7 @@ public class MediumQuickActionService {
 
     private static final String ERROR_MESSAGE = "Medium-Text konnte nicht erstellt werden.";
     private static final String MISSING_OPTION_MESSAGE = "Medium-Option ist erforderlich.";
-    private static final String INVALID_OPTION_MESSAGE = "Medium-Option ist ungueltig.";
+    private static final String INVALID_OPTION_MESSAGE = "Medium-Option ist ungültig.";
 
     private final MediumLlmClient mediumLlmClient;
 
@@ -20,9 +20,14 @@ public class MediumQuickActionService {
         this.mediumLlmClient = mediumLlmClient;
     }
 
-    public void stream(MediumQuickActionRequest request, QuickActionStreamHandler handler) {
+    public void stream(
+            MediumQuickActionRequest request,
+            MediumCurrentUser currentUser,
+            QuickActionStreamHandler handler
+    ) {
         String original = normalize(request == null ? null : request.text());
         String language = normalize(request == null ? null : request.language());
+        MediumCurrentUser resolvedCurrentUser = currentUser == null ? MediumCurrentUser.placeholder() : currentUser;
 
         if (original.isBlank()) {
             handler.complete("");
@@ -37,7 +42,7 @@ public class MediumQuickActionService {
         }
 
         try {
-            List<String> chunks = mediumLlmClient.streamMedium(original, language, prompt.get());
+            List<String> chunks = mediumLlmClient.streamMedium(original, language, prompt.get(), resolvedCurrentUser);
             StringBuilder completeText = new StringBuilder();
 
             for (String chunk : chunks) {

@@ -126,6 +126,7 @@ export function findAdvisorValidationElements(): AdvisorValidationElements | nul
   const detailMessage = queryRequired<HTMLElement>(panel, "[data-advisor-result-detail-message]");
   const detailExcerpt = queryRequired<HTMLElement>(panel, "[data-advisor-result-detail-excerpt]");
   const detailSuggestion = queryRequired<HTMLElement>(panel, "[data-advisor-result-detail-suggestion]");
+  const detailOpenButton = queryRequired<HTMLButtonElement>(panel, "[data-advisor-result-detail-open]");
   const detailLink = queryRequired<HTMLAnchorElement>(panel, "[data-advisor-result-detail-link]");
   const docCheckboxes = Array.from(
     panel.querySelectorAll<HTMLInputElement>("[data-testid='advisor-doc-checkbox']"),
@@ -144,6 +145,7 @@ export function findAdvisorValidationElements(): AdvisorValidationElements | nul
     !detailMessage ||
     !detailExcerpt ||
     !detailSuggestion ||
+    !detailOpenButton ||
     !detailLink ||
     docCheckboxes.length === 0
   ) {
@@ -165,6 +167,7 @@ export function findAdvisorValidationElements(): AdvisorValidationElements | nul
     detailMessage,
     detailExcerpt,
     detailSuggestion,
+    detailOpenButton,
     detailLink,
   };
 }
@@ -196,6 +199,7 @@ export function findRewriteBubbleElements(root: HTMLElement): RewriteBubbleEleme
 export function findQuickActionElements(root: HTMLElement): QuickActionElements | null {
   const panel = queryRequired<HTMLElement>(root, "[data-quick-action-panel]");
   const status = queryRequired<HTMLElement>(root, "[data-quick-action-status]");
+  const languageSelect = document.querySelector<HTMLSelectElement>("[data-correction-language]");
   const plainLanguageButton = queryRequired<HTMLButtonElement>(
     root,
     "[data-quick-action='plain-language']",
@@ -255,6 +259,7 @@ export function findQuickActionElements(root: HTMLElement): QuickActionElements 
   if (
     !panel ||
     !status ||
+    !languageSelect ||
     !plainLanguageButton ||
     !bulletPointsButton ||
     !proofreadButton ||
@@ -281,6 +286,7 @@ export function findQuickActionElements(root: HTMLElement): QuickActionElements 
   return {
     panel,
     status,
+    languageSelect,
     plainLanguageButton,
     bulletPointsButton,
     proofreadButton,

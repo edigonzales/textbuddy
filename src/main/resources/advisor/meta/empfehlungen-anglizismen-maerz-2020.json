@@ -2,25 +2,25 @@
   "order": 1,
   "name": "empfehlungen-anglizismen-maerz-2020",
   "title": "Empfehlungen zu Anglizismen",
-  "summary": "Demo-Referenz fuer Formulierungen und Schreibweisen rund um Anglizismen im Verwaltungsumfeld.",
+  "summary": "Demo-Referenz für Formulierungen und Schreibweisen rund um Anglizismen im Verwaltungsumfeld.",
   "source": "Projektinterne Demoquelle",
   "rules": [
     {
       "id": "downloaden-statt-herunterladen",
-      "title": "Deutsche Alternative fuer downloaden",
+      "title": "Deutsche Alternative für downloaden",
       "page": 6,
-      "instructions": "Pruefe, ob englische Verbformen durch eine deutsche Alternative ersetzt werden sollten.",
+      "instructions": "Prüfe, ob englische Verbformen durch eine deutsche Alternative ersetzt werden sollten.",
       "message": "Der Ausdruck wirkt als vermeidbarer Anglizismus.",
-      "suggestion": "Nutze nach Moeglichkeit 'herunterladen' statt der englischen Verbform.",
+      "suggestion": "Nutze nach Möglichkeit 'herunterladen' statt der englischen Verbform.",
       "matchTerms": ["downloaden", "gedownloadet", "updaten", "upgedatet"]
     },
     {
       "id": "meeting-und-feedback-pruefen",
       "title": "Meeting- und Feedback-Begriffe einordnen",
       "page": 11,
-      "instructions": "Pruefe englische Organisations- und Rueckmeldebegriffe auf Verstaendlichkeit.",
-      "message": "Der Begriff ist englisch gepraegt und sollte fuer breite Zielgruppen eingeordnet werden.",
-      "suggestion": "Pruefe 'Rueckmeldung', 'Besprechung' oder eine kurze Erklaerung.",
+      "instructions": "Prüfe englische Organisations- und Rückmeldebegriffe auf Verständlichkeit.",
+      "message": "Der Begriff ist englisch geprägt und sollte für breite Zielgruppen eingeordnet werden.",
+      "suggestion": "Prüfe 'Rückmeldung', 'Besprechung' oder eine kurze Erklärung.",
       "matchTerms": ["feedback", "meeting", "call"]
     }
   ]

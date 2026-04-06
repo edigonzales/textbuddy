@@ -21,7 +21,7 @@ public record HomePageModel(
     ) {
         return new HomePageModel(
                 "Textbuddy Workspace",
-                "Slice 18 schliesst die Anwendung mit schaltbarer OIDC-Grundintegration, konsistenter Fehlerbehandlung, Logging-Politur und final aktivierten Kernfunktionen ab.",
+                "Phase 02 bringt Frontend-Parität mit erweiterten Korrektursprachen, eingebettetem Advisor-PDF-Viewer und produktiver Textstatistik.",
                 auth,
                 List.copyOf(advisorDocs),
                 List.copyOf(documentImportFormats),

@@ -364,6 +364,90 @@ a {
     color: var(--muted);
 }
 
+.text-stats-panel {
+    display: grid;
+    gap: 0.9rem;
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 20px;
+    border: 1px solid rgba(15, 109, 104, 0.14);
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.text-stats-head h3 {
+    margin: 0;
+}
+
+.text-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+}
+
+.text-stats-item {
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.75rem 0.85rem;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface-strong);
+}
+
+.text-stats-item span {
+    color: var(--muted);
+    font-size: 0.86rem;
+}
+
+.text-stats-item strong {
+    font-size: 1.1rem;
+    color: var(--accent);
+}
+
+.text-stats-flesch {
+    display: grid;
+    gap: 0.55rem;
+    padding: 0.85rem;
+    border-radius: 14px;
+    border: 1px solid rgba(15, 109, 104, 0.14);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.text-stats-flesch-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.8rem;
+    align-items: baseline;
+}
+
+.text-stats-flesch-head span {
+    color: var(--muted);
+}
+
+.text-stats-flesch-head strong {
+    color: var(--accent);
+}
+
+.text-stats-flesch-bar {
+    height: 0.7rem;
+    border-radius: 999px;
+    background: rgba(15, 109, 104, 0.12);
+    overflow: hidden;
+}
+
+.text-stats-flesch-bar span {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #8d2f2f, #cf9840, #4f8a2a, #0f6d68);
+    transition: width 180ms ease;
+}
+
+.text-stats-flesch-label {
+    margin: 0;
+    color: var(--muted);
+}
+
 .correction-panel[data-correction-state="success"] .problem-status {
     color: var(--accent);
 }
@@ -595,7 +679,9 @@ a {
     background: rgba(15, 109, 104, 0.12);
     color: var(--accent);
     font-weight: 700;
+    font: inherit;
     text-decoration: none;
+    cursor: pointer;
     transition:
             transform 140ms ease,
             border-color 140ms ease,
@@ -709,6 +795,12 @@ a {
     background: rgba(255, 255, 255, 0.9);
 }
 
+.advisor-detail-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
 .advisor-detail-reference,
 .advisor-detail-match,
 .advisor-detail-message,
@@ -735,6 +827,87 @@ a {
     color: var(--muted);
 }
 
+.advisor-pdf-viewer {
+    display: grid;
+    gap: 0.9rem;
+    margin-top: 1.15rem;
+    padding: 1rem;
+    border-radius: 20px;
+    border: 1px solid rgba(15, 109, 104, 0.14);
+    background: rgba(255, 255, 255, 0.82);
+}
+
+.advisor-pdf-viewer[hidden] {
+    display: none;
+}
+
+.advisor-pdf-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.advisor-pdf-head h3 {
+    margin: 0;
+}
+
+.advisor-pdf-controls {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.advisor-pdf-control-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: center;
+}
+
+.advisor-pdf-page-shell {
+    display: inline-grid;
+    gap: 0.2rem;
+}
+
+.advisor-pdf-page-shell span {
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-weight: 700;
+}
+
+.advisor-pdf-page-shell input {
+    width: 5.5rem;
+    padding: 0.52rem 0.6rem;
+    border-radius: 12px;
+    border: 1px solid rgba(15, 109, 104, 0.18);
+    background: rgba(255, 255, 255, 0.94);
+    color: var(--text);
+    font: inherit;
+}
+
+.advisor-pdf-zoom-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+    min-width: 4.5rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 12px;
+    border: 1px solid rgba(15, 109, 104, 0.12);
+    color: var(--accent);
+    background: rgba(15, 109, 104, 0.08);
+    font-weight: 700;
+}
+
+.advisor-pdf-frame {
+    width: 100%;
+    min-height: 520px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: #fff;
+}
+
 @media (max-width: 900px) {
     .app-header,
     .workspace-grid {
@@ -750,8 +923,23 @@ a {
         grid-template-columns: 1fr;
     }
 
+    .text-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
     .advisor-results-head,
-    .advisor-detail-head {
+    .advisor-detail-head,
+    .advisor-pdf-head {
         flex-direction: column;
+    }
+
+    .advisor-pdf-control-group {
+        align-items: stretch;
+    }
+
+    .advisor-pdf-page-shell,
+    .advisor-pdf-page-shell input,
+    .advisor-pdf-zoom-label {
+        width: 100%;
     }
 }

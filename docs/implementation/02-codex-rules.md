@@ -45,6 +45,13 @@
 - DTOs klar und klein halten
 - Keine unnötige Generalisierung auf spätere Features
 
+## Sprachregel
+
+- Verwende in allen deutschsprachigen, nutzersichtbaren Texten echte Umlaute (`ä`, `ö`, `ü`, `Ä`, `Ö`, `Ü`)
+- Verwende keine Schreibweisen wie `ae`, `oe`, `ue` in UI-Texten, Fehlermeldungen, Prompts, JTE-Texten und neuer Implementierungsdokumentation
+- Technische Kennungen, API-Feldnamen, Endpoints, Dateinamen, CSS-Klassen und Test-IDs bleiben ASCII
+- Schweizer Rechtschreibung mit `ss` bleibt zulässig
+
 ## UI-Regeln
 
 - Serverseitige Shell mit JTE/HTMX

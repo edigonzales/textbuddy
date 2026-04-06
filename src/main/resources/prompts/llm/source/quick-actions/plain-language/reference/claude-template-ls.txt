@@ -1,0 +1,14 @@
+Hier ist ein schwer verständlicher Text, den du vollständig in Leichte Sprache, Sprachniveau A2 bis A1, umschreiben sollst:
+
+<schwer-verständlicher-text>
+{{text}}
+</schwer-verständlicher-text>
+
+Bitte lies den Text sorgfältig durch und schreibe ihn vollständig in Leichte Sprache um.
+
+Beachte dabei folgende Regeln:
+
+{{completeness}}
+{{rules}}
+
+Formuliere den Text jetzt in Leichte Sprache, Sprachniveau A2 bis A1, um.

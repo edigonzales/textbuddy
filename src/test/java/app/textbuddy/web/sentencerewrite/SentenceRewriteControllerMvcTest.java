@@ -37,4 +37,21 @@ class SentenceRewriteControllerMvcTest {
                 .andExpect(jsonPath("$.alternatives[1]").value("Anders formuliert: Dieser Satz ist etwas holprig."))
                 .andExpect(jsonPath("$.alternatives[2]").value("Praeziser gesagt: Dieser Satz ist etwas holprig."));
     }
+
+    @Test
+    void postSentenceRewriteAcceptsOptionalContext() throws Exception {
+        MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+
+        mockMvc.perform(post("/api/sentence-rewrite")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "sentence": "Dieser Satz ist etwas holprig.",
+                                  "context": "Der Absatz erklärt die Ausgangslage und enthält zusätzliche Nuancen."
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.original").value("Dieser Satz ist etwas holprig."));
+    }
 }

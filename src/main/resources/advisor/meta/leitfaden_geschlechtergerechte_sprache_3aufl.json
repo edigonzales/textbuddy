@@ -2,26 +2,26 @@
   "order": 2,
   "name": "leitfaden_geschlechtergerechte_sprache_3aufl",
   "title": "Leitfaden geschlechtergerechte Sprache",
-  "summary": "Demo-Referenz fuer inklusive Formulierungen und konsistente sprachliche Varianten.",
+  "summary": "Demo-Referenz für inklusive Formulierungen und konsistente sprachliche Varianten.",
   "source": "Projektinterne Demoquelle",
   "rules": [
     {
       "id": "mitarbeiter-neutral-formulieren",
       "title": "Mitarbeitende statt Mitarbeiter",
       "page": 8,
-      "instructions": "Pruefe klassische Personenbezeichnungen auf eine inklusive Alternative.",
+      "instructions": "Prüfe klassische Personenbezeichnungen auf eine inklusive Alternative.",
       "message": "Die Personenbezeichnung kann inklusiver formuliert werden.",
       "suggestion": "Nutze z.B. 'Mitarbeitende' oder eine andere neutrale Sammelbezeichnung.",
       "matchTerms": ["mitarbeiter", "mitarbeiterin", "mitarbeiterinnen"]
     },
     {
       "id": "buerger-neutral-formulieren",
-      "title": "Buerger geschlechtsneutral formulieren",
+      "title": "Bürger geschlechtsneutral formulieren",
       "page": 12,
-      "instructions": "Pruefe Bezeichnungen fuer adressierte Gruppen auf inklusive Formen.",
+      "instructions": "Prüfe Bezeichnungen für adressierte Gruppen auf inklusive Formen.",
       "message": "Die Personenbezeichnung ist nicht geschlechterinklusiv.",
-      "suggestion": "Nutze z.B. 'Bevoelkerung', 'Einwohnende' oder eine passende neutrale Bezeichnung.",
-      "matchTerms": ["buerger", "buergerinnen"]
+      "suggestion": "Nutze z.B. 'Bevölkerung', 'Einwohnende' oder eine passende neutrale Bezeichnung.",
+      "matchTerms": ["bürger", "bürgerinnen", "buerger", "buergerinnen"]
     }
   ]
 }

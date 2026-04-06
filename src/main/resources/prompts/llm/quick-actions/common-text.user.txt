@@ -1,0 +1,4 @@
+Bearbeite diesen Volltext:
+---------------
+{{text}}
+---------------

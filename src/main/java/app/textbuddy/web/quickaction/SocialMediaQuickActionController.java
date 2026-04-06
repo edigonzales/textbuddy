@@ -22,7 +22,7 @@ public class SocialMediaQuickActionController {
     private static final Logger log = LoggerFactory.getLogger(SocialMediaQuickActionController.class);
     private static final String DEFAULT_ERROR_MESSAGE = "Social-Media-Stream konnte nicht gestartet werden.";
     private static final String MISSING_OPTION_MESSAGE = "Social-Media-Option ist erforderlich.";
-    private static final String INVALID_OPTION_MESSAGE = "Social-Media-Option ist ungueltig.";
+    private static final String INVALID_OPTION_MESSAGE = "Social-Media-Option ist ungültig.";
 
     private final SocialMediaQuickActionService socialMediaQuickActionService;
     private final QuickActionSsePayloadFactory payloadFactory;

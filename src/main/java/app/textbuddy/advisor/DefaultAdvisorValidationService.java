@@ -20,9 +20,10 @@ import java.util.stream.Collectors;
 @Service
 public final class DefaultAdvisorValidationService implements AdvisorValidationService {
 
-    static final int DEFAULT_RULE_BATCH_SIZE = 2;
+    static final int DEFAULT_RULE_BATCH_SIZE = 3;
+    static final int MAX_RULES = 20;
 
-    private static final String ERROR_MESSAGE = "Advisor-Pruefung konnte nicht abgeschlossen werden.";
+    private static final String ERROR_MESSAGE = "Advisor-Prüfung konnte nicht abgeschlossen werden.";
 
     private final AdvisorDocumentRepository advisorDocumentRepository;
     private final AdvisorValidationLlmClient advisorValidationLlmClient;
@@ -59,7 +60,9 @@ public final class DefaultAdvisorValidationService implements AdvisorValidationS
         }
 
         try {
-            List<AdvisorRuleCheck> ruleChecks = loadRuleChecks(selectedDocuments);
+            List<AdvisorRuleCheck> ruleChecks = loadRuleChecks(selectedDocuments).stream()
+                    .limit(MAX_RULES)
+                    .toList();
 
             if (ruleChecks.isEmpty()) {
                 handler.complete();

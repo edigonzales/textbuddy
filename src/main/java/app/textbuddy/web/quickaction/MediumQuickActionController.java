@@ -1,6 +1,7 @@
 package app.textbuddy.web.quickaction;
 
 import app.textbuddy.quickaction.MediumPrompt;
+import app.textbuddy.quickaction.MediumCurrentUserResolver;
 import app.textbuddy.quickaction.MediumQuickActionRequest;
 import app.textbuddy.quickaction.MediumQuickActionService;
 import app.textbuddy.quickaction.QuickActionSsePayloadFactory;
@@ -8,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,29 +24,33 @@ public class MediumQuickActionController {
     private static final Logger log = LoggerFactory.getLogger(MediumQuickActionController.class);
     private static final String DEFAULT_ERROR_MESSAGE = "Medium-Stream konnte nicht gestartet werden.";
     private static final String MISSING_OPTION_MESSAGE = "Medium-Option ist erforderlich.";
-    private static final String INVALID_OPTION_MESSAGE = "Medium-Option ist ungueltig.";
+    private static final String INVALID_OPTION_MESSAGE = "Medium-Option ist ungültig.";
 
     private final MediumQuickActionService mediumQuickActionService;
+    private final MediumCurrentUserResolver mediumCurrentUserResolver;
     private final QuickActionSsePayloadFactory payloadFactory;
 
     public MediumQuickActionController(
             MediumQuickActionService mediumQuickActionService,
+            MediumCurrentUserResolver mediumCurrentUserResolver,
             QuickActionSsePayloadFactory payloadFactory
     ) {
         this.mediumQuickActionService = mediumQuickActionService;
+        this.mediumCurrentUserResolver = mediumCurrentUserResolver;
         this.payloadFactory = payloadFactory;
     }
 
     @PostMapping(path = "/medium/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter streamMedium(@RequestBody MediumQuickActionRequest request) {
+    public SseEmitter streamMedium(@RequestBody MediumQuickActionRequest request, Authentication authentication) {
         validateOption(request);
+        var currentUser = mediumCurrentUserResolver.resolve(authentication);
 
         SseEmitter emitter = new SseEmitter(0L);
         QuickActionSseEmitterWriter writer = new QuickActionSseEmitterWriter(emitter, payloadFactory);
 
         Thread.startVirtualThread(() -> {
             try {
-                mediumQuickActionService.stream(request, writer);
+                mediumQuickActionService.stream(request, currentUser, writer);
             } catch (RuntimeException exception) {
                 log.error("Medium stream failed.", exception);
                 writer.error(DEFAULT_ERROR_MESSAGE);

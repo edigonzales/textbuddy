@@ -8,7 +8,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class CustomQuickActionRequestValidator {
 
     static final String MISSING_PROMPT_MESSAGE = "Custom-Prompt ist erforderlich.";
-    static final String INVALID_PROMPT_MESSAGE = "Custom-Prompt ist ungueltig.";
+    static final String INVALID_PROMPT_MESSAGE = "Custom-Prompt ist ungültig.";
 
     public CustomQuickActionPrompt.ValidationResult validate(QuickActionStreamRequest request) {
         return CustomQuickActionPrompt.validate(request == null ? null : request.prompt());

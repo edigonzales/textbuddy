@@ -12,7 +12,7 @@ public class SocialMediaQuickActionService {
 
     private static final String ERROR_MESSAGE = "Social-Media-Text konnte nicht erstellt werden.";
     private static final String MISSING_OPTION_MESSAGE = "Social-Media-Option ist erforderlich.";
-    private static final String INVALID_OPTION_MESSAGE = "Social-Media-Option ist ungueltig.";
+    private static final String INVALID_OPTION_MESSAGE = "Social-Media-Option ist ungültig.";
 
     private final SocialMediaLlmClient socialMediaLlmClient;
 

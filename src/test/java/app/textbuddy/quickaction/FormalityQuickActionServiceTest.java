@@ -99,7 +99,7 @@ class FormalityQuickActionServiceTest {
 
         assertThat(called).isFalse();
         assertThat(handler.completedText).isNull();
-        assertThat(handler.errorMessage).isEqualTo("Formality-Option ist ungueltig.");
+        assertThat(handler.errorMessage).isEqualTo("Formality-Option ist ungültig.");
     }
 
     @Test

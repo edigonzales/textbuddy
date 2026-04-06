@@ -12,7 +12,7 @@ public class FormalityQuickActionService {
 
     private static final String ERROR_MESSAGE = "Formality-Rewrite konnte nicht erstellt werden.";
     private static final String MISSING_OPTION_MESSAGE = "Formality-Option ist erforderlich.";
-    private static final String INVALID_OPTION_MESSAGE = "Formality-Option ist ungueltig.";
+    private static final String INVALID_OPTION_MESSAGE = "Formality-Option ist ungültig.";
 
     private final FormalityLlmClient formalityLlmClient;
 

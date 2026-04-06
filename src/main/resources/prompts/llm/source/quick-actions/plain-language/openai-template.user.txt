@@ -1,0 +1,14 @@
+Du bekommst einen schwer verständlichen Text, den du vollständig in Leichte Sprache auf Sprachniveau A2 bis A1 umschreiben sollst.
+
+Beachte dabei folgende Regeln:
+
+{{completeness}}
+{{rules}}
+
+Gib nur Text aus, keine Markdown-Formatierung, kein HTML.
+
+Hier ist der schwer verständliche Text:
+
+--------------------------------------------------------------------------------
+
+{{text}}

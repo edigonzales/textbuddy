@@ -12,7 +12,7 @@ public class CharacterSpeechQuickActionService {
 
     private static final String ERROR_MESSAGE = "Character-Speech-Text konnte nicht erstellt werden.";
     private static final String MISSING_OPTION_MESSAGE = "Character-Speech-Option ist erforderlich.";
-    private static final String INVALID_OPTION_MESSAGE = "Character-Speech-Option ist ungueltig.";
+    private static final String INVALID_OPTION_MESSAGE = "Character-Speech-Option ist ungültig.";
 
     private final CharacterSpeechLlmClient characterSpeechLlmClient;
 

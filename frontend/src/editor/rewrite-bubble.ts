@@ -11,6 +11,10 @@ import {
   resolveRewriteBubbleState,
   type RewriteBubbleState,
 } from "./rewrite-focus";
+import {
+  buildSentenceRewritePayload,
+  resolveSentenceRewriteContext,
+} from "./sentence-rewrite-request";
 import type {
   EditorElements,
   RewriteBubbleElements,
@@ -22,17 +26,18 @@ import type { WordFocus } from "./word-focus";
 
 const WORD_LOADING_MESSAGE = "Synonyme werden geladen...";
 const WORD_EMPTY_MESSAGE = "Keine Synonyme gefunden.";
-const WORD_READY_MESSAGE = "Synonym auswaehlen:";
+const WORD_READY_MESSAGE = "Synonym auswählen:";
 const WORD_ERROR_MESSAGE = "Synonyme konnten gerade nicht geladen werden.";
 
 const SENTENCE_LOADING_MESSAGE = "Alternativen werden geladen...";
 const SENTENCE_EMPTY_MESSAGE = "Keine Alternativen gefunden.";
-const SENTENCE_READY_MESSAGE = "Alternative auswaehlen:";
+const SENTENCE_READY_MESSAGE = "Alternative auswählen:";
 const SENTENCE_ERROR_MESSAGE = "Alternativen konnten gerade nicht geladen werden.";
 
 interface ActiveSentence extends SentenceFocus {
   docFrom: number;
   docTo: number;
+  context: string;
 }
 
 interface ActiveWord extends WordFocus {
@@ -82,6 +87,7 @@ function createContextKey(context: ActiveRewriteContext): string {
 
 function toActiveSentence(
   editor: Editor,
+  plainText: string,
   sentence: SentenceFocus | null,
 ): ActiveSentence | null {
   if (!sentence) {
@@ -102,6 +108,7 @@ function toActiveSentence(
     ...sentence,
     docFrom: documentRange.from,
     docTo: documentRange.to,
+    context: resolveSentenceRewriteContext(plainText, sentence.start, sentence.end),
   };
 }
 
@@ -153,11 +160,11 @@ function resolveActiveContext(editor: Editor): ActiveRewriteContext | null {
     return {
       mode: "word",
       word,
-      sentence: toActiveSentence(editor, nextState.sentence),
+      sentence: toActiveSentence(editor, plainText, nextState.sentence),
     };
   }
 
-  const sentence = toActiveSentence(editor, nextState.sentence);
+  const sentence = toActiveSentence(editor, plainText, nextState.sentence);
 
   if (!sentence) {
     return null;
@@ -441,9 +448,7 @@ export function mountRewriteBubble(
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          sentence: sentence.text,
-        }),
+        body: JSON.stringify(buildSentenceRewritePayload(sentence.text, sentence.context)),
         signal: controller.signal,
       });
 

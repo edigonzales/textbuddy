@@ -121,6 +121,26 @@ test("typing updates mirror and undo redo state", async ({ page }) => {
   await expect(wordCount).toHaveText("2");
 });
 
+test("text statistics panel updates counters and Flesch score", async ({ page }) => {
+  await page.goto("/");
+
+  const editor = page.getByTestId("editor-input");
+
+  await editor.click();
+  await page.keyboard.type("Mal Tal. Ball Fall.");
+
+  await expect(page.getByTestId("text-stats-characters")).toHaveText("19");
+  await expect(page.getByTestId("text-stats-words")).toHaveText("4");
+  await expect(page.getByTestId("text-stats-syllables")).toHaveText("4");
+  await expect(page.getByTestId("text-stats-sentences")).toHaveText("2");
+  await expect(page.getByTestId("text-stats-avg-sentence-length")).toHaveText("2.0");
+  await expect(page.getByTestId("text-stats-avg-syllables-per-word")).toHaveText("1.00");
+  await expect(page.getByTestId("text-stats-flesch")).toHaveText("119.5");
+  await expect(page.getByTestId("text-stats-flesch-label")).toHaveText(
+    "Sehr leicht verständlich",
+  );
+});
+
 test("document import uploads supported files and injects html into the editor", async ({
   page,
 }) => {
@@ -187,7 +207,7 @@ test("document import rejects unsupported formats before upload", async ({ page 
     buffer: Buffer.from("noop"),
   });
 
-  await expect(importStatus).toContainText("Nicht unterstuetztes Format.");
+  await expect(importStatus).toContainText("Nicht unterstütztes Format.");
   await expect(mirror).toHaveValue("");
   expect(requestCount).toBe(0);
 });
@@ -368,6 +388,45 @@ test("advisor catalog shows multiple selectable documents and serves reachable P
   expect(body.toString("utf-8")).toContain("%PDF-1.4");
 });
 
+test("advisor pdf viewer supports page navigation, zoom and download", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByTestId("advisor-doc-open").first().click();
+
+  await expect(page.getByTestId("advisor-pdf-viewer")).toBeVisible();
+  await expect(page.getByTestId("advisor-pdf-frame")).toHaveAttribute(
+    "src",
+    /\/api\/advisor\/doc\/empfehlungen-anglizismen-maerz-2020#page=1&zoom=100/,
+  );
+
+  await page.getByTestId("advisor-pdf-next").click();
+  await expect(page.getByTestId("advisor-pdf-frame")).toHaveAttribute(
+    "src",
+    /\/api\/advisor\/doc\/empfehlungen-anglizismen-maerz-2020#page=2&zoom=100/,
+  );
+
+  await page.getByTestId("advisor-pdf-zoom-in").click();
+  await expect(page.getByTestId("advisor-pdf-zoom-label")).toHaveText("110%");
+  await expect(page.getByTestId("advisor-pdf-frame")).toHaveAttribute(
+    "src",
+    /\/api\/advisor\/doc\/empfehlungen-anglizismen-maerz-2020#page=2&zoom=110/,
+  );
+
+  await page.getByTestId("advisor-pdf-page-input").fill("6");
+  await page.getByTestId("advisor-pdf-page-input").press("Tab");
+  await expect(page.getByTestId("advisor-pdf-frame")).toHaveAttribute(
+    "src",
+    /\/api\/advisor\/doc\/empfehlungen-anglizismen-maerz-2020#page=6&zoom=110/,
+  );
+  await expect(page.getByTestId("advisor-pdf-download")).toHaveAttribute(
+    "href",
+    "/api/advisor/doc/empfehlungen-anglizismen-maerz-2020",
+  );
+
+  await page.getByTestId("advisor-pdf-close").click();
+  await expect(page.getByTestId("advisor-pdf-viewer")).toBeHidden();
+});
+
 test("advisor validation streams results and deduplicates them in the panel", async ({ page }) => {
   const requestBodies: AdvisorValidateRequestPayload[] = [];
 
@@ -414,13 +473,13 @@ test("advisor validation streams results and deduplicates them in the panel", as
             documentName: "empfehlungen-anglizismen-maerz-2020",
             documentTitle: "Empfehlungen zu Anglizismen",
             ruleId: "downloaden-statt-herunterladen",
-            ruleTitle: "Deutsche Alternative fuer downloaden",
+            ruleTitle: "Deutsche Alternative für downloaden",
             page: 6,
             pageLabel: "Seite 6",
             message: "Der Ausdruck wirkt als vermeidbarer Anglizismus.",
             matchedText: "downloaden",
             excerpt: "Bitte downloaden Sie das Formular per sofort.",
-            suggestion: "Nutze nach Moeglichkeit 'herunterladen'.",
+            suggestion: "Nutze nach Möglichkeit 'herunterladen'.",
             referenceUrl: "/api/advisor/doc/empfehlungen-anglizismen-maerz-2020#page=6",
           },
         },
@@ -459,7 +518,7 @@ test("advisor validation streams results and deduplicates them in the panel", as
   await page.getByTestId("advisor-result-select").nth(1).click();
 
   await expect(page.getByTestId("advisor-result-detail-title")).toHaveText(
-    "Deutsche Alternative fuer downloaden",
+    "Deutsche Alternative für downloaden",
   );
   await expect(page.getByTestId("advisor-result-detail-reference")).toContainText(
     "Empfehlungen zu Anglizismen",
@@ -467,6 +526,12 @@ test("advisor validation streams results and deduplicates them in the panel", as
   await expect(page.getByTestId("advisor-result-detail-link")).toHaveAttribute(
     "href",
     "/api/advisor/doc/empfehlungen-anglizismen-maerz-2020#page=6",
+  );
+
+  await page.getByTestId("advisor-result-detail-open").click();
+  await expect(page.getByTestId("advisor-pdf-frame")).toHaveAttribute(
+    "src",
+    /\/api\/advisor\/doc\/empfehlungen-anglizismen-maerz-2020#page=6&zoom=100/,
   );
 });
 
@@ -542,7 +607,7 @@ test("plain language streams into the editor, shows a diff and supports full und
 
   await expect(mirror).toHaveValue("Der komplizierte Sachverhalt ist relevant.");
   await expect(page.getByTestId("rewrite-diff-panel")).toBeHidden();
-  await expect(page.getByTestId("quick-action-status")).toContainText("rueckgaengig");
+  await expect(page.getByTestId("quick-action-status")).toContainText("rückgängig");
 });
 
 test("bullet points stream into the editor, show a diff and support full undo", async ({
@@ -612,7 +677,7 @@ test("bullet points stream into the editor, show a diff and support full undo", 
 
   await expect(mirror).toHaveValue("Projektlage klaeren. Naechste Schritte festhalten.");
   await expect(page.getByTestId("rewrite-diff-panel")).toBeHidden();
-  await expect(page.getByTestId("quick-action-status")).toContainText("rueckgaengig");
+  await expect(page.getByTestId("quick-action-status")).toContainText("rückgängig");
 });
 
 test("proofread streams into the editor, shows a diff and supports full undo", async ({
@@ -673,7 +738,7 @@ test("proofread streams into the editor, shows a diff and supports full undo", a
 
   await expect(mirror).toHaveValue("This is teh text.");
   await expect(page.getByTestId("rewrite-diff-panel")).toBeHidden();
-  await expect(page.getByTestId("quick-action-status")).toContainText("rueckgaengig");
+  await expect(page.getByTestId("quick-action-status")).toContainText("rückgängig");
 });
 
 test("summarize with the sentence option streams into the editor and sends the selected option", async ({
@@ -1197,12 +1262,67 @@ test("language selection is sent with correction requests", async ({ page }) => 
 
   await page.goto("/");
 
-  await page.getByTestId("correction-language").selectOption("de-DE");
+  await page.getByTestId("correction-language").selectOption("de-CH");
   await page.getByTestId("editor-input").click();
   await page.keyboard.type("Hallo teh.");
 
-  await expect.poll(() => requestBodies.at(-1)?.language).toBe("de-DE");
+  await expect.poll(() => requestBodies.at(-1)?.language).toBe("de-CH");
   await expect(page.getByTestId("correction-status")).toContainText("1 Problem");
+});
+
+test("language selector offers the planned locale set with umlaut labels", async ({ page }) => {
+  await page.goto("/");
+
+  const options = await page.getByTestId("correction-language").locator("option").allTextContents();
+
+  expect(options).toEqual([
+    "Automatisch",
+    "Deutsch (Schweiz)",
+    "Französisch",
+    "Italienisch",
+    "Englisch (USA)",
+    "Englisch (UK)",
+  ]);
+});
+
+test("language selection is sent with quick action requests", async ({ page }) => {
+  const requestBodies: QuickActionRequestPayload[] = [];
+
+  await page.route("**/api/quick-actions/plain-language/stream", async (route) => {
+    const payload = route.request().postDataJSON() as QuickActionRequestPayload;
+
+    requestBodies.push(payload);
+    await route.fulfill({
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream",
+      },
+      body: createSseBody([
+        {
+          event: "chunk",
+          payload: {
+            text: "Plain result.",
+          },
+        },
+        {
+          event: "complete",
+          payload: {
+            text: "Plain result.",
+          },
+        },
+      ]),
+    });
+  });
+
+  await page.goto("/");
+
+  await page.getByTestId("correction-language").selectOption("en-GB");
+  await page.getByTestId("editor-input").click();
+  await page.keyboard.type("This is a test.");
+  await page.getByTestId("quick-action-plain-language").click();
+
+  await expect.poll(() => requestBodies.at(-1)?.language).toBe("en-GB");
+  await expect(page.getByTestId("quick-action-status")).toContainText("abgeschlossen");
 });
 
 test("local dictionary hides and restores known word matches", async ({ page }) => {

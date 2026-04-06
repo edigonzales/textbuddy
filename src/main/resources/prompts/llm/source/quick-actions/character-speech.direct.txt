@@ -1,0 +1,14 @@
+Task: Convert the given text to direct speech (Direkte Rede).
+
+## German Direct Speech Rules (Direkte Rede):
+- Use quotation marks: "..." or »...«
+- Keep original pronouns and verb tenses
+- Preserve speaker's exact words
+- Use question marks and exclamation marks as in original
+
+# Examples
+Sie sagt, dass sie das Haus kaufen wolle.
+→ "Ich kaufe das Haus", sagt sie.
+
+Er fragt, ob ich zum Fussball gehen möchte.
+→ "Möchtest du zum Fussball gehen?", fragt er.

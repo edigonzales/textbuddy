@@ -1,0 +1,6 @@
+Return your response as valid JSON only.
+
+- Use exactly this object shape:
+  {"synonyms":["Synonym 1","Synonym 2"]}
+- Return between 0 and 5 entries in `synonyms`.
+- No Markdown, no code fences, no explanations.

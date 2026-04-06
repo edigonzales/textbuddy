@@ -2,15 +2,15 @@
   "order": 3,
   "name": "rechtschreibleitfaden-2017",
   "title": "Rechtschreibleitfaden 2017",
-  "summary": "Demo-Referenz fuer orthografische Grundregeln, Schreibkonventionen und typische Zweifelsfaelle.",
+  "summary": "Demo-Referenz für orthografische Grundregeln, Schreibkonventionen und typische Zweifelsfälle.",
   "source": "Projektinterne Demoquelle",
   "rules": [
     {
       "id": "alte-dass-schreibung",
       "title": "Alte Dass-Schreibung vermeiden",
       "page": 4,
-      "instructions": "Pruefe, ob die veraltete Form 'daß' verwendet wird.",
-      "message": "Die alte Dass-Schreibung ist nicht mehr zeitgemaess.",
+      "instructions": "Prüfe, ob die veraltete Form 'daß' verwendet wird.",
+      "message": "Die alte Dass-Schreibung ist nicht mehr zeitgemäss.",
       "suggestion": "Nutze die aktuelle Form 'dass'.",
       "matchTerms": ["daß"]
     },
@@ -18,7 +18,7 @@
       "id": "email-mit-bindestrich",
       "title": "E-Mail mit Bindestrich schreiben",
       "page": 17,
-      "instructions": "Pruefe die Standardform fuer zusammengesetzte Lehnwoerter.",
+      "instructions": "Prüfe die Standardform für zusammengesetzte Lehnwörter.",
       "message": "Die Schreibweise ohne Bindestrich weicht von der Standardform ab.",
       "suggestion": "Nutze 'E-Mail' statt 'Email'.",
       "matchTerms": ["email"]

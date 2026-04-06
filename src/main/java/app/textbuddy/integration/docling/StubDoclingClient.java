@@ -105,8 +105,8 @@ public final class StubDoclingClient implements DoclingClient {
         String safeFilename = escape(filename == null || filename.isBlank() ? "Dokument" : filename);
 
         return "<h1>" + safeFilename + "</h1>"
-                + "<p>Stub-Import fuer binaere Dokumente. Fuer echte Konvertierung bitte einen Docling-Server konfigurieren.</p>"
-                + "<p>Dateigroesse: " + sizeInBytes + " Bytes</p>";
+                + "<p>Stub-Import für binäre Dokumente. Für echte Konvertierung bitte einen Docling-Server konfigurieren.</p>"
+                + "<p>Dateigrösse: " + sizeInBytes + " Bytes</p>";
     }
 
     private static String closeParagraph(List<String> paragraphLines) {

@@ -33,6 +33,7 @@ export interface DocumentImportElements {
 export interface QuickActionElements {
   panel: HTMLElement;
   status: HTMLElement;
+  languageSelect: HTMLSelectElement;
   plainLanguageButton: HTMLButtonElement;
   bulletPointsButton: HTMLButtonElement;
   proofreadButton: HTMLButtonElement;
@@ -90,6 +91,7 @@ export interface AdvisorValidationElements {
   detailMessage: HTMLElement;
   detailExcerpt: HTMLElement;
   detailSuggestion: HTMLElement;
+  detailOpenButton: HTMLButtonElement;
   detailLink: HTMLAnchorElement;
 }
 

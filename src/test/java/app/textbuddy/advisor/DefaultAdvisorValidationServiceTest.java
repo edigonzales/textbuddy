@@ -97,6 +97,29 @@ class DefaultAdvisorValidationServiceTest {
         assertThat(handler.errors).isEmpty();
     }
 
+    @Test
+    void validateCapsTheAdvisorRulesAtTwentyEntries() {
+        List<AdvisorRule> rules = new ArrayList<>();
+
+        for (int index = 1; index <= 25; index += 1) {
+            rules.add(rule("rule-" + index, index, List.of("term-" + index)));
+        }
+
+        AdvisorDocumentRepository repository = repository(document("doc-a", "Dokument A", 1, rules));
+        List<Integer> requestedBatchSizes = new ArrayList<>();
+        AdvisorValidationLlmClient llmClient = (text, ruleChecks) -> {
+            requestedBatchSizes.add(ruleChecks.size());
+            return List.of();
+        };
+        DefaultAdvisorValidationService service = new DefaultAdvisorValidationService(repository, llmClient, 3);
+        RecordingHandler handler = new RecordingHandler();
+
+        service.validate(new AdvisorValidateRequest("Text", List.of("doc-a")), handler);
+
+        assertThat(requestedBatchSizes).containsExactly(3, 3, 3, 3, 3, 3, 2);
+        assertThat(handler.completeCount).isEqualTo(1);
+    }
+
     private static AdvisorDocumentRepository repository(AdvisorDocument... documents) {
         List<AdvisorDocument> values = List.of(documents);
 

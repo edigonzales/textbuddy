@@ -53,7 +53,7 @@ class DocumentConversionControllerMvcTest {
         mockMvc.perform(multipart("/api/convert/doc").file(file))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
-                .andExpect(jsonPath("$.detail").value(containsString("Nicht unterstuetztes Dateiformat.")))
+                .andExpect(jsonPath("$.detail").value(containsString("Nicht unterstütztes Dateiformat.")))
                 .andExpect(jsonPath("$.path").value("/api/convert/doc"))
                 .andExpect(jsonPath("$.traceId").isString());
     }

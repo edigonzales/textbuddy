@@ -22,7 +22,7 @@ public class CharacterSpeechQuickActionController {
     private static final Logger log = LoggerFactory.getLogger(CharacterSpeechQuickActionController.class);
     private static final String DEFAULT_ERROR_MESSAGE = "Character-Speech-Stream konnte nicht gestartet werden.";
     private static final String MISSING_OPTION_MESSAGE = "Character-Speech-Option ist erforderlich.";
-    private static final String INVALID_OPTION_MESSAGE = "Character-Speech-Option ist ungueltig.";
+    private static final String INVALID_OPTION_MESSAGE = "Character-Speech-Option ist ungültig.";
 
     private final CharacterSpeechQuickActionService characterSpeechQuickActionService;
     private final QuickActionSsePayloadFactory payloadFactory;

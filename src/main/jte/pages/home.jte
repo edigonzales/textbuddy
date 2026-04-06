@@ -11,7 +11,7 @@
         </div>
         <div class="status-strip">
             <div class="status-pill" data-testid="release-status-pill">
-                Slice 18 kombiniert die vorhandenen Kernfeatures jetzt mit konfigurierbarer OIDC-Grundintegration, globalem Fehlerbild und einem produktionsnaeheren Startprofil.
+                Phase 02 schließt Frontend-Lücken mit erweiterten Sprachoptionen, Advisor-PDF-Viewer, Textstatistik und sprachlich normalisierten UI-Texten.
             </div>
             <div class="status-pill" data-testid="auth-status-pill">
                 <strong>${page.auth().statusTitle()}</strong>
@@ -38,7 +38,7 @@
             <div class="panel-body">
                 <p class="eyebrow">Arbeitsfläche</p>
                 <h2>Quick Actions + Rewrite Bubble</h2>
-                <p class="panel-copy">Die Insel kombiniert Wort-/Satz-Rewrite im Bubble-Menue, alle neun streamingfaehigen Volltext-Rewrites, Dokumentimport, Advisor-Pruefung und Auth-/Fehlerpolitur in einer gemeinsamen Arbeitsflaeche.</p>
+                <p class="panel-copy">Die Insel bündelt Wort-/Satz-Rewrite, alle neun streamingfähigen Volltext-Rewrites, Dokumentimport, Advisor-Prüfung und konsistente Fehlerführung in einer produktionsnahen Arbeitsfläche.</p>
 
                 <div
                     id="editor-island-root"
@@ -51,17 +51,17 @@
                     <div class="chip-row">
                         <span class="chip">JTE rendert die Shell</span>
                         <span class="chip">Tiptap bearbeitet Plain Text</span>
-                        <span class="chip">LanguageTool prueft nur geaenderte Segmente</span>
+                        <span class="chip">LanguageTool prüft nur geänderte Segmente</span>
                         <span class="chip">Fokussiertes Wort hat Vorrang vor Satzfokus</span>
-                        <span class="chip">Dasselbe Bubble-Menue startet Wort-Synonyme oder Satzumformung</span>
-                        <span class="chip">Plain Language streamt ueber SSE direkt in den Editor</span>
+                        <span class="chip">Dasselbe Bubble-Menü startet Wort-Synonyme oder Satzumformung</span>
+                        <span class="chip">Plain Language streamt über SSE direkt in den Editor</span>
                         <span class="chip">Bullet Points nutzt dieselbe Streaming- und Diff-Infrastruktur</span>
                         <span class="chip">Proofread nutzt dieselbe Streaming- und Diff-Infrastruktur</span>
-                        <span class="chip">Summarize waehlt seine Variante ueber ein eigenes Dropdown</span>
-                        <span class="chip">Formality waehlt zwischen formal und informal</span>
-                        <span class="chip">Social Media waehlt zwischen Bluesky, Instagram und LinkedIn</span>
-                        <span class="chip">Medium waehlt zwischen E-Mail, offiziellem Schreiben, Praesentation und Bericht</span>
-                        <span class="chip">Character Speech waehlt zwischen direkter und indirekter Rede</span>
+                        <span class="chip">Summarize wählt seine Variante über ein eigenes Dropdown</span>
+                        <span class="chip">Formality wählt zwischen formal und informal</span>
+                        <span class="chip">Social Media wählt zwischen Bluesky, Instagram und LinkedIn</span>
+                        <span class="chip">Medium wählt zwischen E-Mail, offiziellem Schreiben, Präsentation und Bericht</span>
+                        <span class="chip">Character Speech wählt zwischen direkter und indirekter Rede</span>
                         <span class="chip">Custom nimmt einen freien Arbeitsauftrag im Rewrite-Bereich entgegen</span>
                         <span class="chip">Rewrite-Diff und kompletter Undo bauen auf derselben Streaming-Basis auf</span>
                         <span class="chip">Dokumentimport gleicht Upload-Formate zwischen UI und Backend ab</span>
@@ -78,12 +78,12 @@
                     >
                         <div class="document-import-head">
                             <div>
-                                <p class="eyebrow">Document Import</p>
+                                <p class="eyebrow">Dokumentimport</p>
                                 <h3>Upload oder Drag-and-Drop</h3>
-                                <p class="panel-copy">Unterstuetzte Dokumente werden an Docling gesendet. Das zurueckgelieferte HTML landet direkt in der bestehenden Tiptap-Insel, ohne Upload-Persistenz ausserhalb des aktuellen Requests. Bei aktiver OIDC-Konfiguration laeuft der Endpoint nur fuer angemeldete Sessions.</p>
+                                <p class="panel-copy">Unterstützte Dokumente werden standardmässig eingebettet über Kreuzberg verarbeitet. Das zurückgelieferte HTML landet direkt in der bestehenden Tiptap-Insel, ohne Upload-Persistenz ausserhalb des aktuellen Requests. Bei aktiver OIDC-Konfiguration läuft der Endpoint nur für angemeldete Sessions.</p>
                             </div>
 
-                            <p class="document-import-status" data-document-import-status data-testid="document-import-status" aria-live="polite">Bereit fuer Upload oder Drag-and-Drop.</p>
+                            <p class="document-import-status" data-document-import-status data-testid="document-import-status" aria-live="polite">Bereit für Upload oder Drag-and-Drop.</p>
                         </div>
 
                         <div class="document-import-body">
@@ -106,7 +106,7 @@
                                     accept="${page.documentImportAccept()}"
                                 >
                                 <strong>Dokument hier ablegen</strong>
-                                <span>Ziehe eine Datei auf diese Flaeche oder waehle sie ueber den Upload-Button aus.</span>
+                                <span>Ziehe eine Datei auf diese Fläche oder wähle sie über den Upload-Button aus.</span>
                                 <div class="document-import-format-list" data-testid="document-import-format-list">
                                     @for (var format : page.documentImportFormats())
                                         <span class="document-import-format">${format}</span>
@@ -123,10 +123,10 @@
                             <div>
                                 <p class="eyebrow">Quick Actions</p>
                                 <h3>Rewrite mit Streaming</h3>
-                                <p class="panel-copy">Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom bleiben aktiv. Summarize, Formality, Social Media, Medium und Character Speech nutzen eigene Varianten-Menues, Custom nutzt ein freies Prompt-Feld, weitere Quick Actions werden bewusst nicht nachgezogen.</p>
+                                <p class="panel-copy">Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom bleiben bewusst getrennte Aktionen mit klaren Optionen statt einer generischen Schalter-API.</p>
                             </div>
 
-                            <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" aria-live="polite">Bereit fuer Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom.</p>
+                            <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" aria-live="polite">Bereit für Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom.</p>
                         </div>
 
                         <div class="quick-action-row">
@@ -138,7 +138,7 @@
                                     <span class="quick-action-select-label">Summarize-Variante</span>
                                     <select id="quick-action-summarize-option" class="quick-action-select" data-quick-action-option="summarize" data-testid="quick-action-summarize-option">
                                         <option value="sentence" selected>Ein Satz</option>
-                                        <option value="three_sentence">Drei Saetze</option>
+                                        <option value="three_sentence">Drei Sätze</option>
                                         <option value="paragraph">Ein Absatz</option>
                                         <option value="page">Eine Seite</option>
                                         <option value="management_summary">Management Summary</option>
@@ -173,7 +173,7 @@
                                     <select id="quick-action-medium-option" class="quick-action-select" data-quick-action-option="medium" data-testid="quick-action-medium-option">
                                         <option value="email" selected>E-Mail</option>
                                         <option value="official_letter">Offizieller Brief</option>
-                                        <option value="presentation">Praesentation</option>
+                                        <option value="presentation">Präsentation</option>
                                         <option value="report">Bericht</option>
                                     </select>
                                 </label>
@@ -239,7 +239,7 @@
                                 <h3>Alt gegen Neu</h3>
                             </div>
 
-                            <button type="button" class="rewrite-diff-undo" data-rewrite-diff-undo data-testid="rewrite-diff-undo">Rewrite rueckgaengig machen</button>
+                            <button type="button" class="rewrite-diff-undo" data-rewrite-diff-undo data-testid="rewrite-diff-undo">Rewrite rückgängig machen</button>
                         </div>
 
                         <div class="rewrite-diff-grid">
@@ -261,43 +261,93 @@
         <aside class="workspace-sidebar">
             <section class="panel correction-panel" data-testid="correction-panel" data-correction-panel data-correction-state="idle">
                 <div class="panel-body">
-                    <p class="eyebrow">Problems Panel</p>
+                    <p class="eyebrow">Korrekturpanel</p>
                     <h2>Textkorrektur</h2>
-                    <p class="panel-copy">Die Insel steuert Sprache, lokales Woerterbuch und differenzierte Re-Checks. Der Server bleibt beim bestehenden Korrektur-Endpoint.</p>
+                    <p class="panel-copy">Die Insel steuert die gemeinsame Textsprache für Korrektur und Quick Actions, das lokale Wörterbuch sowie differenzierte Re-Checks. Der Server bleibt beim bestehenden Korrektur-Endpoint.</p>
 
                     <div class="correction-controls" data-testid="correction-controls">
                         <label class="control-stack" for="correction-language">
-                            <span class="control-label">Korrektursprache</span>
+                            <span class="control-label">Textsprache</span>
                             <select id="correction-language" class="control-select" data-correction-language data-testid="correction-language">
                                 <option value="auto" selected>Automatisch</option>
-                                <option value="de-DE">Deutsch</option>
-                                <option value="en-US">Englisch</option>
+                                <option value="de-CH">Deutsch (Schweiz)</option>
+                                <option value="fr">Französisch</option>
+                                <option value="it">Italienisch</option>
+                                <option value="en-US">Englisch (USA)</option>
+                                <option value="en-GB">Englisch (UK)</option>
                             </select>
                         </label>
 
                         <div class="dictionary-shell" data-testid="dictionary-shell">
                             <div class="dictionary-head">
-                                <strong>Lokales Woerterbuch</strong>
+                                <strong>Lokales Wörterbuch</strong>
                                 <span>Nur browserlokal, ohne Serverpersistenz</span>
                             </div>
 
                             <form class="dictionary-form" data-dictionary-form data-testid="dictionary-form">
-                                <input type="text" class="dictionary-input" data-dictionary-input data-testid="dictionary-input" placeholder="Wort hinzufuegen" autocomplete="off" />
-                                <button type="submit" class="dictionary-submit" data-testid="dictionary-submit">Hinzufuegen</button>
+                                <input type="text" class="dictionary-input" data-dictionary-input data-testid="dictionary-input" placeholder="Wort hinzufügen" autocomplete="off" />
+                                <button type="submit" class="dictionary-submit" data-testid="dictionary-submit">Hinzufügen</button>
                             </form>
 
-                            <p class="dictionary-empty" data-dictionary-empty data-testid="dictionary-empty">Noch keine lokalen Woerter gespeichert.</p>
+                            <p class="dictionary-empty" data-dictionary-empty data-testid="dictionary-empty">Noch keine lokalen Wörter gespeichert.</p>
                             <ul class="dictionary-list" data-dictionary-list data-testid="dictionary-list"></ul>
                         </div>
                     </div>
+
+                    <section class="text-stats-panel" data-text-stats-panel data-testid="text-stats-panel">
+                        <div class="text-stats-head">
+                            <div>
+                                <p class="eyebrow">Textstatistik</p>
+                                <h3>Lesbarkeit und Umfang</h3>
+                            </div>
+                        </div>
+
+                        <div class="text-stats-grid">
+                            <article class="text-stats-item">
+                                <span>Zeichen</span>
+                                <strong data-text-stats="characters" data-testid="text-stats-characters">0</strong>
+                            </article>
+                            <article class="text-stats-item">
+                                <span>Wörter</span>
+                                <strong data-text-stats="words" data-testid="text-stats-words">0</strong>
+                            </article>
+                            <article class="text-stats-item">
+                                <span>Silben</span>
+                                <strong data-text-stats="syllables" data-testid="text-stats-syllables">0</strong>
+                            </article>
+                            <article class="text-stats-item">
+                                <span>Sätze</span>
+                                <strong data-text-stats="sentences" data-testid="text-stats-sentences">0</strong>
+                            </article>
+                            <article class="text-stats-item">
+                                <span>Ø Satzlänge</span>
+                                <strong data-text-stats="avg-sentence-length" data-testid="text-stats-avg-sentence-length">0.0</strong>
+                            </article>
+                            <article class="text-stats-item">
+                                <span>Ø Silben/Wort</span>
+                                <strong data-text-stats="avg-syllables-per-word" data-testid="text-stats-avg-syllables-per-word">0.0</strong>
+                            </article>
+                        </div>
+
+                        <div class="text-stats-flesch">
+                            <div class="text-stats-flesch-head">
+                                <span>Flesch-Lesbarkeitsindex</span>
+                                <strong data-text-stats="flesch" data-testid="text-stats-flesch">0.0</strong>
+                            </div>
+                            <div class="text-stats-flesch-bar" role="img" aria-label="Flesch-Lesbarkeit">
+                                <span data-text-stats-flesch-fill></span>
+                            </div>
+                            <p class="text-stats-flesch-label" data-text-stats-flesch-label data-testid="text-stats-flesch-label">Keine Bewertung</p>
+                        </div>
+                    </section>
 
                     <p class="problem-status" data-correction-status data-testid="correction-status">Schreibe Text, um Korrekturen zu sehen.</p>
                     <div class="problem-list" data-correction-list data-testid="correction-problem-list"></div>
 
                     <div class="stack-list problems-footnotes">
                         <div class="stack-item">
-                            <strong>Produktionsnaeher statt groesser</strong>
-                            Fehlerseiten, API-Fehler und Trace-IDs ziehen jetzt dieselbe Betriebslogik durch die vorhandenen Korrektur-, Rewrite- und Importfluesse.
+                            <strong>Produktionsnäher statt grösser</strong>
+                            Fehlerseiten, API-Fehler und Trace-IDs ziehen jetzt dieselbe Betriebslogik durch die vorhandenen Korrektur-, Rewrite- und Importflüsse.
                         </div>
                         <div class="stack-item">
                             <strong>Bewusst weiterhin begrenzt</strong>
@@ -309,15 +359,15 @@
 
             <section class="panel advisor-panel" data-testid="advisor-panel" data-advisor-panel data-advisor-state="idle">
                 <div class="panel-body">
-                    <p class="eyebrow">Advisor Catalog</p>
+                    <p class="eyebrow">Advisor-Katalog</p>
                     <h2>Referenzdokumente</h2>
-                    <p class="panel-copy">Die Auswahl bleibt mehrfach moeglich, Treffer laufen waehrend des Streams direkt in die Ergebnisliste und nutzen dasselbe konsistente Fehler- und Auth-Verhalten wie die uebrigen API-Flows.</p>
+                    <p class="panel-copy">Dokumente lassen sich direkt im Browser anzeigen, seitenweise prüfen und mit Zoom steuern. Treffer laufen während des Streams in dieselbe konsistente Ergebnisansicht.</p>
 
                     <div class="advisor-toolbar">
                         <p class="advisor-status" data-advisor-status data-testid="advisor-status" aria-live="polite">
-                            ${page.advisorDocs().size()} Dokumente verfuegbar. Waehle Referenzen, schreibe Text im Editor und starte dann die Advisor-Pruefung.
+                            ${page.advisorDocs().size()} Dokumente verfügbar. Wähle Referenzen, schreibe Text im Editor und starte dann die Advisor-Prüfung.
                         </p>
-                        <button type="button" class="advisor-validate" data-advisor-validate data-testid="advisor-validate">Pruefung starten</button>
+                        <button type="button" class="advisor-validate" data-advisor-validate data-testid="advisor-validate">Prüfung starten</button>
                     </div>
 
                     <div class="advisor-list" data-testid="advisor-doc-list">
@@ -325,7 +375,7 @@
                             <article class="advisor-item" data-testid="advisor-doc-item">
                                 <label class="advisor-select">
                                     <input type="checkbox" name="advisor-docs" value="${advisorDoc.name()}" data-testid="advisor-doc-checkbox">
-                                    <span>Auswaehlen</span>
+                                    <span>Auswählen</span>
                                 </label>
 
                                 <div class="advisor-copy">
@@ -335,8 +385,17 @@
                                 </div>
 
                                 <div class="advisor-links">
-                                    <a class="advisor-link" href="${advisorDoc.documentUrl()}" target="_blank" rel="noopener noreferrer" data-testid="advisor-doc-open">PDF anzeigen</a>
-                                    <a class="advisor-link advisor-link-secondary" href="${advisorDoc.documentUrl()}" download="${advisorDoc.name()}.pdf" data-testid="advisor-doc-download">PDF laden</a>
+                                    <button
+                                        type="button"
+                                        class="advisor-link"
+                                        data-advisor-open
+                                        data-advisor-doc-url="${advisorDoc.documentUrl()}"
+                                        data-advisor-doc-title="${advisorDoc.title()}"
+                                        data-advisor-doc-name="${advisorDoc.name()}"
+                                        data-testid="advisor-doc-open"
+                                    >Im Viewer öffnen</button>
+                                    <a class="advisor-link" href="${advisorDoc.documentUrl()}" target="_blank" rel="noopener noreferrer" data-testid="advisor-doc-open-tab">Im neuen Tab</a>
+                                    <a class="advisor-link advisor-link-secondary" href="${advisorDoc.documentUrl()}" download="${advisorDoc.name()}.pdf" data-testid="advisor-doc-download">PDF herunterladen</a>
                                 </div>
                             </article>
                         @endfor
@@ -345,16 +404,16 @@
                     <section class="advisor-results-panel" data-testid="advisor-results-panel">
                         <div class="advisor-results-head">
                             <div>
-                                <p class="eyebrow">Validation Stream</p>
+                                <p class="eyebrow">Validierungsstream</p>
                                 <h3>Trefferliste</h3>
-                                <p class="panel-copy">Die Liste aktualisiert sich waehrend des Streams. Der Client dedupliziert Treffer ueber einen stabilen Schluessel.</p>
+                                <p class="panel-copy">Die Liste aktualisiert sich während des Streams. Der Client dedupliziert Treffer über einen stabilen Schlüssel.</p>
                             </div>
 
                             <span class="advisor-result-counter" data-advisor-result-count data-testid="advisor-result-count">0 Treffer</span>
                         </div>
 
                         <p class="advisor-results-empty" data-advisor-result-empty data-testid="advisor-result-empty">
-                            Noch keine Advisor-Treffer. Starte die Pruefung mit markierten Dokumenten.
+                            Noch keine Advisor-Treffer. Starte die Prüfung mit markierten Dokumenten.
                         </p>
 
                         <div class="advisor-results" data-advisor-result-list data-testid="advisor-result-list"></div>
@@ -362,11 +421,14 @@
                         <section class="advisor-detail" data-advisor-result-detail data-testid="advisor-result-detail" hidden>
                             <div class="advisor-detail-head">
                                 <div>
-                                    <p class="eyebrow">Ausgewaehlter Treffer</p>
+                                    <p class="eyebrow">Ausgewählter Treffer</p>
                                     <h3 data-advisor-result-detail-title data-testid="advisor-result-detail-title"></h3>
                                 </div>
 
-                                <a class="advisor-link" href="#" target="_blank" rel="noopener noreferrer" data-advisor-result-detail-link data-testid="advisor-result-detail-link">Dokument oeffnen</a>
+                                <div class="advisor-detail-actions">
+                                    <button type="button" class="advisor-link" data-advisor-result-detail-open data-testid="advisor-result-detail-open" hidden>Treffer im Viewer öffnen</button>
+                                    <a class="advisor-link advisor-link-secondary" href="#" target="_blank" rel="noopener noreferrer" data-advisor-result-detail-link data-testid="advisor-result-detail-link" hidden>Im neuen Tab öffnen</a>
+                                </div>
                             </div>
 
                             <p class="advisor-detail-reference" data-advisor-result-detail-reference data-testid="advisor-result-detail-reference"></p>
@@ -377,10 +439,47 @@
                         </section>
                     </section>
 
+                    <section class="advisor-pdf-viewer" data-advisor-pdf-viewer data-testid="advisor-pdf-viewer" hidden>
+                        <div class="advisor-pdf-head">
+                            <div>
+                                <p class="eyebrow">PDF-Viewer</p>
+                                <h3 data-advisor-pdf-title data-testid="advisor-pdf-title">Dokumentansicht</h3>
+                            </div>
+
+                            <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-close data-testid="advisor-pdf-close">Viewer schließen</button>
+                        </div>
+
+                        <div class="advisor-pdf-controls">
+                            <div class="advisor-pdf-control-group">
+                                <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-prev data-testid="advisor-pdf-prev">Seite zurück</button>
+                                <label class="advisor-pdf-page-shell" for="advisor-pdf-page-input">
+                                    <span>Seite</span>
+                                    <input id="advisor-pdf-page-input" type="number" min="1" value="1" data-advisor-pdf-page-input data-testid="advisor-pdf-page-input">
+                                </label>
+                                <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-next data-testid="advisor-pdf-next">Seite vor</button>
+                            </div>
+
+                            <div class="advisor-pdf-control-group">
+                                <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-zoom-out data-testid="advisor-pdf-zoom-out">Zoom −</button>
+                                <span class="advisor-pdf-zoom-label" data-advisor-pdf-zoom-label data-testid="advisor-pdf-zoom-label">100%</span>
+                                <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-zoom-in data-testid="advisor-pdf-zoom-in">Zoom +</button>
+                                <a class="advisor-link" href="#" data-advisor-pdf-download data-testid="advisor-pdf-download">PDF herunterladen</a>
+                            </div>
+                        </div>
+
+                        <iframe
+                            class="advisor-pdf-frame"
+                            data-advisor-pdf-frame
+                            data-testid="advisor-pdf-frame"
+                            title="Advisor PDF Viewer"
+                            loading="lazy"
+                        ></iframe>
+                    </section>
+
                     <div class="stack-list advisor-footnotes">
                         <div class="stack-item">
                             <strong>Mehrfachauswahl aktiv genutzt</strong>
-                            Die Checkboxen steuern jetzt direkt, welche Dokumentregeln in die Advisor-Pruefung einbezogen werden.
+                            Die Checkboxen steuern jetzt direkt, welche Dokumentregeln in die Advisor-Prüfung einbezogen werden.
                         </div>
                         <div class="stack-item">
                             <strong>Bewusst statisch</strong>

@@ -99,7 +99,7 @@ class SocialMediaQuickActionServiceTest {
 
         assertThat(called).isFalse();
         assertThat(handler.completedText).isNull();
-        assertThat(handler.errorMessage).isEqualTo("Social-Media-Option ist ungueltig.");
+        assertThat(handler.errorMessage).isEqualTo("Social-Media-Option ist ungültig.");
     }
 
     @Test

@@ -33,7 +33,7 @@ public class DefaultDocumentConversionService implements DocumentConversionServi
 
         if (!formatCatalog.supports(normalizedUpload.filename(), normalizedUpload.contentType())) {
             throw new UnsupportedDocumentFormatException(
-                    "Nicht unterstuetztes Dateiformat. Unterstuetzt werden: "
+                    "Nicht unterstütztes Dateiformat. Unterstützt werden: "
                             + formatCatalog.describeSupportedFormats()
                             + "."
             );
@@ -42,7 +42,7 @@ public class DefaultDocumentConversionService implements DocumentConversionServi
         String html = Objects.requireNonNullElse(doclingClient.convertToHtml(normalizedUpload), "");
 
         if (html.isBlank()) {
-            throw new DocumentConversionFailedException("Docling hat kein HTML fuer dieses Dokument geliefert.");
+            throw new DocumentConversionFailedException("Dokumentimport hat kein HTML für dieses Dokument geliefert.");
         }
 
         return new DocumentConversionResponse(html);

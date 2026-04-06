@@ -5,6 +5,7 @@ import { setEditorPlainText } from "./editor-content";
 import { getPlainText } from "./plain-text";
 import { postQuickActionSse } from "./quick-action-sse";
 import { createRewriteDiff } from "./rewrite-diff";
+import { normalizeRequestedLanguage } from "./request-language";
 import type {
   QuickActionElements,
   QuickActionSseChunkPayload,
@@ -14,8 +15,8 @@ import type {
 } from "./types";
 
 const IDLE_MESSAGE =
-  "Bereit fuer Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom.";
-const UNDONE_MESSAGE = "Rewrite wurde rueckgaengig gemacht.";
+  "Bereit für Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom.";
+const UNDONE_MESSAGE = "Rewrite wurde rückgängig gemacht.";
 const AUTH_REQUIRED_MESSAGE = "Mit OIDC anmelden, um Quick Actions zu starten.";
 const CUSTOM_PROMPT_MAX_LENGTH = 400;
 const DISALLOWED_CUSTOM_PROMPT_CHARACTERS = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/;
@@ -56,6 +57,10 @@ interface ActiveStreamState {
   original: string;
   streamed: string;
   controller: AbortController;
+}
+
+function getSelectedLanguage(elements: QuickActionElements): string {
+  return normalizeRequestedLanguage(elements.languageSelect.value);
 }
 
 function isAbortError(error: unknown): boolean {
@@ -136,7 +141,7 @@ export function mountQuickActionStream(
       errorMessage: "Summarize konnte gerade nicht abgeschlossen werden.",
       buildRequestBody: (text) => ({
         text,
-        language: "auto",
+        language: getSelectedLanguage(elements),
         option: elements.summarizeOptionSelect.value,
       }),
     },
@@ -148,7 +153,7 @@ export function mountQuickActionStream(
       errorMessage: "Formality konnte gerade nicht abgeschlossen werden.",
       buildRequestBody: (text) => ({
         text,
-        language: "auto",
+        language: getSelectedLanguage(elements),
         option: elements.formalityOptionSelect.value,
       }),
     },
@@ -160,7 +165,7 @@ export function mountQuickActionStream(
       errorMessage: "Social Media konnte gerade nicht abgeschlossen werden.",
       buildRequestBody: (text) => ({
         text,
-        language: "auto",
+        language: getSelectedLanguage(elements),
         option: elements.socialMediaOptionSelect.value,
       }),
     },
@@ -172,7 +177,7 @@ export function mountQuickActionStream(
       errorMessage: "Medium konnte gerade nicht abgeschlossen werden.",
       buildRequestBody: (text) => ({
         text,
-        language: "auto",
+        language: getSelectedLanguage(elements),
         option: elements.mediumOptionSelect.value,
       }),
     },
@@ -184,7 +189,7 @@ export function mountQuickActionStream(
       errorMessage: "Character Speech konnte gerade nicht abgeschlossen werden.",
       buildRequestBody: (text) => ({
         text,
-        language: "auto",
+        language: getSelectedLanguage(elements),
         option: elements.characterSpeechOptionSelect.value,
       }),
     },
@@ -196,7 +201,7 @@ export function mountQuickActionStream(
       errorMessage: "Custom konnte gerade nicht abgeschlossen werden.",
       buildRequestBody: (text) => ({
         text,
-        language: "auto",
+        language: getSelectedLanguage(elements),
         prompt: normalizeCustomPrompt(elements.customPromptInput.value),
       }),
     },
@@ -287,7 +292,7 @@ export function mountQuickActionStream(
       ? action.buildRequestBody(originalText)
       : {
           text: originalText,
-          language: "auto",
+          language: getSelectedLanguage(elements),
         };
 
     clearDiff();

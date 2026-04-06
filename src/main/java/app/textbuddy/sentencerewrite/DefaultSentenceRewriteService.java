@@ -20,12 +20,13 @@ public class DefaultSentenceRewriteService implements SentenceRewriteService {
     @Override
     public SentenceRewriteResponse rewrite(SentenceRewriteRequest request) {
         String original = normalize(request == null ? null : request.sentence());
+        String context = normalize(request == null ? null : request.context());
 
         if (original.isBlank()) {
             return new SentenceRewriteResponse(original, List.of());
         }
 
-        List<String> alternatives = llmClientFacade.rewriteSentence(original).stream()
+        List<String> alternatives = llmClientFacade.rewriteSentence(original, context).stream()
                 .map(this::normalize)
                 .filter(candidate -> !candidate.isBlank())
                 .filter(candidate -> !candidate.equals(original))

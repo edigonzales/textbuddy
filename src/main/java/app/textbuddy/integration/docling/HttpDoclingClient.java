@@ -103,7 +103,7 @@ public final class HttpDoclingClient implements DoclingClient {
         }
 
         throw new DocumentConversionFailedException(
-                "Docling-Antwort enthaelt kein HTML: " + compactResponse(response)
+                "Docling-Antwort enthält kein HTML: " + compactResponse(response)
         );
     }
 

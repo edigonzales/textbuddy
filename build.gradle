@@ -5,12 +5,14 @@ plugins {
 
 group = 'app.textbuddy'
 version = '0.0.1-SNAPSHOT'
-description = 'Slice 18 auth and polish for Textbuddy'
+description = 'Phase 01 produktiver Kern for Textbuddy'
 
 ext {
     jteVersion = '3.2.3'
     htmxVersion = '2.0.8'
     springAiVersion = '2.0.0-M2'
+    languageToolVersion = '6.7'
+    kreuzbergVersion = '4.7.3'
 }
 
 java {
@@ -32,6 +34,16 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation("org.languagetool:languagetool-core:${languageToolVersion}") {
+        exclude group: 'com.sun.xml.bind', module: 'jaxb-core'
+        exclude group: 'com.sun.xml.bind', module: 'jaxb-impl'
+        exclude group: 'javax.xml.bind', module: 'jaxb-api'
+    }
+    implementation "org.languagetool:language-de:${languageToolVersion}"
+    implementation "org.languagetool:language-en:${languageToolVersion}"
+    implementation "org.languagetool:language-fr:${languageToolVersion}"
+    implementation "org.languagetool:language-it:${languageToolVersion}"
+    implementation "dev.kreuzberg:kreuzberg:${kreuzbergVersion}"
     implementation "gg.jte:jte-spring-boot-starter-4:${jteVersion}"
     implementation "org.webjars.npm:htmx.org:${htmxVersion}"
 
@@ -101,7 +113,17 @@ tasks.named('processResources') {
     dependsOn 'syncFrontendAssets'
 }
 
+tasks.named('bootJar') {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 tasks.named('test') {
+    dependsOn 'bootJar'
     dependsOn 'testFrontendUnit'
+    maxParallelForks = 1
+    forkEvery = 1
     useJUnitPlatform()
+    doFirst {
+        systemProperty 'textbuddy.bootJarPath', tasks.named('bootJar').get().archiveFile.get().asFile.absolutePath
+    }
 }

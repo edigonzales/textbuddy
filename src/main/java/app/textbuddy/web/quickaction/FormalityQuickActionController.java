@@ -22,7 +22,7 @@ public class FormalityQuickActionController {
     private static final Logger log = LoggerFactory.getLogger(FormalityQuickActionController.class);
     private static final String DEFAULT_ERROR_MESSAGE = "Formality-Stream konnte nicht gestartet werden.";
     private static final String MISSING_OPTION_MESSAGE = "Formality-Option ist erforderlich.";
-    private static final String INVALID_OPTION_MESSAGE = "Formality-Option ist ungueltig.";
+    private static final String INVALID_OPTION_MESSAGE = "Formality-Option ist ungültig.";
 
     private final FormalityQuickActionService formalityQuickActionService;
     private final QuickActionSsePayloadFactory payloadFactory;

@@ -112,12 +112,12 @@ public class GlobalErrorHandler {
 
     private String defaultMessage(HttpStatusCode status) {
         return switch (status.value()) {
-            case 400 -> "Die Anfrage ist ungueltig.";
+            case 400 -> "Die Anfrage ist ungültig.";
             case 401 -> "Anmeldung erforderlich.";
             case 403 -> "Zugriff verweigert.";
             case 404 -> "Die angeforderte Ressource wurde nicht gefunden.";
-            case 405 -> "Diese HTTP-Methode wird fuer den Endpoint nicht unterstuetzt.";
-            case 502 -> "Ein angebundener Dienst hat ungueltig geantwortet.";
+            case 405 -> "Diese HTTP-Methode wird für den Endpoint nicht unterstützt.";
+            case 502 -> "Ein angebundener Dienst hat ungültig geantwortet.";
             default -> "Ein interner Fehler ist aufgetreten.";
         };
     }

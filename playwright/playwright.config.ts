@@ -10,7 +10,8 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: "./gradlew bootRun --args='--server.port=4173'",
+    command:
+      "./gradlew bootRun --args='--server.port=4173 --textbuddy.llm.mode=stub --textbuddy.languagetool.mode=stub --textbuddy.document.mode=stub'",
     cwd: resolve(__dirname, ".."),
     reuseExistingServer: false,
     timeout: 120_000,

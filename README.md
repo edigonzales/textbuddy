@@ -78,11 +78,24 @@ Mit aktivierter Auth:
 
 ## Adapter-Konfiguration
 
-Fuer lokale Entwicklung laufen die externen Adapter standardmaessig im Stub-Modus.
+Der Standardpfad von Phase 01 ist:
 
-- `textbuddy.languagetool.base-url`: aktiviert den HTTP-LanguageTool-Client
-- `textbuddy.docling.base-url`: aktiviert den HTTP-Docling-Client
-- `textbuddy.docling.api-key`: optionaler API-Key fuer Docling
+- LLM im Provider-Modus
+- LanguageTool eingebettet in der JVM
+- Dokumentimport eingebettet über Kreuzberg
+
+Wichtige Properties:
+
+- `textbuddy.llm.mode=provider|stub`
+- `textbuddy.llm.base-url`
+- `textbuddy.llm.api-key`
+- `textbuddy.llm.model`
+- `textbuddy.languagetool.mode=embedded|http|stub`
+- `textbuddy.languagetool.base-url`
+- `textbuddy.languagetool.ngram-path`
+- `textbuddy.document.mode=kreuzberg|http|stub`
+- `textbuddy.document.base-url`
+- `textbuddy.document.api-key`
 
 ## Arbeitsmodus
 

@@ -11,7 +11,7 @@ public enum MediumPrompt {
             "official_letter",
             "Formuliere den Text als offizielles Schreiben mit formeller Anrede und Abschluss."
     ),
-    PRESENTATION("presentation", "Formuliere den Text als Praesentationsentwurf mit klarer Folienstruktur."),
+    PRESENTATION("presentation", "Formuliere den Text als Präsentationsentwurf mit klarer Folienstruktur."),
     REPORT("report", "Formuliere den Text als sachlichen Bericht mit strukturierter Einordnung.");
 
     private final String option;

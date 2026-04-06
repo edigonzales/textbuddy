@@ -50,8 +50,8 @@ public record CustomQuickActionPrompt(String userPrompt) {
 
     public String instruction() {
         return """
-                Fuehre den folgenden Arbeitsauftrag auf den bereitgestellten Volltext aus.
-                Arbeite nur am Inhalt des Volltexts und antworte ausschliesslich mit dem ueberarbeiteten Text.
+                Führe den folgenden Arbeitsauftrag auf den bereitgestellten Volltext aus.
+                Arbeite nur am Inhalt des Volltexts und antworte ausschliesslich mit dem überarbeiteten Text.
 
                 Arbeitsauftrag:
                 %s

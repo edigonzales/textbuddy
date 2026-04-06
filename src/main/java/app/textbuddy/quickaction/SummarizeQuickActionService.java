@@ -12,7 +12,7 @@ public class SummarizeQuickActionService {
 
     private static final String ERROR_MESSAGE = "Zusammenfassung konnte nicht erstellt werden.";
     private static final String MISSING_OPTION_MESSAGE = "Summarize-Option ist erforderlich.";
-    private static final String INVALID_OPTION_MESSAGE = "Summarize-Option ist ungueltig.";
+    private static final String INVALID_OPTION_MESSAGE = "Summarize-Option ist ungültig.";
 
     private final SummarizeLlmClient summarizeLlmClient;
 

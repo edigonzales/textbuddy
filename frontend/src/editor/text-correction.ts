@@ -13,6 +13,7 @@ import {
   normalizeDictionaryWord,
 } from "./local-dictionary";
 import { getPlainText, plainTextToHtml } from "./plain-text";
+import { normalizeRequestedLanguage } from "./request-language";
 import {
   diffTextCorrectionSegments,
   segmentTextForCorrection,
@@ -26,14 +27,13 @@ import type {
   TextCorrectionResponse,
 } from "./types";
 
-const DEFAULT_LANGUAGE = "auto";
 const CORRECTION_DEBOUNCE_MS = 350;
 const IDLE_MESSAGE = "Schreibe Text, um Korrekturen zu sehen.";
-const DEBOUNCE_MESSAGE = "Pruefung nach Tipp-Pause...";
-const LOADING_MESSAGE = "Pruefe geaenderte Segmente...";
+const DEBOUNCE_MESSAGE = "Prüfung nach Tipp-Pause...";
+const LOADING_MESSAGE = "Prüfe geänderte Segmente...";
 const ERROR_MESSAGE = "Korrekturen konnten gerade nicht geladen werden.";
 const AUTH_REQUIRED_MESSAGE = "Mit OIDC anmelden, um Korrekturen zu laden.";
-const STREAMING_MESSAGE = "Rewrite-Stream laeuft gerade.";
+const STREAMING_MESSAGE = "Rewrite-Stream läuft gerade.";
 
 interface SegmentCorrectionState extends TextCorrectionSegment {
   blocks: TextCorrectionBlock[];
@@ -79,8 +79,7 @@ function isAbortError(error: unknown): boolean {
 }
 
 function getSelectedLanguage(elements: CorrectionElements): string {
-  const language = elements.languageSelect.value.trim();
-  return language || DEFAULT_LANGUAGE;
+  return normalizeRequestedLanguage(elements.languageSelect.value);
 }
 
 export function mountTextCorrectionBridge(

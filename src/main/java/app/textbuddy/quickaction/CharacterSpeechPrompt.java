@@ -6,7 +6,7 @@ import java.util.Optional;
 
 public enum CharacterSpeechPrompt {
 
-    DIRECT_SPEECH("direct_speech", "Formuliere den Text als direkte Rede mit woertlichen Zitaten."),
+    DIRECT_SPEECH("direct_speech", "Formuliere den Text als direkte Rede mit wörtlichen Zitaten."),
     INDIRECT_SPEECH("indirect_speech", "Formuliere den Text als indirekte Rede mit berichteter Aussage.");
 
     private final String option;

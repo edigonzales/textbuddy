@@ -1,10 +1,11 @@
 package app.textbuddy.integration.llm;
 
 import app.textbuddy.quickaction.MediumPrompt;
+import app.textbuddy.quickaction.MediumCurrentUser;
 
 import java.util.List;
 
 public interface MediumLlmClient {
 
-    List<String> streamMedium(String text, String language, MediumPrompt prompt);
+    List<String> streamMedium(String text, String language, MediumPrompt prompt, MediumCurrentUser currentUser);
 }

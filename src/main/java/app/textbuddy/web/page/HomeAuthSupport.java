@@ -35,7 +35,7 @@ public class HomeAuthSupport {
                     false,
                     false,
                     "Lokaler Modus",
-                    "OIDC ist deaktiviert. Alle vorhandenen Flows bleiben fuer lokale Entwicklung direkt verfuegbar.",
+                    "OIDC ist deaktiviert. Alle vorhandenen Flows bleiben für lokale Entwicklung direkt verfügbar.",
                     "",
                     ""
             );
@@ -48,7 +48,7 @@ public class HomeAuthSupport {
                     true,
                     true,
                     "OIDC aktiv",
-                    "APIs sind abgesichert. Die Arbeitsflaeche ist angemeldet und produktionsnah konfiguriert.",
+                    "APIs sind abgesichert. Die Arbeitsfläche ist angemeldet und produktionsnah konfiguriert.",
                     displayName,
                     resolveLoginUrl()
             );
@@ -58,7 +58,7 @@ public class HomeAuthSupport {
                 true,
                 false,
                 "OIDC aktiv",
-                "APIs erfordern eine Anmeldung. Melde dich ueber OIDC an, um Import, Korrektur, Advisor und Rewrites zu nutzen.",
+                "APIs erfordern eine Anmeldung. Melde dich über OIDC an, um Import, Korrektur, Advisor und Rewrites zu nutzen.",
                 "",
                 resolveLoginUrl()
         );

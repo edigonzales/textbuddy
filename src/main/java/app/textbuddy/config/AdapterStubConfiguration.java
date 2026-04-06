@@ -17,9 +17,11 @@ import app.textbuddy.integration.llm.WordSynonymLlmClient;
 import app.textbuddy.quickaction.CharacterSpeechPrompt;
 import app.textbuddy.quickaction.CustomQuickActionPrompt;
 import app.textbuddy.quickaction.FormalityPrompt;
+import app.textbuddy.quickaction.MediumCurrentUser;
 import app.textbuddy.quickaction.MediumPrompt;
 import app.textbuddy.quickaction.SocialMediaPrompt;
 import app.textbuddy.quickaction.SummarizePrompt;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -34,11 +36,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Configuration(proxyBeanMethods = false)
+@ConditionalOnProperty(prefix = "textbuddy.llm", name = "mode", havingValue = "stub")
 public class AdapterStubConfiguration {
 
     @Bean
     LlmClientFacade llmClientFacade() {
-        return sentence -> {
+        return (sentence, context) -> {
             String normalized = sentence == null ? "" : sentence.trim();
 
             if (normalized.isBlank()) {
@@ -179,8 +182,9 @@ public class AdapterStubConfiguration {
 
     @Bean
     MediumLlmClient mediumLlmClient() {
-        return (text, language, prompt) -> {
+        return (text, language, prompt, currentUser) -> {
             String normalized = normalize(text);
+            MediumCurrentUser resolvedCurrentUser = currentUser == null ? MediumCurrentUser.placeholder() : currentUser;
 
             if (normalized.isBlank()) {
                 return List.of();
@@ -195,12 +199,14 @@ public class AdapterStubConfiguration {
                 case EMAIL -> """
                         Betreff: Projektupdate
 
-                        Hallo Team,
+                        Hallo [Anrede],
 
                         %s %s
 
-                        Viele Gruesse
-                        """.formatted(lead, support);
+                        Freundliche Gruesse
+                        %s
+                        %s
+                        """.formatted(lead, support, resolvedCurrentUser.fullName(), resolvedCurrentUser.email());
                 case OFFICIAL_LETTER -> """
                         Offizielles Schreiben
 

@@ -1,0 +1,7 @@
+Return your response as valid JSON only.
+
+- Use exactly this object shape:
+  {"sentence":"Original sentence","options":["Alternative 1","Alternative 2"]}
+- Keep the original sentence in the `sentence` field.
+- Return between 1 and 5 entries in `options`.
+- No Markdown, no code fences, no explanations.

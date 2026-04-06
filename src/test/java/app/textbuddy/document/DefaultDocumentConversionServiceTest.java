@@ -51,7 +51,7 @@ class DefaultDocumentConversionServiceTest {
                 new byte[]{1, 2, 3}
         )))
                 .isInstanceOf(UnsupportedDocumentFormatException.class)
-                .hasMessageContaining("Nicht unterstuetztes Dateiformat");
+                .hasMessageContaining("Nicht unterstütztes Dateiformat");
 
         assertThat(called).isFalse();
     }

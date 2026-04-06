@@ -22,7 +22,7 @@ public class SummarizeQuickActionController {
     private static final Logger log = LoggerFactory.getLogger(SummarizeQuickActionController.class);
     private static final String DEFAULT_ERROR_MESSAGE = "Summarize-Stream konnte nicht gestartet werden.";
     private static final String MISSING_OPTION_MESSAGE = "Summarize-Option ist erforderlich.";
-    private static final String INVALID_OPTION_MESSAGE = "Summarize-Option ist ungueltig.";
+    private static final String INVALID_OPTION_MESSAGE = "Summarize-Option ist ungültig.";
 
     private final SummarizeQuickActionService summarizeQuickActionService;
     private final QuickActionSsePayloadFactory payloadFactory;

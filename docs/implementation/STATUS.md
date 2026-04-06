@@ -5,9 +5,10 @@
 - Dieses Dokument wird nach jeder Codex-Session aktualisiert.
 - Pro Session darf genau **ein** Slice von `pending` nach `done` wechseln.
 - Optional darf genau ein nächster Slice als `ready` markiert werden.
+- Nach Abschluss aller Slices werden die weiteren Umsetzungsstände zusätzlich über die Produktionsphasen gepflegt.
 - Wenn ein Slice blockiert ist, dokumentiere den Grund knapp im Handoff-Bereich.
 
-## Aktueller Stand
+## Aktueller Stand der Slices
 
 | Slice | Status | Kurzbeschreibung |
 | --- | --- | --- |
@@ -31,13 +32,30 @@
 | 17 | done | Document Import |
 | 18 | done | Auth and Polish |
 
+## Produktionsphasen
+
+Details und Abgrenzung der Phasen stehen im [05-phase-index.md](/Users/stefan/sources/textbuddy/docs/implementation/05-phase-index.md) sowie in den zugehörigen Phasen- und Prompt-Dokumenten.
+
+| Phase | Status | Kurzbeschreibung |
+| --- | --- | --- |
+| 01 | done | Produktiver Kern: echte LLM-Integration, eingebettetes LanguageTool, eingebetteter Dokumentimport |
+| 02 | done | Frontend-Parität und sprachliche Normalisierung |
+| 03 | ready | Lokale OCR und Dokumentimport-Qualität |
+| 04 | pending | Betriebsfähigkeit, Sicherheit und Observability |
+| 05 | pending | Release, Distribution und Produktionsabnahme |
+
 ## Empfohlene Reihenfolge
 
 - Standardstart ist **Slice 00**
 - Danach strikt numerisch fortfahren, sofern kein dokumentierter Blocker besteht
+- Nach Abschluss von Slice 18 mit **Phase 01** fortfahren und danach die Phasen strikt numerisch abschließen
 
 ## Handoff-Notizen
 
+- Phase 01 abgeschlossen: Produktive OpenAI-kompatible LLM-Adapter mit Prompt-Katalog sind aktiv, `POST /api/sentence-rewrite` akzeptiert optional `context`, Advisor-Validierung läuft über LLM-Batches, LanguageTool läuft standardmässig eingebettet, Dokumentimport standardmässig über eingebettetes Kreuzberg, und die Sprachwahl wird aus der UI an Korrektur sowie Quick Actions durchgereicht.
+- Phase 01 Build/Test-Handoff: `./gradlew test --rerun-tasks --tests 'app.textbuddy.integration.llm.*' --tests 'app.textbuddy.integration.languagetool.EmbeddedLanguageToolClientTest' --tests 'app.textbuddy.integration.docling.KreuzbergDoclingClientTest' --tests 'app.textbuddy.web.sentencerewrite.SentenceRewriteControllerMvcTest' --tests 'app.textbuddy.web.quickaction.MediumQuickActionControllerMvcTest' --tests 'app.textbuddy.smoke.JarStartupSmokeTest'` ist grün; `npm test -- --grep "language selection is sent with correction requests|language selection is sent with quick action requests|word synonym uses the focused word context and replaces only that range"` unter `playwright/` ist grün. Nächste reguläre Phase ist **02**.
+- Phase 02 abgeschlossen: Deutschsprachige nutzersichtbare Texte in Shell und Browserlogik nutzen echte Umlaute, die Korrektursprachwahl umfasst `auto`, `de-CH`, `fr`, `it`, `en-US`, `en-GB`, der Advisor-Bereich enthält einen eingebetteten PDF-Viewer mit Seitensteuerung, Zoom und Download, und ein neues Textstatistik-Panel liefert Zeichen, Wörter, Silben, Sätze sowie Flesch-Lesbarkeit.
+- Phase 02 Build/Test-Handoff: `npm run test:unit` unter `frontend/`, `npm test -- editor-island.spec.ts` unter `playwright/` sowie `./gradlew test --tests 'app.textbuddy.web.page.HomePageMvcTest' --tests 'app.textbuddy.web.advisor.AdvisorCatalogControllerMvcTest' --tests 'app.textbuddy.web.error.ErrorHandlingMvcTest' --tests 'app.textbuddy.quickaction.FormalityQuickActionServiceTest' --tests 'app.textbuddy.quickaction.SocialMediaQuickActionServiceTest' --tests 'app.textbuddy.quickaction.CharacterSpeechQuickActionServiceTest' --tests 'app.textbuddy.quickaction.CustomQuickActionServiceTest' --tests 'app.textbuddy.quickaction.CustomQuickActionPromptTest'` sind grün. Nächste reguläre Phase ist **03**.
 - Slice 00 abgeschlossen: Gradle-Groovy-Basis, Spring-Boot-4-MVC-Shell mit JTE/HTMX, Frontend-Workspace, Kernservice-/Adapter-Stubs und Basistests stehen.
 - Slice 01 abgeschlossen: Die Tiptap-Insel ist in `GET /` integriert und liefert lokalen Plain-Text-Editor mit Hidden Mirror, Zeichen-/Wortzaehlern, Undo/Redo sowie den Events `editor:text-changed` und `editor:selection-changed`.
 - Slice 01 Build/Test-Handoff: Frontend-Assets werden per Gradle aus `frontend/` nach Spring-Static-Resources gebaut; MockMvc prueft die Seiteneinbindung, Playwright deckt Tippen, Mirror und Undo/Redo ab.

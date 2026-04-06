@@ -4,12 +4,12 @@ import { findAdvisorValidationElements } from "./dom";
 import { postAdvisorValidationSse } from "./advisor-validation-sse";
 import type { AdvisorValidationEventPayload } from "./types";
 
-const RUNNING_LABEL = "Pruefung laeuft...";
-const IDLE_LABEL = "Pruefung starten";
-const DEFAULT_ERROR_MESSAGE = "Advisor-Pruefung konnte nicht abgeschlossen werden.";
-const AUTH_REQUIRED_MESSAGE = "Mit OIDC anmelden, um die Advisor-Pruefung zu starten.";
+const RUNNING_LABEL = "Prüfung läuft...";
+const IDLE_LABEL = "Prüfung starten";
+const DEFAULT_ERROR_MESSAGE = "Advisor-Prüfung konnte nicht abgeschlossen werden.";
+const AUTH_REQUIRED_MESSAGE = "Mit OIDC anmelden, um die Advisor-Prüfung zu starten.";
 const EMPTY_RESULTS_MESSAGE =
-  "Noch keine Advisor-Treffer. Starte die Pruefung mit markierten Dokumenten.";
+  "Noch keine Advisor-Treffer. Starte die Prüfung mit markierten Dokumenten.";
 
 interface ActiveValidationState {
   controller: AbortController;
@@ -84,18 +84,21 @@ export function mountAdvisorValidation(): void {
     const hasText = mirror.value.trim().length > 0;
 
     if (!hasText) {
-      setPanelState("idle", "Schreibe Text im Editor und waehle dann Referenzdokumente fuer die Advisor-Pruefung.");
+      setPanelState(
+        "idle",
+        "Schreibe Text im Editor und wähle dann Referenzdokumente für die Advisor-Prüfung.",
+      );
       return;
     }
 
     if (docs.length === 0) {
-      setPanelState("idle", "Waehle mindestens ein Referenzdokument fuer die Advisor-Pruefung.");
+      setPanelState("idle", "Wähle mindestens ein Referenzdokument für die Advisor-Prüfung.");
       return;
     }
 
     setPanelState(
       "idle",
-      `${docs.length} Dokument${docs.length === 1 ? "" : "e"} ausgewaehlt. Advisor-Pruefung kann gestartet werden.`,
+      `${docs.length} Dokument${docs.length === 1 ? "" : "e"} ausgewählt. Advisor-Prüfung kann gestartet werden.`,
     );
   }
 
@@ -112,7 +115,11 @@ export function mountAdvisorValidation(): void {
       elements.detailMessage.textContent = "";
       elements.detailExcerpt.textContent = "";
       elements.detailSuggestion.textContent = "";
+      elements.detailOpenButton.hidden = true;
+      elements.detailOpenButton.dataset.advisorViewerUrl = "";
+      elements.detailOpenButton.dataset.advisorDocTitle = "";
       elements.detailLink.href = "#";
+      elements.detailLink.hidden = true;
       return;
     }
 
@@ -126,7 +133,11 @@ export function mountAdvisorValidation(): void {
     elements.detailMessage.textContent = selectedResult.message;
     elements.detailExcerpt.textContent = selectedResult.excerpt;
     elements.detailSuggestion.textContent = selectedResult.suggestion;
+    elements.detailOpenButton.hidden = false;
+    elements.detailOpenButton.dataset.advisorViewerUrl = selectedResult.referenceUrl;
+    elements.detailOpenButton.dataset.advisorDocTitle = selectedResult.documentTitle;
     elements.detailLink.href = selectedResult.referenceUrl;
+    elements.detailLink.hidden = false;
   }
 
   function renderResults(): void {
@@ -206,7 +217,10 @@ export function mountAdvisorValidation(): void {
     };
     resetResults();
     syncValidateButton();
-    setPanelState("streaming", `Advisor-Pruefung laeuft fuer ${docs.length} Dokument${docs.length === 1 ? "" : "e"}...`);
+    setPanelState(
+      "streaming",
+      `Advisor-Prüfung läuft für ${docs.length} Dokument${docs.length === 1 ? "" : "e"}...`,
+    );
 
     try {
       await postAdvisorValidationSse("/api/advisor/validate", {
@@ -232,7 +246,7 @@ export function mountAdvisorValidation(): void {
           renderResults();
           setPanelState(
             "streaming",
-            `${results.length} eindeutige Treffer aus ${activeValidation.receivedEvents} empfangenen Events.`,
+            `${results.length} eindeutige Treffer aus ${activeValidation.receivedEvents} empfangenen Ereignissen.`,
           );
         },
         onError: (payload) => {
@@ -268,7 +282,7 @@ export function mountAdvisorValidation(): void {
 
       setPanelState(
         "success",
-        `${results.length} eindeutige Treffer aus ${completedValidation.receivedEvents} empfangenen Events.`,
+        `${results.length} eindeutige Treffer aus ${completedValidation.receivedEvents} empfangenen Ereignissen.`,
       );
     } catch (error) {
       if (isAbortError(error)) {

@@ -2,14 +2,14 @@
   "order": 4,
   "name": "schreibweisungen",
   "title": "Schreibweisungen",
-  "summary": "Demo-Referenz fuer interne Schreibstandards, Tonalitaet und standardisierte Begriffe.",
+  "summary": "Demo-Referenz für interne Schreibstandards, Tonalität und standardisierte Begriffe.",
   "source": "Projektinterne Demoquelle",
   "rules": [
     {
       "id": "per-sofort-vermeiden",
       "title": "Per sofort durch ab sofort ersetzen",
       "page": 7,
-      "instructions": "Pruefe intern geerbte Formulierungen auf klarere Standardformen.",
+      "instructions": "Prüfe intern geerbte Formulierungen auf klarere Standardformen.",
       "message": "Die Formulierung wirkt intern und wenig standardisiert.",
       "suggestion": "Nutze 'ab sofort'.",
       "matchTerms": ["per sofort"]
@@ -18,8 +18,8 @@
       "id": "zhd-ausschreiben",
       "title": "Adressierung ausschreiben",
       "page": 15,
-      "instructions": "Pruefe Abkuerzungen in der Briefadressierung auf Lesbarkeit.",
-      "message": "Abkuerzungen in der Adressierung sollten ausgeschrieben werden.",
+      "instructions": "Prüfe Abkürzungen in der Briefadressierung auf Lesbarkeit.",
+      "message": "Abkürzungen in der Adressierung sollten ausgeschrieben werden.",
       "suggestion": "Nutze eine ausgeschriebene Form wie 'zuhanden von'.",
       "matchTerms": ["z.hd.", "zuhanden"]
     }

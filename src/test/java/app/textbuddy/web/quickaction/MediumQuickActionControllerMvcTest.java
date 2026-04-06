@@ -80,4 +80,28 @@ class MediumQuickActionControllerMvcTest {
                                 """))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void postMediumEmailStreamFallsBackToPlaceholderUserContext() throws Exception {
+        MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+
+        MvcResult mvcResult = mockMvc.perform(post("/api/quick-actions/medium/stream")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "text": "Projekt ist freigegeben. Team startet am Montag.",
+                                  "language": "de-DE",
+                                  "option": "email"
+                                }
+                                """))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mvcResult.getAsyncResult(1_000L);
+
+        mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Vorname Nachname")))
+                .andExpect(content().string(containsString("vorname.nachname@example.org")));
+    }
 }
