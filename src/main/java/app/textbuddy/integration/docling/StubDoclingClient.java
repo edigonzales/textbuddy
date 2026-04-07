@@ -12,7 +12,7 @@ import java.util.Locale;
 public final class StubDoclingClient implements DoclingClient {
 
     @Override
-    public String convertToHtml(DocumentUpload upload) {
+    public String convertToHtml(DocumentUpload upload, String ocrLanguage) {
         String extension = extractExtension(upload.filename());
         String text = new String(upload.content(), StandardCharsets.UTF_8);
 

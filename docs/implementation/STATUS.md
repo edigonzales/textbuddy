@@ -40,8 +40,8 @@ Details und Abgrenzung der Phasen stehen im [05-phase-index.md](/Users/stefan/so
 | --- | --- | --- |
 | 01 | done | Produktiver Kern: echte LLM-Integration, eingebettetes LanguageTool, eingebetteter Dokumentimport |
 | 02 | done | Frontend-Parität und sprachliche Normalisierung |
-| 03 | ready | Lokale OCR und Dokumentimport-Qualität |
-| 04 | pending | Betriebsfähigkeit, Sicherheit und Observability |
+| 03 | done | Lokale OCR und Dokumentimport-Qualität |
+| 04 | ready | Betriebsfähigkeit, Sicherheit und Observability |
 | 05 | pending | Release, Distribution und Produktionsabnahme |
 
 ## Empfohlene Reihenfolge
@@ -52,6 +52,8 @@ Details und Abgrenzung der Phasen stehen im [05-phase-index.md](/Users/stefan/so
 
 ## Handoff-Notizen
 
+- Phase 03 abgeschlossen: Dokumentimport unterstützt lokale OCR mit den Sprachen `de`, `en`, `fr`, `it`, nutzt Runtime-gefilterte Formatfreigaben inklusive bildbasierter Formate, verarbeitet Import-HTML editorfreundlich nach, erzwingt Upload-Limits und Timeout-Logik im Standardpfad und liefert kontrollierte Problem-JSON-Fehler für große, beschädigte oder nicht verarbeitbare Dateien.
+- Phase 03 Build/Test-Handoff: `./gradlew test --tests 'app.textbuddy.document.DefaultDocumentConversionServiceTest' --tests 'app.textbuddy.document.EditorFriendlyHtmlPostProcessorTest' --tests 'app.textbuddy.integration.docling.KreuzbergDoclingClientTest' --tests 'app.textbuddy.integration.docling.KreuzbergDoclingClientOcrFallbackTest' --tests 'app.textbuddy.web.document.DocumentConversionControllerMvcTest' --tests 'app.textbuddy.web.document.DocumentConversionUploadLimitsMvcTest' --tests 'app.textbuddy.web.page.HomePageMvcTest' --tests 'app.textbuddy.web.error.ErrorHandlingMvcTest'` ist grün, `./gradlew test --tests 'app.textbuddy.smoke.CoreFlowsSmokeMvcTest'` ist grün, und `npm test -- editor-island.spec.ts` unter `playwright/` ist grün. OCR-Integrationsläufe für gescannte Dokumente werden automatisch übersprungen, wenn die lokale OCR-Runtime zwar vorhanden, aber ohne betriebsbereite Sprachdaten gestartet ist.
 - Phase 01 abgeschlossen: Produktive OpenAI-kompatible LLM-Adapter mit Prompt-Katalog sind aktiv, `POST /api/sentence-rewrite` akzeptiert optional `context`, Advisor-Validierung läuft über LLM-Batches, LanguageTool läuft standardmässig eingebettet, Dokumentimport standardmässig über eingebettetes Kreuzberg, und die Sprachwahl wird aus der UI an Korrektur sowie Quick Actions durchgereicht.
 - Phase 01 Build/Test-Handoff: `./gradlew test --rerun-tasks --tests 'app.textbuddy.integration.llm.*' --tests 'app.textbuddy.integration.languagetool.EmbeddedLanguageToolClientTest' --tests 'app.textbuddy.integration.docling.KreuzbergDoclingClientTest' --tests 'app.textbuddy.web.sentencerewrite.SentenceRewriteControllerMvcTest' --tests 'app.textbuddy.web.quickaction.MediumQuickActionControllerMvcTest' --tests 'app.textbuddy.smoke.JarStartupSmokeTest'` ist grün; `npm test -- --grep "language selection is sent with correction requests|language selection is sent with quick action requests|word synonym uses the focused word context and replaces only that range"` unter `playwright/` ist grün. Nächste reguläre Phase ist **02**.
 - Phase 02 abgeschlossen: Deutschsprachige nutzersichtbare Texte in Shell und Browserlogik nutzen echte Umlaute, die Korrektursprachwahl umfasst `auto`, `de-CH`, `fr`, `it`, `en-US`, `en-GB`, der Advisor-Bereich enthält einen eingebetteten PDF-Viewer mit Seitensteuerung, Zoom und Download, und ein neues Textstatistik-Panel liefert Zeichen, Wörter, Silben, Sätze sowie Flesch-Lesbarkeit.

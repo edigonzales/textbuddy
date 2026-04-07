@@ -12,7 +12,7 @@ public class CoreStubConfiguration {
     @Bean
     @ConditionalOnMissingBean(DocumentConversionService.class)
     DocumentConversionService documentConversionService() {
-        return upload -> {
+        return (upload, ocrLanguage) -> {
             throw new UnsupportedOperationException("DocumentConversionService ist nicht konfiguriert.");
         };
     }

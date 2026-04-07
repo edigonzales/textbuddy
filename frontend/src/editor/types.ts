@@ -27,6 +27,7 @@ export interface DocumentImportElements {
   dropzone: HTMLElement;
   button: HTMLButtonElement;
   input: HTMLInputElement;
+  ocrLanguageSelect: HTMLSelectElement;
   labels: string;
 }
 

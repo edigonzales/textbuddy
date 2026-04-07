@@ -1,4 +1,5 @@
 @import app.textbuddy.web.page.HomePageModel
+@import app.textbuddy.document.DocumentOcrLanguage
 @param HomePageModel page
 
 @template.layout.main(title = page.title(), content = @`
@@ -11,7 +12,7 @@
         </div>
         <div class="status-strip">
             <div class="status-pill" data-testid="release-status-pill">
-                Phase 02 schließt Frontend-Lücken mit erweiterten Sprachoptionen, Advisor-PDF-Viewer, Textstatistik und sprachlich normalisierten UI-Texten.
+                Phase 03 liefert lokale OCR für gescannte Dokumente, robuste Upload-Grenzen und editorfreundliche HTML-Nachbearbeitung.
             </div>
             <div class="status-pill" data-testid="auth-status-pill">
                 <strong>${page.auth().statusTitle()}</strong>
@@ -64,7 +65,8 @@
                         <span class="chip">Character Speech wählt zwischen direkter und indirekter Rede</span>
                         <span class="chip">Custom nimmt einen freien Arbeitsauftrag im Rewrite-Bereich entgegen</span>
                         <span class="chip">Rewrite-Diff und kompletter Undo bauen auf derselben Streaming-Basis auf</span>
-                        <span class="chip">Dokumentimport gleicht Upload-Formate zwischen UI und Backend ab</span>
+                        <span class="chip">Dokumentimport gleicht Upload-Formate zwischen UI, Runtime und Backend ab</span>
+                        <span class="chip">Lokale OCR unterstützt Deutsch, Englisch, Französisch und Italienisch</span>
                         <span class="chip">API-Fehler liefern ein konsistentes Problem-JSON mit Trace-ID</span>
                         <span class="chip">OIDC bleibt per Konfiguration aktivierbar, ohne den lokalen Start zu blockieren</span>
                     </div>
@@ -80,7 +82,7 @@
                             <div>
                                 <p class="eyebrow">Dokumentimport</p>
                                 <h3>Upload oder Drag-and-Drop</h3>
-                                <p class="panel-copy">Unterstützte Dokumente werden standardmässig eingebettet über Kreuzberg verarbeitet. Das zurückgelieferte HTML landet direkt in der bestehenden Tiptap-Insel, ohne Upload-Persistenz ausserhalb des aktuellen Requests. Bei aktiver OIDC-Konfiguration läuft der Endpoint nur für angemeldete Sessions.</p>
+                                <p class="panel-copy">Unterstützte Dokumente werden standardmässig eingebettet über Kreuzberg mit lokaler OCR verarbeitet. Das zurückgelieferte HTML wird editorfreundlich nachbearbeitet und landet direkt in der bestehenden Tiptap-Insel, ohne Upload-Persistenz ausserhalb des aktuellen Requests. Bei aktiver OIDC-Konfiguration läuft der Endpoint nur für angemeldete Sessions.</p>
                             </div>
 
                             <p class="document-import-status" data-document-import-status data-testid="document-import-status" aria-live="polite">Bereit für Upload oder Drag-and-Drop.</p>
@@ -107,6 +109,23 @@
                                 >
                                 <strong>Dokument hier ablegen</strong>
                                 <span>Ziehe eine Datei auf diese Fläche oder wähle sie über den Upload-Button aus.</span>
+                                <label class="quick-action-select-shell document-import-select-shell" for="document-import-ocr-language">
+                                    <span class="quick-action-select-label">OCR-Sprache</span>
+                                    <select
+                                        id="document-import-ocr-language"
+                                        class="quick-action-select document-import-ocr-language"
+                                        data-document-import-ocr-language
+                                        data-testid="document-import-ocr-language"
+                                    >
+                                        @for (var ocrLanguage : DocumentOcrLanguage.supportedLanguages())
+                                            @if (ocrLanguage == DocumentOcrLanguage.DEFAULT)
+                                                <option value="${ocrLanguage.code()}" selected>${ocrLanguage.label()}</option>
+                                            @else
+                                                <option value="${ocrLanguage.code()}">${ocrLanguage.label()}</option>
+                                            @endif
+                                        @endfor
+                                    </select>
+                                </label>
                                 <div class="document-import-format-list" data-testid="document-import-format-list">
                                     @for (var format : page.documentImportFormats())
                                         <span class="document-import-format">${format}</span>

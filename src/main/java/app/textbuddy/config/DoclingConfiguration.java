@@ -36,7 +36,7 @@ public class DoclingConfiguration {
             }
             case KREUZBERG -> {
                 log.info("Document import: embedded Kreuzberg mode");
-                yield new KreuzbergDoclingClient();
+                yield new KreuzbergDoclingClient(properties.normalizedTimeoutSeconds());
             }
         };
     }

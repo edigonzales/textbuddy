@@ -21,7 +21,7 @@ public record HomePageModel(
     ) {
         return new HomePageModel(
                 "Textbuddy Workspace",
-                "Phase 02 bringt Frontend-Parität mit erweiterten Korrektursprachen, eingebettetem Advisor-PDF-Viewer und produktiver Textstatistik.",
+                "Phase 03 bringt lokale OCR für gescannte Dokumente, robustere Importgrenzen und editorfreundlich nachbearbeitetes HTML.",
                 auth,
                 List.copyOf(advisorDocs),
                 List.copyOf(documentImportFormats),

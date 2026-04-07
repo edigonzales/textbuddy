@@ -57,4 +57,22 @@ class DocumentConversionControllerMvcTest {
                 .andExpect(jsonPath("$.path").value("/api/convert/doc"))
                 .andExpect(jsonPath("$.traceId").isString());
     }
+
+    @Test
+    void postConvertDocAcceptsOcrLanguageParameterWithFallback() throws Exception {
+        MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "scan.png",
+                "image/png",
+                "dummy".getBytes(StandardCharsets.UTF_8)
+        );
+
+        mockMvc.perform(multipart("/api/convert/doc")
+                        .file(file)
+                        .param("ocrLanguage", "zz"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.html").isString());
+    }
 }

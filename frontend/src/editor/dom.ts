@@ -92,8 +92,12 @@ export function findDocumentImportElements(root: HTMLElement): DocumentImportEle
   const dropzone = queryRequired<HTMLElement>(panel, "[data-document-import-dropzone]");
   const button = queryRequired<HTMLButtonElement>(panel, "[data-document-import-button]");
   const input = queryRequired<HTMLInputElement>(panel, "[data-document-import-input]");
+  const ocrLanguageSelect = queryRequired<HTMLSelectElement>(
+    panel,
+    "[data-document-import-ocr-language]",
+  );
 
-  if (!status || !dropzone || !button || !input) {
+  if (!status || !dropzone || !button || !input || !ocrLanguageSelect) {
     return null;
   }
 
@@ -103,6 +107,7 @@ export function findDocumentImportElements(root: HTMLElement): DocumentImportEle
     dropzone,
     button,
     input,
+    ocrLanguageSelect,
     labels: panel.dataset.documentImportLabels ?? "",
   };
 }

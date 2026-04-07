@@ -146,9 +146,11 @@ test("document import uploads supported files and injects html into the editor",
 }) => {
   let requestCount = 0;
   let releaseUpload: (() => void) | null = null;
+  let importRequestUrl = "";
 
-  await page.route("**/api/convert/doc", async (route) => {
+  await page.route("**/api/convert/doc**", async (route) => {
     requestCount += 1;
+    importRequestUrl = route.request().url();
 
     await new Promise<void>((resolve) => {
       releaseUpload = resolve;
@@ -175,7 +177,7 @@ test("document import uploads supported files and injects html into the editor",
     buffer: Buffer.from("dummy"),
   });
 
-  await expect(importStatus).toContainText("Konvertiere import.docx...");
+  await expect(importStatus).toContainText("Konvertiere import.docx (OCR: Deutsch)...");
 
   releaseUpload?.();
 
@@ -185,12 +187,13 @@ test("document import uploads supported files and injects html into the editor",
   await expect(editor).toContainText("Listenpunkt");
   await expect(mirror).toHaveValue(/Import Titel[\s\S]*Erste Zeile\.[\s\S]*Listenpunkt/);
   expect(requestCount).toBe(1);
+  expect(importRequestUrl).toContain("ocrLanguage=de");
 });
 
 test("document import rejects unsupported formats before upload", async ({ page }) => {
   let requestCount = 0;
 
-  await page.route("**/api/convert/doc", async (route) => {
+  await page.route("**/api/convert/doc**", async (route) => {
     requestCount += 1;
     await route.abort();
   });
@@ -210,6 +213,33 @@ test("document import rejects unsupported formats before upload", async ({ page 
   await expect(importStatus).toContainText("Nicht unterstütztes Format.");
   await expect(mirror).toHaveValue("");
   expect(requestCount).toBe(0);
+});
+
+test("document import sends selected OCR language", async ({ page }) => {
+  let importRequestUrl = "";
+
+  await page.route("**/api/convert/doc**", async (route) => {
+    importRequestUrl = route.request().url();
+    await route.fulfill({
+      json: {
+        html: "<p>OCR Import</p>",
+      },
+    });
+  });
+
+  await page.goto("/");
+
+  await page.getByTestId("document-import-ocr-language").selectOption("fr");
+  await page.getByTestId("document-import-input").setInputFiles({
+    name: "scan.png",
+    mimeType: "image/png",
+    buffer: Buffer.from("dummy"),
+  });
+
+  await expect(page.getByTestId("document-import-status")).toContainText(
+    "scan.png wurde importiert.",
+  );
+  expect(importRequestUrl).toContain("ocrLanguage=fr");
 });
 
 test("text correction marks problems and applies a suggestion", async ({ page }) => {

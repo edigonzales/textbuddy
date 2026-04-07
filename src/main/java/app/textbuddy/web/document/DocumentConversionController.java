@@ -25,13 +25,16 @@ public class DocumentConversionController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public DocumentConversionResponse convert(@RequestParam("file") MultipartFile file) {
+    public DocumentConversionResponse convert(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(name = "ocrLanguage", required = false) String ocrLanguage
+    ) {
         try {
             return documentConversionService.convert(new DocumentUpload(
                     file.getOriginalFilename(),
                     file.getContentType(),
                     file.getBytes()
-            ));
+            ), ocrLanguage);
         } catch (IOException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Datei konnte nicht gelesen werden.", exception);
         }

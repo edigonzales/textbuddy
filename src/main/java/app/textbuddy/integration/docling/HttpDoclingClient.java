@@ -23,7 +23,7 @@ public final class HttpDoclingClient implements DoclingClient {
     }
 
     @Override
-    public String convertToHtml(DocumentUpload upload) {
+    public String convertToHtml(DocumentUpload upload, String ocrLanguage) {
         try {
             JsonNode response = restClient.post()
                     .uri("/v1/convert/file")

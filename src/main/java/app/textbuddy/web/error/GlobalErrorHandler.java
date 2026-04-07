@@ -12,6 +12,7 @@ import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -50,6 +51,10 @@ public class GlobalErrorHandler {
     }
 
     private HttpStatusCode resolveStatus(Exception exception) {
+        if (exception instanceof MaxUploadSizeExceededException) {
+            return HttpStatus.PAYLOAD_TOO_LARGE;
+        }
+
         if (exception instanceof ErrorResponse errorResponse) {
             return errorResponse.getStatusCode();
         }
@@ -73,6 +78,10 @@ public class GlobalErrorHandler {
     }
 
     private String resolveDetail(Exception exception, HttpStatusCode status) {
+        if (exception instanceof MaxUploadSizeExceededException) {
+            return "Datei ist zu gross. Bitte eine kleinere Datei hochladen.";
+        }
+
         if (exception instanceof ResponseStatusException responseStatusException) {
             String reason = responseStatusException.getReason();
 
@@ -115,6 +124,7 @@ public class GlobalErrorHandler {
             case 400 -> "Die Anfrage ist ungültig.";
             case 401 -> "Anmeldung erforderlich.";
             case 403 -> "Zugriff verweigert.";
+            case 413 -> "Datei ist zu gross.";
             case 404 -> "Die angeforderte Ressource wurde nicht gefunden.";
             case 405 -> "Diese HTTP-Methode wird für den Endpoint nicht unterstützt.";
             case 502 -> "Ein angebundener Dienst hat ungültig geantwortet.";

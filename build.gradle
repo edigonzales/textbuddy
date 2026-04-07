@@ -44,6 +44,7 @@ dependencies {
     implementation "org.languagetool:language-fr:${languageToolVersion}"
     implementation "org.languagetool:language-it:${languageToolVersion}"
     implementation "dev.kreuzberg:kreuzberg:${kreuzbergVersion}"
+    implementation 'org.jsoup:jsoup:1.18.3'
     implementation "gg.jte:jte-spring-boot-starter-4:${jteVersion}"
     implementation "org.webjars.npm:htmx.org:${htmxVersion}"
 

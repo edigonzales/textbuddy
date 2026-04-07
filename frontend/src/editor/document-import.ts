@@ -8,6 +8,7 @@ import type { DocumentImportElements } from "./types";
 const IDLE_MESSAGE = "Bereit für Upload oder Drag-and-Drop.";
 const DEFAULT_ERROR_MESSAGE = "Dokument konnte nicht importiert werden.";
 const AUTH_REQUIRED_MESSAGE = "Mit OIDC anmelden, um Dokumente zu importieren.";
+const DEFAULT_OCR_LANGUAGE = "de";
 
 interface DocumentConversionResponse {
   html: string;
@@ -46,6 +47,16 @@ function isSupportedFile(file: File, accept: string): boolean {
   return tokens.some((token) => fileMatchesToken(file, token));
 }
 
+function resolveOcrLanguage(value: string): string {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "de" || normalized === "en" || normalized === "fr" || normalized === "it") {
+    return normalized;
+  }
+
+  return DEFAULT_OCR_LANGUAGE;
+}
+
 export function mountDocumentImport(
   editor: Editor,
   root: HTMLElement,
@@ -66,6 +77,7 @@ export function mountDocumentImport(
 
     elements.button.disabled = busy || authLocked;
     elements.input.disabled = busy || authLocked;
+    elements.ocrLanguageSelect.disabled = busy || authLocked;
     elements.dropzone.dataset.busy = busy ? "true" : "false";
     elements.dropzone.dataset.authLocked = authLocked ? "true" : "false";
   }
@@ -92,18 +104,24 @@ export function mountDocumentImport(
 
     const controller = new AbortController();
     const formData = new FormData();
+    const ocrLanguage = resolveOcrLanguage(elements.ocrLanguageSelect.value);
+    const ocrLabel =
+      elements.ocrLanguageSelect.selectedOptions.item(0)?.textContent?.trim() ?? ocrLanguage;
 
     formData.append("file", file);
     activeRequest = controller;
     setBusy(true);
-    setPanelState("loading", `Konvertiere ${file.name}...`);
+    setPanelState("loading", `Konvertiere ${file.name} (OCR: ${ocrLabel})...`);
 
     try {
-      const response = await fetch("/api/convert/doc", {
-        method: "POST",
-        body: formData,
-        signal: controller.signal,
-      });
+      const response = await fetch(
+        `/api/convert/doc?ocrLanguage=${encodeURIComponent(ocrLanguage)}`,
+        {
+          method: "POST",
+          body: formData,
+          signal: controller.signal,
+        },
+      );
 
       if (!response.ok) {
         throw new Error(await extractErrorMessage(response, DEFAULT_ERROR_MESSAGE));

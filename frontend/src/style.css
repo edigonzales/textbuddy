@@ -181,6 +181,15 @@
   margin-top: 0.2rem;
 }
 
+#editor-island-root .document-import-select-shell {
+  margin-top: 0.45rem;
+  max-width: 16rem;
+}
+
+#editor-island-root .document-import-ocr-language {
+  width: 100%;
+}
+
 #editor-island-root .document-import-format {
   padding: 0.35rem 0.6rem;
   border-radius: 999px;
