@@ -16,6 +16,7 @@ import { mountQuickActionStream } from "./quick-action-stream";
 import { mountRewriteBubble } from "./rewrite-bubble";
 import { mountTextCorrectionBridge } from "./text-correction";
 import type { EditorElements } from "./types";
+import { t } from "./ui-i18n";
 
 function syncUndoRedoState(elements: EditorElements, editor: Editor): void {
   elements.undoButton.disabled = !editor.can().chain().focus().undo().run();
@@ -76,7 +77,7 @@ export function mountEditorIsland(): void {
     content: plainTextToHtml(elements.mirror.value),
     editorProps: {
       attributes: {
-        "aria-label": "Textbuddy Editor",
+        "aria-label": t("editor.ariaLabel"),
         role: "textbox",
         "aria-multiline": "true",
         "data-testid": "editor-input",

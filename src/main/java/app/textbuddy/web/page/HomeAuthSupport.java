@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 @Component
 public class HomeAuthSupport {
@@ -26,16 +27,17 @@ public class HomeAuthSupport {
         this.clientRegistrationRepositoryProvider = clientRegistrationRepositoryProvider;
     }
 
-    public HomeAuthModel resolve(Authentication authentication) {
+    public HomeAuthModel resolve(Authentication authentication, Function<String, String> messageResolver) {
         boolean authEnabled = properties.getAuth().isEnabled();
         boolean authenticated = isAuthenticated(authentication);
+        Function<String, String> t = messageResolver == null ? Function.identity() : messageResolver;
 
         if (!authEnabled) {
             return new HomeAuthModel(
                     false,
                     false,
-                    "Lokaler Modus",
-                    "OIDC ist deaktiviert. Alle vorhandenen Flows bleiben für lokale Entwicklung direkt verfügbar.",
+                    t.apply("auth.localMode.title"),
+                    t.apply("auth.localMode.message"),
                     "",
                     ""
             );
@@ -47,8 +49,8 @@ public class HomeAuthSupport {
             return new HomeAuthModel(
                     true,
                     true,
-                    "OIDC aktiv",
-                    "APIs sind abgesichert. Die Arbeitsfläche ist angemeldet und produktionsnah konfiguriert.",
+                    t.apply("auth.oidcEnabled.title"),
+                    t.apply("auth.oidcEnabled.authenticatedMessage"),
                     displayName,
                     resolveLoginUrl()
             );
@@ -57,8 +59,8 @@ public class HomeAuthSupport {
         return new HomeAuthModel(
                 true,
                 false,
-                "OIDC aktiv",
-                "APIs erfordern eine Anmeldung. Melde dich über OIDC an, um Import, Korrektur, Advisor und Rewrites zu nutzen.",
+                t.apply("auth.oidcEnabled.title"),
+                t.apply("auth.oidcEnabled.unauthenticatedMessage"),
                 "",
                 resolveLoginUrl()
         );

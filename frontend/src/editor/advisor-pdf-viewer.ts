@@ -1,3 +1,5 @@
+import { t } from "./ui-i18n";
+
 interface AdvisorPdfViewerElements {
   panel: HTMLElement;
   title: HTMLElement;
@@ -131,7 +133,9 @@ function resolveOpenRequest(trigger: HTMLElement): {
 
     return {
       url,
-      title: (trigger.dataset.advisorDocTitle ?? "Dokumentansicht").trim() || "Dokumentansicht",
+      title:
+        (trigger.dataset.advisorDocTitle ?? t("viewer.docFallback")).trim() ||
+        t("viewer.docFallback"),
       docName: (trigger.dataset.advisorDocName ?? deriveDocumentName(url)).trim() || "advisor",
       page: parsePageFromUrl(url),
     };
@@ -146,7 +150,9 @@ function resolveOpenRequest(trigger: HTMLElement): {
 
     return {
       url,
-      title: (trigger.dataset.advisorDocTitle ?? "Trefferdokument").trim() || "Trefferdokument",
+      title:
+        (trigger.dataset.advisorDocTitle ?? t("viewer.hitDocFallback")).trim() ||
+        t("viewer.hitDocFallback"),
       docName: deriveDocumentName(url),
       page: parsePageFromUrl(url),
     };
@@ -169,7 +175,7 @@ export function mountAdvisorPdfViewer(): void {
   function render(): void {
     if (!state) {
       resolvedElements.panel.hidden = true;
-      resolvedElements.title.textContent = "Dokumentansicht";
+      resolvedElements.title.textContent = t("viewer.docFallback");
       resolvedElements.pageInput.value = "1";
       resolvedElements.zoomLabel.textContent = `${DEFAULT_ZOOM}%`;
       resolvedElements.downloadLink.href = "#";

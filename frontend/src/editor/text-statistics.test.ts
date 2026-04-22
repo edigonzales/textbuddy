@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   calculateTextStatistics,
   countSyllablesInWord,
-  describeFleschScore,
+  describeFleschScoreKey,
   splitWords,
 } from "./text-statistics";
 
@@ -44,11 +44,11 @@ test("calculateTextStatistics returns zeros for blank text", () => {
   assert.equal(stats.averageSyllablesPerWord, 0);
 });
 
-test("describeFleschScore maps ranges to labels", () => {
-  assert.equal(describeFleschScore(90, true), "Sehr leicht verständlich");
-  assert.equal(describeFleschScore(65, true), "Leicht verständlich");
-  assert.equal(describeFleschScore(45, true), "Mittel verständlich");
-  assert.equal(describeFleschScore(25, true), "Anspruchsvoll");
-  assert.equal(describeFleschScore(10, true), "Sehr anspruchsvoll");
-  assert.equal(describeFleschScore(10, false), "Keine Bewertung");
+test("describeFleschScoreKey maps ranges to keys", () => {
+  assert.equal(describeFleschScoreKey(90, true), "stats.flesch.veryEasy");
+  assert.equal(describeFleschScoreKey(65, true), "stats.flesch.easy");
+  assert.equal(describeFleschScoreKey(45, true), "stats.flesch.medium");
+  assert.equal(describeFleschScoreKey(25, true), "stats.flesch.demanding");
+  assert.equal(describeFleschScoreKey(10, true), "stats.flesch.veryDemanding");
+  assert.equal(describeFleschScoreKey(10, false), "stats.flesch.none");
 });

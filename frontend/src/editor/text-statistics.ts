@@ -88,26 +88,26 @@ export function calculateTextStatistics(text: string): TextStatistics {
   };
 }
 
-export function describeFleschScore(score: number, hasWords: boolean): string {
+export function describeFleschScoreKey(score: number, hasWords: boolean): string {
   if (!hasWords) {
-    return "Keine Bewertung";
+    return "stats.flesch.none";
   }
 
   if (score >= 80) {
-    return "Sehr leicht verständlich";
+    return "stats.flesch.veryEasy";
   }
 
   if (score >= 60) {
-    return "Leicht verständlich";
+    return "stats.flesch.easy";
   }
 
   if (score >= 40) {
-    return "Mittel verständlich";
+    return "stats.flesch.medium";
   }
 
   if (score >= 20) {
-    return "Anspruchsvoll";
+    return "stats.flesch.demanding";
   }
 
-  return "Sehr anspruchsvoll";
+  return "stats.flesch.veryDemanding";
 }

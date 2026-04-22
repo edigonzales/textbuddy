@@ -26,14 +26,15 @@ import type {
   TextCorrectionBlock,
   TextCorrectionResponse,
 } from "./types";
+import { t } from "./ui-i18n";
 
 const CORRECTION_DEBOUNCE_MS = 350;
-const IDLE_MESSAGE = "Schreibe Text, um Korrekturen zu sehen.";
-const DEBOUNCE_MESSAGE = "Prüfung nach Tipp-Pause...";
-const LOADING_MESSAGE = "Prüfe geänderte Segmente...";
-const ERROR_MESSAGE = "Korrekturen konnten gerade nicht geladen werden.";
-const AUTH_REQUIRED_MESSAGE = "Mit OIDC anmelden, um Korrekturen zu laden.";
-const STREAMING_MESSAGE = "Rewrite-Stream läuft gerade.";
+const IDLE_MESSAGE = t("correction.status.idle");
+const DEBOUNCE_MESSAGE = t("correction.status.debounce");
+const LOADING_MESSAGE = t("correction.status.loading");
+const ERROR_MESSAGE = t("correction.status.error");
+const AUTH_REQUIRED_MESSAGE = t("correction.status.authRequired");
+const STREAMING_MESSAGE = t("correction.status.streaming");
 
 interface SegmentCorrectionState extends TextCorrectionSegment {
   blocks: TextCorrectionBlock[];
@@ -43,14 +44,16 @@ function createProblemBadge(index: number): HTMLElement {
   const badge = document.createElement("span");
 
   badge.className = "problem-index";
-  badge.textContent = `Problem ${index + 1}`;
+  badge.textContent = t("correction.problem.badge", {
+    index: index + 1,
+  });
 
   return badge;
 }
 
 function extractProblemText(original: string, block: TextCorrectionBlock): string {
   const problemText = original.slice(block.offset, block.offset + block.length);
-  return problemText || "Leerer Bereich";
+  return problemText || t("correction.problem.emptyFragment");
 }
 
 function cloneBlock(block: TextCorrectionBlock): TextCorrectionBlock {
@@ -80,6 +83,16 @@ function isAbortError(error: unknown): boolean {
 
 function getSelectedLanguage(elements: CorrectionElements): string {
   return normalizeRequestedLanguage(elements.languageSelect.value);
+}
+
+function buildProblemCountMessage(count: number): string {
+  if (count === 0) {
+    return t("correction.status.noProblems");
+  }
+
+  return t("correction.status.problemCount", {
+    count,
+  });
 }
 
 export function mountTextCorrectionBridge(
@@ -166,25 +179,29 @@ export function mountTextCorrectionBridge(
     const detail = document.createElement("p");
     const suggestions = document.createElement("div");
     const dictionaryButton = document.createElement("button");
+    const problemText = extractProblemText(original, block);
 
     item.className = "problem-item";
     item.dataset.testid = "correction-problem-item";
     item.tabIndex = 0;
     item.setAttribute("role", "button");
-    item.setAttribute("aria-label", `Problem ${index + 1}: ${extractProblemText(original, block)}`);
+    item.setAttribute(
+      "aria-label",
+      `${t("correction.problem.badge", { index: index + 1 })}: ${problemText}`,
+    );
 
     header.className = "problem-item-head";
     header.append(createProblemBadge(index));
 
     fragment.className = "problem-fragment";
-    fragment.textContent = extractProblemText(original, block);
+    fragment.textContent = problemText;
     header.append(fragment);
 
     title.className = "problem-message";
-    title.textContent = block.shortMessage || block.message || "Korrektur";
+    title.textContent = block.shortMessage || block.message || t("correction.problem.defaultTitle");
 
     detail.className = "problem-detail";
-    detail.textContent = block.message || "Es liegt ein Problem in diesem Textbereich vor.";
+    detail.textContent = block.message || t("correction.problem.defaultDetail");
 
     suggestions.className = "problem-suggestions";
 
@@ -192,7 +209,7 @@ export function mountTextCorrectionBridge(
       const emptyState = document.createElement("span");
 
       emptyState.className = "problem-empty";
-      emptyState.textContent = "Kein Vorschlag";
+      emptyState.textContent = t("correction.problem.noSuggestion");
       suggestions.append(emptyState);
     } else {
       block.replacements.slice(0, 3).forEach((replacement) => {
@@ -210,13 +227,11 @@ export function mountTextCorrectionBridge(
       });
     }
 
-    const problemText = extractProblemText(original, block);
-
     if (isDictionaryWord(problemText)) {
       dictionaryButton.type = "button";
       dictionaryButton.className = "dictionary-inline-button";
       dictionaryButton.dataset.testid = "dictionary-add-problem";
-      dictionaryButton.textContent = "Als bekannt merken";
+      dictionaryButton.textContent = t("correction.problem.markKnown");
       dictionaryButton.addEventListener("click", (event) => {
         event.stopPropagation();
         addDictionaryWord(problemText);
@@ -277,12 +292,7 @@ export function mountTextCorrectionBridge(
     }
 
     if (state === "success") {
-      setPanelState(
-        "success",
-        blocks.length === 0
-          ? "Keine Probleme gefunden."
-          : `${blocks.length} Problem${blocks.length === 1 ? "" : "e"} gefunden.`,
-      );
+      setPanelState("success", buildProblemCountMessage(blocks.length));
       return;
     }
 
@@ -312,7 +322,7 @@ export function mountTextCorrectionBridge(
       removeButton.type = "button";
       removeButton.className = "dictionary-word-remove";
       removeButton.dataset.testid = "dictionary-word-remove";
-      removeButton.textContent = "Entfernen";
+      removeButton.textContent = t("correction.dictionary.remove");
       removeButton.addEventListener("click", () => {
         removeDictionaryWord(word);
       });

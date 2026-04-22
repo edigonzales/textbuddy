@@ -11,6 +11,7 @@ import org.springframework.web.context.WebApplicationContext;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -118,5 +119,19 @@ class HomePageMvcTest {
                 .andExpect(content().string(containsString("data-testid=\"dictionary-list\"")))
                 .andExpect(content().string(containsString("Wort-/Satz-Rewrite")))
                 .andExpect(content().string(containsString("Aktion wählen, konfigurieren, anwenden")));
+    }
+
+    @Test
+    void getRootSupportsUiLanguageSwitchViaQueryParameter() throws Exception {
+        MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+
+        mockMvc.perform(get("/?lang=en"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("pages/home"))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("<html lang=\"en\">")))
+                .andExpect(content().string(containsString("Textbuddy Workspace")))
+                .andExpect(content().string(containsString("Sign in with OIDC")))
+                .andExpect(cookie().value("textbuddy-ui-locale", "en"));
     }
 }

@@ -21,18 +21,19 @@ import type {
   SentenceRewriteResponse,
   WordSynonymResponse,
 } from "./types";
+import { t } from "./ui-i18n";
 import type { SentenceFocus } from "./sentence-focus";
 import type { WordFocus } from "./word-focus";
 
-const WORD_LOADING_MESSAGE = "Synonyme werden geladen...";
-const WORD_EMPTY_MESSAGE = "Keine Synonyme gefunden.";
-const WORD_READY_MESSAGE = "Synonym auswählen:";
-const WORD_ERROR_MESSAGE = "Synonyme konnten gerade nicht geladen werden.";
+const WORD_LOADING_MESSAGE = t("rewrite.status.word.loading");
+const WORD_EMPTY_MESSAGE = t("rewrite.status.word.empty");
+const WORD_READY_MESSAGE = t("rewrite.status.word.ready");
+const WORD_ERROR_MESSAGE = t("rewrite.status.word.error");
 
-const SENTENCE_LOADING_MESSAGE = "Alternativen werden geladen...";
-const SENTENCE_EMPTY_MESSAGE = "Keine Alternativen gefunden.";
-const SENTENCE_READY_MESSAGE = "Alternative auswählen:";
-const SENTENCE_ERROR_MESSAGE = "Alternativen konnten gerade nicht geladen werden.";
+const SENTENCE_LOADING_MESSAGE = t("rewrite.status.sentence.loading");
+const SENTENCE_EMPTY_MESSAGE = t("rewrite.status.sentence.empty");
+const SENTENCE_READY_MESSAGE = t("rewrite.status.sentence.ready");
+const SENTENCE_ERROR_MESSAGE = t("rewrite.status.sentence.error");
 
 interface ActiveSentence extends SentenceFocus {
   docFrom: number;
@@ -66,7 +67,7 @@ function shorten(text: string, maxLength: number): string {
     return normalized;
   }
 
-  return `${normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
+  return `${normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd()}...`;
 }
 
 function createWordKey(word: WordFocus): string {
@@ -261,18 +262,22 @@ export function mountRewriteBubble(
   function syncBubbleChrome(context: ActiveRewriteContext): void {
     if (context.mode === "word") {
       applyModeAppearance("word");
-      elements.focus.textContent = `Wort: ${context.word.text}`;
-      elements.primaryAction.textContent = "Wort umschreiben";
+      elements.focus.textContent = t("rewrite.focus.word", {
+        text: context.word.text,
+      });
+      elements.primaryAction.textContent = t("rewrite.wordAction");
       elements.primaryAction.dataset.actionKind = "word";
-      elements.secondaryAction.textContent = "Satz umschreiben";
+      elements.secondaryAction.textContent = t("rewrite.sentenceAction");
       elements.secondaryAction.dataset.actionKind = "sentence";
       elements.secondaryAction.hidden = context.sentence === null;
       return;
     }
 
     applyModeAppearance("sentence");
-    elements.focus.textContent = `Satz: ${shorten(context.sentence.text, 48)}`;
-    elements.primaryAction.textContent = "Satz umschreiben";
+    elements.focus.textContent = t("rewrite.focus.sentence", {
+      text: shorten(context.sentence.text, 48),
+    });
+    elements.primaryAction.textContent = t("rewrite.sentenceAction");
     elements.primaryAction.dataset.actionKind = "sentence";
     elements.secondaryAction.hidden = true;
   }
@@ -304,6 +309,7 @@ export function mountRewriteBubble(
       hideBubble();
       return;
     }
+
     const previousKey = activeContext ? createContextKey(activeContext) : "";
     const nextKey = createContextKey(nextContext);
 

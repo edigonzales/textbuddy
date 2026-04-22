@@ -4,10 +4,11 @@ import { isApiLocked } from "./auth";
 import { setEditorHtml } from "./editor-content";
 import { extractErrorMessage } from "./http-error";
 import type { DocumentImportElements } from "./types";
+import { t } from "./ui-i18n";
 
-const IDLE_MESSAGE = "Bereit für Upload oder Drag-and-Drop.";
-const DEFAULT_ERROR_MESSAGE = "Dokument konnte nicht importiert werden.";
-const AUTH_REQUIRED_MESSAGE = "Mit OIDC anmelden, um Dokumente zu importieren.";
+const IDLE_MESSAGE = t("import.status.idle");
+const DEFAULT_ERROR_MESSAGE = t("import.status.defaultError");
+const AUTH_REQUIRED_MESSAGE = t("import.status.authRequired");
 const DEFAULT_OCR_LANGUAGE = "de";
 
 interface DocumentConversionResponse {
@@ -108,7 +109,9 @@ export function mountDocumentImport(
     if (!isSupportedFile(file, elements.input.accept)) {
       setPanelState(
         "error",
-        `Nicht unterstütztes Format. Erlaubt sind: ${elements.labels}.`,
+        t("import.status.unsupportedFormat", {
+          formats: elements.labels,
+        }),
       );
       elements.input.value = "";
       return;
@@ -123,7 +126,13 @@ export function mountDocumentImport(
     formData.append("file", file);
     activeRequest = controller;
     setBusy(true);
-    setPanelState("loading", `Konvertiere ${file.name} (OCR: ${ocrLabel})...`);
+    setPanelState(
+      "loading",
+      t("import.status.loading", {
+        fileName: file.name,
+        ocrLabel,
+      }),
+    );
 
     try {
       const response = await fetch(
@@ -143,7 +152,7 @@ export function mountDocumentImport(
 
       setEditorHtml(editor, payload.html ?? "");
       editor.commands.focus("start");
-      setPanelState("success", `${file.name} wurde importiert.`);
+      setPanelState("success", t("import.status.success", { fileName: file.name }));
     } catch (error) {
       if (controller.signal.aborted) {
         return;

@@ -6,6 +6,12 @@ public record ErrorPageModel(
         String errorTitle,
         String message,
         String path,
-        String traceId
+        String traceId,
+        String lang,
+        String skipLinkLabel,
+        String eyebrow,
+        String pathLabel,
+        String traceLabel,
+        String backHomeLabel
 ) {
 }

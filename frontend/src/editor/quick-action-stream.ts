@@ -4,8 +4,8 @@ import { isApiLocked } from "./auth";
 import { setEditorPlainText } from "./editor-content";
 import { getPlainText } from "./plain-text";
 import { postQuickActionSse } from "./quick-action-sse";
-import { createRewriteDiff } from "./rewrite-diff";
 import { normalizeRequestedLanguage } from "./request-language";
+import { createRewriteDiff } from "./rewrite-diff";
 import type {
   QuickActionElements,
   QuickActionSseChunkPayload,
@@ -13,10 +13,11 @@ import type {
   QuickActionSseErrorPayload,
   RewriteDiffToken,
 } from "./types";
+import { t } from "./ui-i18n";
 
-const IDLE_MESSAGE = "Aktion wählen und anwenden.";
-const UNDONE_MESSAGE = "Rewrite wurde rückgängig gemacht.";
-const AUTH_REQUIRED_MESSAGE = "Mit OIDC anmelden, um Quick Actions zu starten.";
+const IDLE_MESSAGE = t("quickAction.status.idle");
+const UNDONE_MESSAGE = t("quickAction.status.undone");
+const AUTH_REQUIRED_MESSAGE = t("quickAction.status.authRequired");
 const CUSTOM_PROMPT_MAX_LENGTH = 400;
 const DISALLOWED_CUSTOM_PROMPT_CHARACTERS = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/;
 
@@ -59,15 +60,15 @@ interface ActiveStreamState {
 }
 
 const ACTION_LABELS: Record<QuickActionKey, string> = {
-  "plain-language": "Plain Language",
-  "bullet-points": "Bullet Points",
-  proofread: "Proofread",
-  summarize: "Summarize",
-  formality: "Formality",
-  "social-media": "Social Media",
-  medium: "Medium",
-  "character-speech": "Character Speech",
-  custom: "Custom",
+  "plain-language": t("quickAction.action.plainLanguage"),
+  "bullet-points": t("quickAction.action.bulletPoints"),
+  proofread: t("quickAction.action.proofread"),
+  summarize: t("quickAction.action.summarize"),
+  formality: t("quickAction.action.formality"),
+  "social-media": t("quickAction.action.socialMedia"),
+  medium: t("quickAction.action.medium"),
+  "character-speech": t("quickAction.action.characterSpeech"),
+  custom: t("quickAction.action.custom"),
 };
 
 function getSelectedLanguage(elements: QuickActionElements): string {
@@ -128,30 +129,30 @@ export function mountQuickActionStream(
     "plain-language": {
       button: elements.plainLanguageButton,
       endpoint: "/api/quick-actions/plain-language/stream",
-      streamingMessage: "Plain Language streamt gerade...",
-      successMessage: "Plain Language abgeschlossen.",
-      errorMessage: "Plain Language konnte gerade nicht umgeschrieben werden.",
+      streamingMessage: t("quickAction.streaming.plainLanguage"),
+      successMessage: t("quickAction.success.plainLanguage"),
+      errorMessage: t("quickAction.error.plainLanguage"),
     },
     "bullet-points": {
       button: elements.bulletPointsButton,
       endpoint: "/api/quick-actions/bullet-points/stream",
-      streamingMessage: "Bullet Points streamen gerade...",
-      successMessage: "Bullet Points abgeschlossen.",
-      errorMessage: "Bullet Points konnten gerade nicht erstellt werden.",
+      streamingMessage: t("quickAction.streaming.bulletPoints"),
+      successMessage: t("quickAction.success.bulletPoints"),
+      errorMessage: t("quickAction.error.bulletPoints"),
     },
     proofread: {
       button: elements.proofreadButton,
       endpoint: "/api/quick-actions/proofread/stream",
-      streamingMessage: "Proofread streamt gerade...",
-      successMessage: "Proofread abgeschlossen.",
-      errorMessage: "Proofread konnte gerade nicht abgeschlossen werden.",
+      streamingMessage: t("quickAction.streaming.proofread"),
+      successMessage: t("quickAction.success.proofread"),
+      errorMessage: t("quickAction.error.proofread"),
     },
     summarize: {
       button: elements.summarizeButton,
       endpoint: "/api/quick-actions/summarize/stream",
-      streamingMessage: "Summarize streamt gerade...",
-      successMessage: "Summarize abgeschlossen.",
-      errorMessage: "Summarize konnte gerade nicht abgeschlossen werden.",
+      streamingMessage: t("quickAction.streaming.summarize"),
+      successMessage: t("quickAction.success.summarize"),
+      errorMessage: t("quickAction.error.summarize"),
       buildRequestBody: (text) => ({
         text,
         language: getSelectedLanguage(elements),
@@ -161,9 +162,9 @@ export function mountQuickActionStream(
     formality: {
       button: elements.formalityButton,
       endpoint: "/api/quick-actions/formality/stream",
-      streamingMessage: "Formality streamt gerade...",
-      successMessage: "Formality abgeschlossen.",
-      errorMessage: "Formality konnte gerade nicht abgeschlossen werden.",
+      streamingMessage: t("quickAction.streaming.formality"),
+      successMessage: t("quickAction.success.formality"),
+      errorMessage: t("quickAction.error.formality"),
       buildRequestBody: (text) => ({
         text,
         language: getSelectedLanguage(elements),
@@ -173,9 +174,9 @@ export function mountQuickActionStream(
     "social-media": {
       button: elements.socialMediaButton,
       endpoint: "/api/quick-actions/social-media/stream",
-      streamingMessage: "Social Media streamt gerade...",
-      successMessage: "Social Media abgeschlossen.",
-      errorMessage: "Social Media konnte gerade nicht abgeschlossen werden.",
+      streamingMessage: t("quickAction.streaming.socialMedia"),
+      successMessage: t("quickAction.success.socialMedia"),
+      errorMessage: t("quickAction.error.socialMedia"),
       buildRequestBody: (text) => ({
         text,
         language: getSelectedLanguage(elements),
@@ -185,9 +186,9 @@ export function mountQuickActionStream(
     medium: {
       button: elements.mediumButton,
       endpoint: "/api/quick-actions/medium/stream",
-      streamingMessage: "Medium streamt gerade...",
-      successMessage: "Medium abgeschlossen.",
-      errorMessage: "Medium konnte gerade nicht abgeschlossen werden.",
+      streamingMessage: t("quickAction.streaming.medium"),
+      successMessage: t("quickAction.success.medium"),
+      errorMessage: t("quickAction.error.medium"),
       buildRequestBody: (text) => ({
         text,
         language: getSelectedLanguage(elements),
@@ -197,9 +198,9 @@ export function mountQuickActionStream(
     "character-speech": {
       button: elements.characterSpeechButton,
       endpoint: "/api/quick-actions/character-speech/stream",
-      streamingMessage: "Character Speech streamt gerade...",
-      successMessage: "Character Speech abgeschlossen.",
-      errorMessage: "Character Speech konnte gerade nicht abgeschlossen werden.",
+      streamingMessage: t("quickAction.streaming.characterSpeech"),
+      successMessage: t("quickAction.success.characterSpeech"),
+      errorMessage: t("quickAction.error.characterSpeech"),
       buildRequestBody: (text) => ({
         text,
         language: getSelectedLanguage(elements),
@@ -209,9 +210,9 @@ export function mountQuickActionStream(
     custom: {
       button: elements.customButton,
       endpoint: "/api/quick-actions/custom/stream",
-      streamingMessage: "Custom streamt gerade...",
-      successMessage: "Custom abgeschlossen.",
-      errorMessage: "Custom konnte gerade nicht abgeschlossen werden.",
+      streamingMessage: t("quickAction.streaming.custom"),
+      successMessage: t("quickAction.success.custom"),
+      errorMessage: t("quickAction.error.custom"),
       buildRequestBody: (text) => ({
         text,
         language: getSelectedLanguage(elements),
@@ -255,8 +256,7 @@ export function mountQuickActionStream(
     );
     configPanels.forEach((panel) => {
       const panelAction = panel.dataset.quickActionConfig as QuickActionKey | undefined;
-      const visible = panelAction === selectedAction;
-      panel.hidden = !visible;
+      panel.hidden = panelAction !== selectedAction;
     });
 
     syncActionAvailability();
@@ -273,20 +273,17 @@ export function mountQuickActionStream(
       action.button.setAttribute("aria-disabled", action.button.disabled ? "true" : "false");
     });
 
-    elements.summarizeOptionSelect.disabled =
-      disableSelectors || selectedAction !== "summarize";
+    elements.summarizeOptionSelect.disabled = disableSelectors || selectedAction !== "summarize";
     elements.summarizeOptionSelect.setAttribute(
       "aria-disabled",
       elements.summarizeOptionSelect.disabled ? "true" : "false",
     );
-    elements.formalityOptionSelect.disabled =
-      disableSelectors || selectedAction !== "formality";
+    elements.formalityOptionSelect.disabled = disableSelectors || selectedAction !== "formality";
     elements.formalityOptionSelect.setAttribute(
       "aria-disabled",
       elements.formalityOptionSelect.disabled ? "true" : "false",
     );
-    elements.socialMediaOptionSelect.disabled =
-      disableSelectors || selectedAction !== "social-media";
+    elements.socialMediaOptionSelect.disabled = disableSelectors || selectedAction !== "social-media";
     elements.socialMediaOptionSelect.setAttribute(
       "aria-disabled",
       elements.socialMediaOptionSelect.disabled ? "true" : "false",
@@ -317,10 +314,9 @@ export function mountQuickActionStream(
 
     elements.runButton.disabled = runDisabled;
     elements.runButton.setAttribute("aria-disabled", runDisabled ? "true" : "false");
-    elements.runButton.textContent =
-      streaming
-        ? "Aktion läuft..."
-        : `${ACTION_LABELS[selectedAction]} anwenden`;
+    elements.runButton.textContent = streaming
+      ? t("quickAction.status.running")
+      : `${ACTION_LABELS[selectedAction]} ${t("quickAction.runSuffix")}`;
   }
 
   function applyEditorText(text: string): void {
@@ -367,6 +363,12 @@ export function mountQuickActionStream(
     }
 
     if (!originalText.trim()) {
+      syncActionAvailability();
+      return;
+    }
+
+    if (selectedAction === "custom" && !hasValidCustomPrompt(elements.customPromptInput.value)) {
+      setPanelState("error", t("quickAction.error.customPromptRequired"));
       syncActionAvailability();
       return;
     }
@@ -446,7 +448,7 @@ export function mountQuickActionStream(
         "error",
         error instanceof Error && error.message.trim().length > 0
           ? error.message
-          : action.errorMessage,
+          : t("quickAction.error.generic"),
       );
       syncActionAvailability();
     }

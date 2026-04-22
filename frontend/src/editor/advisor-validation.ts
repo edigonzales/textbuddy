@@ -3,13 +3,13 @@ import { appendUniqueAdvisorValidationEvent, createAdvisorValidationKey } from "
 import { findAdvisorValidationElements } from "./dom";
 import { postAdvisorValidationSse } from "./advisor-validation-sse";
 import type { AdvisorValidationEventPayload } from "./types";
+import { t } from "./ui-i18n";
 
-const RUNNING_LABEL = "Prüfung läuft...";
-const IDLE_LABEL = "Prüfung starten";
-const DEFAULT_ERROR_MESSAGE = "Advisor-Prüfung konnte nicht abgeschlossen werden.";
-const AUTH_REQUIRED_MESSAGE = "Mit OIDC anmelden, um die Advisor-Prüfung zu starten.";
-const EMPTY_RESULTS_MESSAGE =
-  "Noch keine Advisor-Treffer. Starte die Prüfung mit markierten Dokumenten.";
+const RUNNING_LABEL = t("advisor.status.button.running");
+const IDLE_LABEL = t("advisor.validate");
+const DEFAULT_ERROR_MESSAGE = t("advisor.status.defaultError");
+const AUTH_REQUIRED_MESSAGE = t("advisor.status.authRequired");
+const EMPTY_RESULTS_MESSAGE = t("advisor.results.empty");
 
 interface ActiveValidationState {
   controller: AbortController;
@@ -24,8 +24,10 @@ function isAbortError(error: unknown): boolean {
     : error instanceof Error && error.name === "AbortError";
 }
 
-function pluralizeResults(count: number): string {
-  return `${count} Treffer`;
+function resultCountLabel(count: number): string {
+  return t("advisor.result.count", {
+    count,
+  });
 }
 
 export function mountAdvisorValidation(): void {
@@ -93,21 +95,20 @@ export function mountAdvisorValidation(): void {
     const hasText = mirror.value.trim().length > 0;
 
     if (!hasText) {
-      setPanelState(
-        "idle",
-        "Schreibe Text im Editor und wähle dann Referenzdokumente für die Advisor-Prüfung.",
-      );
+      setPanelState("idle", t("advisor.status.needsText"));
       return;
     }
 
     if (docs.length === 0) {
-      setPanelState("idle", "Wähle mindestens ein Referenzdokument für die Advisor-Prüfung.");
+      setPanelState("idle", t("advisor.status.needsDocs"));
       return;
     }
 
     setPanelState(
       "idle",
-      `${docs.length} Dokument${docs.length === 1 ? "" : "e"} ausgewählt. Advisor-Prüfung kann gestartet werden.`,
+      t("advisor.status.ready", {
+        count: docs.length,
+      }),
     );
   }
 
@@ -134,11 +135,16 @@ export function mountAdvisorValidation(): void {
 
     elements.detailPanel.hidden = false;
     elements.detailTitle.textContent = selectedResult.ruleTitle;
-    elements.detailReference.textContent = `${selectedResult.documentTitle}, ${selectedResult.pageLabel}`;
+    elements.detailReference.textContent = t("advisor.results.reference", {
+      documentTitle: selectedResult.documentTitle,
+      pageLabel: selectedResult.pageLabel,
+    });
     elements.detailMatch.textContent =
       selectedResult.matchedText.trim().length > 0
-        ? `Treffer im Text: ${selectedResult.matchedText}`
-        : "Treffer ohne markierten Ausdruck";
+        ? t("advisor.results.match", {
+            matchedText: selectedResult.matchedText,
+          })
+        : t("advisor.results.matchNone");
     elements.detailMessage.textContent = selectedResult.message;
     elements.detailExcerpt.textContent = selectedResult.excerpt;
     elements.detailSuggestion.textContent = selectedResult.suggestion;
@@ -150,7 +156,7 @@ export function mountAdvisorValidation(): void {
   }
 
   function renderResults(): void {
-    elements.resultCount.textContent = pluralizeResults(results.length);
+    elements.resultCount.textContent = resultCountLabel(results.length);
     elements.resultEmpty.hidden = results.length > 0;
 
     elements.resultList.replaceChildren(
@@ -183,7 +189,10 @@ export function mountAdvisorValidation(): void {
 
         const reference = document.createElement("span");
         reference.className = "advisor-result-reference";
-        reference.textContent = `${result.documentTitle}, ${result.pageLabel}`;
+        reference.textContent = t("advisor.results.reference", {
+          documentTitle: result.documentTitle,
+          pageLabel: result.pageLabel,
+        });
         reference.setAttribute("data-testid", "advisor-result-reference");
 
         const excerpt = document.createElement("span");
@@ -233,7 +242,9 @@ export function mountAdvisorValidation(): void {
     syncValidateButton();
     setPanelState(
       "streaming",
-      `Advisor-Prüfung läuft für ${docs.length} Dokument${docs.length === 1 ? "" : "e"}...`,
+      t("advisor.status.running", {
+        count: docs.length,
+      }),
     );
 
     try {
@@ -260,7 +271,10 @@ export function mountAdvisorValidation(): void {
           renderResults();
           setPanelState(
             "streaming",
-            `${results.length} eindeutige Treffer aus ${activeValidation.receivedEvents} empfangenen Ereignissen.`,
+            t("advisor.status.runningProgress", {
+              uniqueCount: results.length,
+              receivedCount: activeValidation.receivedEvents,
+            }),
           );
         },
         onError: (payload) => {
@@ -289,14 +303,19 @@ export function mountAdvisorValidation(): void {
       if (results.length === 0) {
         setPanelState(
           "success",
-          `Keine Treffer in ${completedValidation.selectedDocs.length} Dokument${completedValidation.selectedDocs.length === 1 ? "" : "en"} gefunden.`,
+          t("advisor.status.noHits", {
+            count: completedValidation.selectedDocs.length,
+          }),
         );
         return;
       }
 
       setPanelState(
         "success",
-        `${results.length} eindeutige Treffer aus ${completedValidation.receivedEvents} empfangenen Ereignissen.`,
+        t("advisor.status.runningProgress", {
+          uniqueCount: results.length,
+          receivedCount: completedValidation.receivedEvents,
+        }),
       );
     } catch (error) {
       if (isAbortError(error)) {

@@ -3,6 +3,7 @@ package app.textbuddy.web.page;
 import app.textbuddy.advisor.AdvisorDocsResponseItem;
 
 import java.util.List;
+import java.util.Map;
 
 public record HomePageModel(
         String title,
@@ -10,22 +11,17 @@ public record HomePageModel(
         HomeAuthModel auth,
         List<AdvisorDocsResponseItem> advisorDocs,
         List<String> documentImportFormats,
-        String documentImportAccept
+        String documentImportAccept,
+        String uiLocaleLanguage,
+        String uiLocaleTag,
+        List<String> supportedUiLanguages,
+        String uiMessagesJson,
+        Map<String, String> messages
 ) {
-
-    public static HomePageModel defaultPage(
-            HomeAuthModel auth,
-            List<AdvisorDocsResponseItem> advisorDocs,
-            List<String> documentImportFormats,
-            String documentImportAccept
-    ) {
-        return new HomePageModel(
-                "Textbuddy Workspace",
-                "Phase 03 bringt lokale OCR für gescannte Dokumente, robustere Importgrenzen und editorfreundlich nachbearbeitetes HTML.",
-                auth,
-                List.copyOf(advisorDocs),
-                List.copyOf(documentImportFormats),
-                documentImportAccept
-        );
+    public String t(String key) {
+        if (messages == null) {
+            return key;
+        }
+        return messages.getOrDefault(key, key);
     }
 }

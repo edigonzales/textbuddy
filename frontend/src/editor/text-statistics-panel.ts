@@ -1,5 +1,6 @@
 import type { EditorTextChangedDetail } from "./types";
-import { calculateTextStatistics, describeFleschScore } from "./text-statistics";
+import { calculateTextStatistics, describeFleschScoreKey } from "./text-statistics";
+import { t } from "./ui-i18n";
 
 interface TextStatisticsElements {
   panel: HTMLElement;
@@ -93,7 +94,9 @@ export function mountTextStatisticsPanel(): void {
     resolvedElements.averageSentenceLength.textContent = formatDecimal(stats.averageSentenceLength, 1);
     resolvedElements.averageSyllablesPerWord.textContent = formatDecimal(stats.averageSyllablesPerWord, 2);
     resolvedElements.flesch.textContent = formatDecimal(stats.fleschScore, 1);
-    resolvedElements.fleschLabel.textContent = describeFleschScore(stats.fleschScore, stats.words > 0);
+    resolvedElements.fleschLabel.textContent = t(
+      describeFleschScoreKey(stats.fleschScore, stats.words > 0),
+    );
     resolvedElements.fleschFill.style.width = `${normalizedFlesch}%`;
   }
 
