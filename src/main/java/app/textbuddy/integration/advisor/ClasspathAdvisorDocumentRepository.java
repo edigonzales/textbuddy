@@ -85,6 +85,7 @@ public final class ClasspathAdvisorDocumentRepository implements AdvisorDocument
                         metadata.title(),
                         metadata.summary(),
                         metadata.source(),
+                        metadata.allowedRoles(),
                         metadata.name() + ".pdf",
                         rules
                 ));
@@ -119,7 +120,8 @@ public final class ClasspathAdvisorDocumentRepository implements AdvisorDocument
         String title = requireText(metadata.title(), "title", metadataResource);
         String summary = requireText(metadata.summary(), "summary", metadataResource);
         String source = requireText(metadata.source(), "source", metadataResource);
-        return new MetadataFile(metadata.order(), name, title, summary, source, metadata.rules());
+        List<String> allowedRoles = validateRoles(metadata.allowedRoles(), metadataResource);
+        return new MetadataFile(metadata.order(), name, title, summary, source, allowedRoles, metadata.rules());
     }
 
     private List<AdvisorRule> validateRules(List<RuleFile> rules, Resource metadataResource) {
@@ -172,6 +174,28 @@ public final class ClasspathAdvisorDocumentRepository implements AdvisorDocument
         return value.trim();
     }
 
+    private List<String> validateRoles(List<String> allowedRoles, Resource metadataResource) {
+        if (allowedRoles == null || allowedRoles.isEmpty()) {
+            return List.of();
+        }
+
+        List<String> normalizedRoles = new ArrayList<>(allowedRoles.size());
+
+        for (String role : allowedRoles) {
+            String normalizedRole = requireText(role, "allowedRoles", metadataResource);
+
+            if (!normalizedRole.startsWith("ROLE_")) {
+                throw new IllegalStateException(
+                        "Advisor metadata allowedRoles must use ROLE_* values in " + describe(metadataResource) + "."
+                );
+            }
+
+            normalizedRoles.add(normalizedRole);
+        }
+
+        return List.copyOf(normalizedRoles);
+    }
+
     private AdvisorDocumentFile toDocumentFile(AdvisorDocument document) {
         return new AdvisorDocumentFile(
                 document.name(),
@@ -199,6 +223,7 @@ public final class ClasspathAdvisorDocumentRepository implements AdvisorDocument
             String title,
             String summary,
             String source,
+            List<String> allowedRoles,
             List<RuleFile> rules
     ) {
     }

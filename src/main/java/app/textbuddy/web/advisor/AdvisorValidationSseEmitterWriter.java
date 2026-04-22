@@ -16,18 +16,23 @@ final class AdvisorValidationSseEmitterWriter implements AdvisorValidationStream
     private static final Logger log = LoggerFactory.getLogger(AdvisorValidationSseEmitterWriter.class);
 
     private final SseEmitter emitter;
+    private final String traceId;
+    private int validationCount;
 
-    AdvisorValidationSseEmitterWriter(SseEmitter emitter) {
+    AdvisorValidationSseEmitterWriter(SseEmitter emitter, String traceId) {
         this.emitter = emitter;
+        this.traceId = traceId == null ? "" : traceId.trim();
     }
 
     @Override
     public void validation(AdvisorValidationEvent event) {
+        validationCount += 1;
         send("validation", event);
     }
 
     @Override
     public void complete() {
+        log.info("[{}] Advisor-SSE abgeschlossen (events={}).", traceId, validationCount);
         emitter.complete();
     }
 
@@ -35,9 +40,10 @@ final class AdvisorValidationSseEmitterWriter implements AdvisorValidationStream
     public void error(String message) {
         try {
             send("error", Map.of("message", message));
+            log.warn("[{}] Advisor-SSE meldet Fehler: {}", traceId, message);
             emitter.complete();
         } catch (RuntimeException exception) {
-            log.warn("Failed to send advisor SSE error response.", exception);
+            log.warn("[{}] Failed to send advisor SSE error response.", traceId, exception);
             emitter.completeWithError(exception);
         }
     }

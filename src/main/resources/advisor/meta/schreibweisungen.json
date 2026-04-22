@@ -4,6 +4,7 @@
   "title": "Schreibweisungen",
   "summary": "Demo-Referenz für interne Schreibstandards, Tonalität und standardisierte Begriffe.",
   "source": "Projektinterne Demoquelle",
+  "allowedRoles": ["ROLE_ADVISOR_INTERNAL"],
   "rules": [
     {
       "id": "per-sofort-vermeiden",

@@ -5,6 +5,8 @@ import app.textbuddy.quickaction.MediumCurrentUserResolver;
 import app.textbuddy.quickaction.MediumQuickActionRequest;
 import app.textbuddy.quickaction.MediumQuickActionService;
 import app.textbuddy.quickaction.QuickActionSsePayloadFactory;
+import app.textbuddy.web.error.TraceIdSupport;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -41,18 +43,23 @@ public class MediumQuickActionController {
     }
 
     @PostMapping(path = "/medium/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter streamMedium(@RequestBody MediumQuickActionRequest request, Authentication authentication) {
+    public SseEmitter streamMedium(
+            @RequestBody MediumQuickActionRequest request,
+            Authentication authentication,
+            HttpServletRequest httpServletRequest
+    ) {
         validateOption(request);
         var currentUser = mediumCurrentUserResolver.resolve(authentication);
 
+        String traceId = TraceIdSupport.resolve(httpServletRequest);
         SseEmitter emitter = new SseEmitter(0L);
-        QuickActionSseEmitterWriter writer = new QuickActionSseEmitterWriter(emitter, payloadFactory);
+        QuickActionSseEmitterWriter writer = new QuickActionSseEmitterWriter(emitter, payloadFactory, traceId);
 
         Thread.startVirtualThread(() -> {
             try {
                 mediumQuickActionService.stream(request, currentUser, writer);
             } catch (RuntimeException exception) {
-                log.error("Medium stream failed.", exception);
+                log.error("[{}] Medium stream failed.", traceId, exception);
                 writer.error(DEFAULT_ERROR_MESSAGE);
             }
         });

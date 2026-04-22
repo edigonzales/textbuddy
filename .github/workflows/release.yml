@@ -1,0 +1,227 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'SemVer-Tag (z. B. v1.2.3)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Resolve release tag
+        id: meta
+        run: |
+          set -euo pipefail
+
+          TAG_INPUT='${{ github.event.inputs.tag }}'
+
+          if [ '${{ github.ref_type }}' = 'tag' ] && [ -n '${{ github.ref_name }}' ]; then
+            RELEASE_TAG='${{ github.ref_name }}'
+          elif [ -n "$TAG_INPUT" ]; then
+            RELEASE_TAG="$TAG_INPUT"
+          else
+            echo 'Fehler: Kein Release-Tag vorhanden. Nutze Tag-Push oder workflow_dispatch mit Input tag.' >&2
+            exit 1
+          fi
+
+          if ! echo "$RELEASE_TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$'; then
+            echo "Fehler: Ungültiger Tag '$RELEASE_TAG'. Erwartet wird SemVer mit Prefix v." >&2
+            exit 1
+          fi
+
+          RELEASE_VERSION="${RELEASE_TAG#v}"
+
+          echo "release_tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "release_version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.meta.outputs.release_tag }}
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+
+      - name: Run release smoke tests
+        run: ./gradlew test --tests 'app.textbuddy.smoke.JarStartupSmokeTest' --tests 'app.textbuddy.smoke.JarEndToEndSmokeTest' --tests 'app.textbuddy.smoke.JarPerformanceSmokeTest' --tests 'app.textbuddy.smoke.InstallerStartScriptSmokeTest'
+
+      - name: Build release artifacts
+        run: ./gradlew clean verifyReleaseBundle installerZip -PreleaseVersion=${{ steps.meta.outputs.release_version }}
+
+      - name: Verify mandatory release files
+        run: |
+          set -euo pipefail
+          test -f build/release/textbuddy.jar
+          test -f build/release/docs/release/runbook-produktionsbetrieb.md
+          test -f build/release/docs/release/abnahme-checkliste.md
+          test -f build/release/docs/release/konfigurationsbeispiele.md
+          test -f build/release/config/examples/textbuddy.env.example
+          test -f build/release/config/examples/application-production.properties.example
+          test -f build/release/textbuddy-${{ steps.meta.outputs.release_version }}.zip
+
+      - name: Smoke test installer ZIP
+        run: |
+          set -euo pipefail
+          WORK_DIR="$(mktemp -d)"
+          ZIP_FILE="build/release/textbuddy-${{ steps.meta.outputs.release_version }}.zip"
+          unzip -q "$ZIP_FILE" -d "$WORK_DIR/extracted"
+
+          test -f "$WORK_DIR/extracted/textbuddy.jar"
+          test -f "$WORK_DIR/extracted/bin/start-textbuddy.sh"
+          test -f "$WORK_DIR/extracted/bin/start-textbuddy.cmd"
+          test -f "$WORK_DIR/extracted/docs/release/runbook-produktionsbetrieb.md"
+          test -f "$WORK_DIR/extracted/config/examples/textbuddy.env.example"
+
+          cd "$WORK_DIR/extracted"
+          ./bin/start-textbuddy.sh \
+            --server.port=18090 \
+            --textbuddy.auth.enabled=false \
+            --textbuddy.llm.mode=stub \
+            --textbuddy.languagetool.mode=stub \
+            --textbuddy.document.mode=stub \
+            > app.log 2>&1 &
+          APP_PID=$!
+
+          cleanup() {
+            kill "$APP_PID" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          STARTED=0
+          for _ in $(seq 1 120); do
+            if curl -fsS "http://127.0.0.1:18090/actuator/health" >/dev/null 2>&1; then
+              STARTED=1
+              break
+            fi
+            sleep 0.5
+          done
+
+          if [ "$STARTED" -ne 1 ]; then
+            echo "Fehler: Installer-Startskript konnte die Anwendung nicht starten." >&2
+            cat app.log >&2 || true
+            exit 1
+          fi
+
+          kill "$APP_PID" 2>/dev/null || true
+          wait "$APP_PID" 2>/dev/null || true
+          trap - EXIT
+
+          mkdir -p "$WORK_DIR/fake-bin"
+          cat > "$WORK_DIR/fake-bin/java" <<'SCRIPT'
+          #!/usr/bin/env bash
+          if [ "${1:-}" = "-version" ]; then
+            echo 'openjdk version "17.0.9"' >&2
+            exit 0
+          fi
+          exit 0
+          SCRIPT
+          chmod +x "$WORK_DIR/fake-bin/java"
+
+          set +e
+          PATH="$WORK_DIR/fake-bin:$PATH" ./bin/start-textbuddy.sh > java17.log 2>&1
+          SCRIPT_EXIT=$?
+          set -e
+
+          if [ "$SCRIPT_EXIT" -eq 0 ]; then
+            echo "Fehler: Startskript hätte mit Java 17 fehlschlagen müssen." >&2
+            cat java17.log >&2 || true
+            exit 1
+          fi
+
+          grep -q "Java-Version ist zu alt" java17.log
+
+      - name: Validate GPG secrets
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GPG_PRIVATE_KEY}" ]; then
+            echo 'Fehler: Secret GPG_PRIVATE_KEY fehlt.' >&2
+            exit 1
+          fi
+          if [ -z "${GPG_PASSPHRASE}" ]; then
+            echo 'Fehler: Secret GPG_PASSPHRASE fehlt.' >&2
+            exit 1
+          fi
+
+      - name: Import GPG key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$GPG_PRIVATE_KEY" | gpg --batch --import
+
+      - name: Create checksums and signatures
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+        run: |
+          set -euo pipefail
+          cd build/release
+
+          sha256sum textbuddy.jar > textbuddy.jar.sha256
+
+          GPG_SIGN_ARGS=(--batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE")
+          if [ -n "$GPG_KEY_ID" ]; then
+            GPG_SIGN_ARGS+=(--local-user "$GPG_KEY_ID")
+          fi
+
+          gpg "${GPG_SIGN_ARGS[@]}" --output textbuddy.jar.asc --detach-sign textbuddy.jar
+          gpg "${GPG_SIGN_ARGS[@]}" --output textbuddy.jar.sha256.asc --detach-sign textbuddy.jar.sha256
+
+      - name: Verify signatures and checksum
+        run: |
+          set -euo pipefail
+          cd build/release
+          sha256sum -c textbuddy.jar.sha256
+          gpg --verify textbuddy.jar.asc textbuddy.jar
+          gpg --verify textbuddy.jar.sha256.asc textbuddy.jar.sha256
+
+      - name: Create draft release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.release_tag }}
+          name: Textbuddy ${{ steps.meta.outputs.release_tag }}
+          draft: true
+          files: |
+            build/release/textbuddy.jar
+            build/release/textbuddy.jar.sha256
+            build/release/textbuddy.jar.asc
+            build/release/textbuddy.jar.sha256.asc
+            build/release/textbuddy-${{ steps.meta.outputs.release_version }}.zip
+
+      - name: Upload failure reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-failure-reports
+          if-no-files-found: ignore
+          path: |
+            build/reports/**
+            build/test-results/**
+            build/release/**

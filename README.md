@@ -1,6 +1,6 @@
 # textbuddy
 
-Dieses Repository enthält die planungs- und umsetzungsleitenden Unterlagen und die lauffaehige Referenzimplementierung fuer eine schrittweise Neuimplementierung von TextMate mit:
+Dieses Repository enthält die planungs- und umsetzungsleitenden Unterlagen sowie die lauffähige Referenzimplementierung für die schrittweise Neuimplementierung von TextMate mit:
 
 - Gradle Groovy
 - Java 25
@@ -12,7 +12,7 @@ Dieses Repository enthält die planungs- und umsetzungsleitenden Unterlagen und 
 
 ## Implementierungsdokumentation
 
-Die eigentliche Arbeitsgrundlage liegt unter [docs/implementation/00-master-spec.md](/Users/stefan/sources/textbuddy/docs/implementation/00-master-spec.md).
+Die Arbeitsgrundlage liegt unter [docs/implementation/00-master-spec.md](/Users/stefan/sources/textbuddy/docs/implementation/00-master-spec.md).
 
 Wichtige Einstiegsdateien:
 
@@ -26,11 +26,9 @@ Wichtige Einstiegsdateien:
 
 - Java 25
 - Node.js 20+
-- ein aktuelles `npm`
+- aktuelles `npm`
 
-## Build und Start
-
-Lokaler Standardstart ohne Auth:
+## Lokaler Entwicklungsstart
 
 ```bash
 ./gradlew bootRun
@@ -44,15 +42,78 @@ Kompletter Build mit Java- und Frontend-Tests:
 ./gradlew test
 ```
 
+## Release und Distribution (Phase 05)
+
+Release-Bundle erzeugen:
+
+```bash
+./gradlew clean verifyReleaseBundle installerZip
+```
+
+Ergebnis:
+
+- `build/release/textbuddy.jar`
+- `build/release/textbuddy-<version>.zip`
+- `build/release/docs/release/runbook-produktionsbetrieb.md`
+- `build/release/docs/release/abnahme-checkliste.md`
+- `build/release/config/examples/`
+
+Standardstartpfad:
+
+```bash
+cd build/release
+java -jar textbuddy.jar
+```
+
+Optionaler Installer-Start:
+
+```bash
+unzip textbuddy-<version>.zip -d textbuddy
+cd textbuddy
+./bin/start-textbuddy.sh
+```
+
+Weitere Details:
+
+- [Runbook Produktionsbetrieb](/Users/stefan/sources/textbuddy/docs/release/runbook-produktionsbetrieb.md)
+- [Konfigurationsbeispiele](/Users/stefan/sources/textbuddy/docs/release/konfigurationsbeispiele.md)
+- [Abnahme- und Release-Checkliste](/Users/stefan/sources/textbuddy/docs/release/abnahme-checkliste.md)
+- [CI- und Release-Pipeline](/Users/stefan/sources/textbuddy/docs/release/ci-und-release-pipeline.md)
+
+## Signatur und Checksum
+
+Im Tag-Release werden zusätzlich erzeugt:
+
+- `textbuddy.jar.sha256`
+- `textbuddy.jar.asc`
+- `textbuddy.jar.sha256.asc`
+
+Verifikation (Linux):
+
+```bash
+sha256sum -c textbuddy.jar.sha256
+gpg --verify textbuddy.jar.asc textbuddy.jar
+gpg --verify textbuddy.jar.sha256.asc textbuddy.jar.sha256
+```
+
+## CI und Release
+
+Neue Workflows unter `.github/workflows/`:
+
+- `ci.yml` für Pull Requests und Push auf `main`
+- `release.yml` für Tag-Releases (`v*`) und `workflow_dispatch`
+
+Release wird als Draft erstellt und danach manuell über GitHub veröffentlicht.
+
 ## Auth / OIDC
 
-Auth ist standardmaessig deaktiviert:
+Auth ist standardmässig deaktiviert:
 
 - `textbuddy.auth.enabled=false`
 - Home-Seite bleibt offen
 - APIs sind direkt nutzbar
 
-OIDC-Grundintegration aktivierst du ueber Properties. Beispiel:
+OIDC-Grundintegration aktivierst du über Properties. Beispiel:
 
 ```bash
 ./gradlew bootRun --args='
@@ -70,15 +131,9 @@ OIDC-Grundintegration aktivierst du ueber Properties. Beispiel:
 '
 ```
 
-Mit aktivierter Auth:
-
-- die Home-Seite zeigt den OIDC-Status
-- bestehende `/api/**`-Endpoints verlangen eine angemeldete Session
-- API-Fehler liefern ein konsistentes JSON-Fehlerformat inklusive `traceId`
-
 ## Adapter-Konfiguration
 
-Der Standardpfad von Phase 01 ist:
+Der Standardpfad ist:
 
 - LLM im Provider-Modus
 - LanguageTool eingebettet in der JVM
@@ -96,10 +151,11 @@ Wichtige Properties:
 - `textbuddy.document.mode=kreuzberg|http|stub`
 - `textbuddy.document.base-url`
 - `textbuddy.document.api-key`
+- `textbuddy.runtime.home`
+- `textbuddy.runtime.initialize-local-resources`
 
 ## Arbeitsmodus
 
-- Die Umsetzung erfolgt **inkrementell**.
-- Eine Implementierungssession bearbeitet **genau einen Slice**.
+- Die Umsetzung erfolgt inkrementell.
+- Eine Implementierungssession bearbeitet genau einen Slice oder eine Produktionsphase.
 - Spätere Features dürfen nicht vorgezogen werden.
-- Nach jeder Session werden nur Status und Handoff aktualisiert.

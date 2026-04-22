@@ -4,9 +4,11 @@
   "description": "Browser- und UI-Tests fuer Textbuddy",
   "private": true,
   "scripts": {
-    "test": "playwright test"
+    "test": "playwright test",
+    "test:a11y": "playwright test editor-island.a11y.spec.ts"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.2",
     "@playwright/test": "^1.59.1"
   }
 }

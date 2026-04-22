@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Textbuddy GUI Refactor Mockups</title>
+  <style>
+    :root {
+      --bg: #eef2f4;
+      --surface: #ffffff;
+      --ink: #1e2b34;
+      --muted: #637682;
+      --line: #d6e0e5;
+      --accent: #1b6668;
+      --accent-soft: #e7f3f3;
+      --ok: #e8f2df;
+      --warn: #f6efdd;
+      --err: #f6e3e3;
+      --shadow: 0 10px 24px rgba(20, 34, 44, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #f5f8fa, var(--bg));
+    }
+
+    .page {
+      width: min(1400px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 1.5rem 0 2.5rem;
+      display: grid;
+      gap: 1rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      letter-spacing: 0.01em;
+    }
+
+    .subtitle {
+      margin: 0.35rem 0 0;
+      color: var(--muted);
+    }
+
+    .artboard {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 1rem;
+      display: grid;
+      gap: 0.8rem;
+    }
+
+    .artboard h2 {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--accent);
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .shell {
+      display: grid;
+      gap: 0.8rem;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 0.8rem;
+      background: #fbfdfe;
+    }
+
+    .row {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.8rem;
+      background: #fff;
+      color: var(--muted);
+    }
+
+    .pill.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: #b9d8d9;
+      font-weight: 700;
+    }
+
+    .status {
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      padding: 0.5rem 0.65rem;
+      background: #fff;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .status.ok { background: var(--ok); color: #3f5f20; border-color: #cde2b8; }
+    .status.warn { background: var(--warn); color: #805716; border-color: #ebd3a6; }
+
+    .editor {
+      min-height: 120px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      padding: 0.7rem;
+      line-height: 1.45;
+      color: #2b3b45;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+      gap: 0.8rem;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0.7rem;
+      background: #fff;
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .small {
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+
+    .button {
+      border: 1px solid #b8d0d1;
+      background: linear-gradient(180deg, #f4fbfb, #e7f3f3);
+      color: #1b6668;
+      border-radius: 10px;
+      padding: 0.5rem 0.7rem;
+      font-weight: 700;
+      width: fit-content;
+    }
+
+    .diff {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+
+    .diff .card { min-height: 92px; }
+
+    .token-del { background: #f8e6e6; color: #8d2f2f; text-decoration: line-through; padding: 0.02rem 0.14rem; border-radius: 6px; }
+    .token-add { background: #e7f3df; color: #2d6618; padding: 0.02rem 0.14rem; border-radius: 6px; }
+
+    .mobile {
+      width: min(390px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 0.7rem;
+      background: #fff;
+      display: grid;
+      gap: 0.6rem;
+    }
+
+    @media (max-width: 980px) {
+      .split { grid-template-columns: minmax(0, 1fr); }
+      .diff { grid-template-columns: minmax(0, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <h1>Textbuddy GUI Refactor Mockups (High-Fidelity, Ultra-Minimal)</h1>
+      <p class="subtitle">Desktop: Idle, Quick-Action-Konfiguration, Streaming+Diff, Advisor-Resultat. Mobile: Hauptworkflow gestapelt.</p>
+    </header>
+
+    <section class="artboard">
+      <h2>Desktop: Idle</h2>
+      <div class="shell">
+        <div class="row">
+          <span class="pill">Systemstatus</span>
+          <span class="pill">SSE-Rewrites</span>
+          <span class="pill">Segment-Korrektur</span>
+          <span class="pill">Lokales Wörterbuch</span>
+        </div>
+        <div class="row">
+          <span class="button">Undo</span>
+          <span class="button">Redo</span>
+          <span class="pill">1'248 Zeichen</span>
+          <span class="pill">192 Wörter</span>
+        </div>
+        <div class="editor">Hier steht der Arbeitsentwurf. Die Oberfläche priorisiert den Editor und reduziert Sekundärinformationen.</div>
+        <div class="status">Aktion wählen und anwenden.</div>
+      </div>
+    </section>
+
+    <section class="artboard">
+      <h2>Desktop: Quick-Action-Konfiguration</h2>
+      <div class="split">
+        <div class="card">
+          <strong>Aktionen</strong>
+          <div class="small">Überarbeiten</div>
+          <div class="row">
+            <span class="pill">Plain Language</span>
+            <span class="pill">Proofread</span>
+            <span class="pill">Bullet Points</span>
+            <span class="pill active">Summarize</span>
+          </div>
+          <div class="small">Stil & Kanal</div>
+          <div class="row">
+            <span class="pill">Formality</span>
+            <span class="pill">Social Media</span>
+            <span class="pill">Medium</span>
+          </div>
+          <div class="small">Narrativ / Custom</div>
+          <div class="row">
+            <span class="pill">Character Speech</span>
+            <span class="pill">Custom</span>
+          </div>
+        </div>
+        <div class="card">
+          <strong>Konfiguration: Summarize</strong>
+          <label class="small">Variante</label>
+          <div class="status">Ein Satz (default)</div>
+          <span class="button">Summarize anwenden</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="artboard">
+      <h2>Desktop: Streaming + Diff</h2>
+      <div class="shell">
+        <div class="status warn">Summarize streamt gerade…</div>
+        <div class="editor">Management Summary\n- Kernpunkt: Projekt ist freigegeben…</div>
+        <div class="diff">
+          <article class="card">
+            <strong>Vorher</strong>
+            <p class="small">Der <span class="token-del">lange Ausgangstext</span> ist hier sichtbar.</p>
+          </article>
+          <article class="card">
+            <strong>Nachher</strong>
+            <p class="small"><span class="token-add">Management Summary</span> mit kompakten Punkten.</p>
+          </article>
+        </div>
+        <span class="button">Rewrite rückgängig machen</span>
+      </div>
+    </section>
+
+    <section class="artboard">
+      <h2>Desktop: Advisor-Result-Flow</h2>
+      <div class="split">
+        <div class="card">
+          <strong>Trefferliste</strong>
+          <div class="status ok">2 eindeutige Treffer</div>
+          <div class="card">
+            <strong>Per sofort durch ab sofort ersetzen</strong>
+            <span class="small">Schreibweisungen, Seite 7</span>
+          </div>
+          <div class="card">
+            <strong>Deutsche Alternative für downloaden</strong>
+            <span class="small">Anglizismen, Seite 6</span>
+          </div>
+        </div>
+        <div class="card">
+          <strong>Ausgewählter Treffer</strong>
+          <p class="small">Treffer im Text: per sofort</p>
+          <p class="small">Meldung: Die Formulierung wirkt intern und wenig standardisiert.</p>
+          <span class="button">Treffer im Viewer öffnen</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="artboard">
+      <h2>Mobile: Hauptworkflow (gestapelt)</h2>
+      <div class="mobile">
+        <div class="status">Aktion wählen und anwenden.</div>
+        <div class="editor">Mobile Editor mit gleicher Kernfunktionalität.</div>
+        <div class="card">
+          <strong>Quick Actions</strong>
+          <div class="row">
+            <span class="pill active">Plain Language</span>
+            <span class="pill">Proofread</span>
+            <span class="pill">Summarize</span>
+          </div>
+          <span class="button">Plain Language anwenden</span>
+        </div>
+        <div class="card">
+          <strong>Dokumentimport</strong>
+          <span class="small">Drag-and-drop, OCR-Auswahl, direkter Import.</span>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

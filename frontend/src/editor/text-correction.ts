@@ -106,6 +106,10 @@ export function mountTextCorrectionBridge(
     panelState = state;
     panelMessage = message;
     elements.panel.dataset.correctionState = state;
+    elements.panel.setAttribute("aria-busy", state === "loading" ? "true" : "false");
+    elements.status.setAttribute("role", state === "error" ? "alert" : "status");
+    elements.status.setAttribute("aria-live", state === "error" ? "assertive" : "polite");
+    elements.status.setAttribute("aria-atomic", "true");
     elements.status.textContent = message;
   }
 
@@ -167,6 +171,7 @@ export function mountTextCorrectionBridge(
     item.dataset.testid = "correction-problem-item";
     item.tabIndex = 0;
     item.setAttribute("role", "button");
+    item.setAttribute("aria-label", `Problem ${index + 1}: ${extractProblemText(original, block)}`);
 
     header.className = "problem-item-head";
     header.append(createProblemBadge(index));

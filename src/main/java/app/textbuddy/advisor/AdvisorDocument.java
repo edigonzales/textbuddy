@@ -8,6 +8,7 @@ public record AdvisorDocument(
         String title,
         String summary,
         String source,
+        List<String> allowedRoles,
         String pdfFileName,
         List<AdvisorRule> rules
 ) {

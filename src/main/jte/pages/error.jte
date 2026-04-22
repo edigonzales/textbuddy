@@ -2,7 +2,7 @@
 @param ErrorPageModel page
 
 @template.layout.main(title = page.title(), content = @`
-<div class="page-shell error-shell">
+<main id="main-content" class="page-shell error-shell" tabindex="-1">
     <section class="panel error-card" data-testid="error-page">
         <div class="panel-body">
             <p class="eyebrow">Fehlerbild</p>
@@ -25,5 +25,5 @@
             </div>
         </div>
     </section>
-</div>
+</main>
 `)

@@ -77,6 +77,8 @@ export function mountEditorIsland(): void {
     editorProps: {
       attributes: {
         "aria-label": "Textbuddy Editor",
+        role: "textbox",
+        "aria-multiline": "true",
         "data-testid": "editor-input",
         class: "editor-input",
         spellcheck: "false",

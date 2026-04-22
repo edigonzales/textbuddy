@@ -51,7 +51,7 @@ public final class EmbeddedLanguageToolClient implements LanguageToolClient {
                     .map(this::mapMatch)
                     .toList();
         } catch (IOException exception) {
-            throw new IllegalStateException("Eingebettetes LanguageTool konnte den Text nicht prüfen.", exception);
+            throw new LanguageToolUnavailableException("Eingebettetes LanguageTool konnte den Text nicht prüfen.", exception);
         }
     }
 
@@ -131,7 +131,7 @@ public final class EmbeddedLanguageToolClient implements LanguageToolClient {
         }
 
         if (resolvedLanguage == null) {
-            throw new IllegalArgumentException("Nicht unterstützte LanguageTool-Sprache: " + normalized);
+            throw new LanguageToolUnavailableException("Nicht unterstützte LanguageTool-Sprache: " + normalized);
         }
 
         return resolvedLanguage.getDefaultLanguageVariant();
@@ -145,7 +145,7 @@ public final class EmbeddedLanguageToolClient implements LanguageToolClient {
         Path configuredPath = ngramPath.get();
 
         if (!Files.isDirectory(configuredPath)) {
-            throw new IllegalStateException(
+            throw new LanguageToolUnavailableException(
                     "textbuddy.languagetool.ngram-path muss auf ein bestehendes Verzeichnis zeigen."
             );
         }
@@ -153,7 +153,7 @@ public final class EmbeddedLanguageToolClient implements LanguageToolClient {
         try {
             languageTool.activateLanguageModelRules(configuredPath.toFile());
         } catch (IOException exception) {
-            throw new IllegalStateException("LanguageTool-N-Gramm-Regeln konnten nicht aktiviert werden.", exception);
+            throw new LanguageToolUnavailableException("LanguageTool-N-Gramm-Regeln konnten nicht aktiviert werden.", exception);
         }
     }
 

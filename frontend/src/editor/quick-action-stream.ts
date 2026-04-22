@@ -14,8 +14,7 @@ import type {
   RewriteDiffToken,
 } from "./types";
 
-const IDLE_MESSAGE =
-  "Bereit für Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom.";
+const IDLE_MESSAGE = "Aktion wählen und anwenden.";
 const UNDONE_MESSAGE = "Rewrite wurde rückgängig gemacht.";
 const AUTH_REQUIRED_MESSAGE = "Mit OIDC anmelden, um Quick Actions zu starten.";
 const CUSTOM_PROMPT_MAX_LENGTH = 400;
@@ -58,6 +57,18 @@ interface ActiveStreamState {
   streamed: string;
   controller: AbortController;
 }
+
+const ACTION_LABELS: Record<QuickActionKey, string> = {
+  "plain-language": "Plain Language",
+  "bullet-points": "Bullet Points",
+  proofread: "Proofread",
+  summarize: "Summarize",
+  formality: "Formality",
+  "social-media": "Social Media",
+  medium: "Medium",
+  "character-speech": "Character Speech",
+  custom: "Custom",
+};
 
 function getSelectedLanguage(elements: QuickActionElements): string {
   return normalizeRequestedLanguage(elements.languageSelect.value);
@@ -111,6 +122,8 @@ export function mountQuickActionStream(
   let activeStream: ActiveStreamState | null = null;
   let completedRewrite: CompletedRewriteState | null = null;
   let suppressExternalReset = false;
+  let selectedAction: QuickActionKey = "plain-language";
+
   const quickActions: Record<QuickActionKey, QuickActionDefinition> = {
     "plain-language": {
       button: elements.plainLanguageButton,
@@ -212,6 +225,10 @@ export function mountQuickActionStream(
     message: string,
   ): void {
     elements.panel.dataset.quickActionState = state;
+    elements.panel.setAttribute("aria-busy", state === "streaming" ? "true" : "false");
+    elements.status.setAttribute("role", state === "error" ? "alert" : "status");
+    elements.status.setAttribute("aria-live", state === "error" ? "assertive" : "polite");
+    elements.status.setAttribute("aria-atomic", "true");
     elements.status.textContent = message;
   }
 
@@ -221,22 +238,89 @@ export function mountQuickActionStream(
     syncActionAvailability();
   }
 
-  function syncActionAvailability(): void {
-    const disabled =
-      activeStream !== null || getPlainText(editor).trim().length === 0 || isApiLocked(root);
+  function setSelectedAction(actionKey: QuickActionKey): void {
+    selectedAction = actionKey;
+    elements.panel.dataset.quickActionSelectedAction = actionKey;
+    elements.activeLabel.textContent = ACTION_LABELS[actionKey];
 
-    Object.entries(quickActions).forEach(([actionKey, action]) => {
-      action.button.disabled =
-        actionKey === "custom"
-          ? disabled || !hasValidCustomPrompt(elements.customPromptInput.value)
-          : disabled;
+    Object.entries(quickActions).forEach(([entryKey, definition]) => {
+      const isActive = entryKey === actionKey;
+
+      definition.button.dataset.activeAction = isActive ? "true" : "false";
+      definition.button.setAttribute("aria-pressed", isActive ? "true" : "false");
     });
-    elements.summarizeOptionSelect.disabled = disabled;
-    elements.formalityOptionSelect.disabled = disabled;
-    elements.socialMediaOptionSelect.disabled = disabled;
-    elements.mediumOptionSelect.disabled = disabled;
-    elements.characterSpeechOptionSelect.disabled = disabled;
-    elements.customPromptInput.disabled = activeStream !== null || isApiLocked(root);
+
+    const configPanels = Array.from(
+      elements.panel.querySelectorAll<HTMLElement>("[data-quick-action-config]"),
+    );
+    configPanels.forEach((panel) => {
+      const panelAction = panel.dataset.quickActionConfig as QuickActionKey | undefined;
+      const visible = panelAction === selectedAction;
+      panel.hidden = !visible;
+    });
+
+    syncActionAvailability();
+  }
+
+  function syncActionAvailability(): void {
+    const apiLocked = isApiLocked(root);
+    const hasText = getPlainText(editor).trim().length > 0;
+    const streaming = activeStream !== null;
+    const disableSelectors = streaming || apiLocked;
+
+    Object.values(quickActions).forEach((action) => {
+      action.button.disabled = disableSelectors;
+      action.button.setAttribute("aria-disabled", action.button.disabled ? "true" : "false");
+    });
+
+    elements.summarizeOptionSelect.disabled =
+      disableSelectors || selectedAction !== "summarize";
+    elements.summarizeOptionSelect.setAttribute(
+      "aria-disabled",
+      elements.summarizeOptionSelect.disabled ? "true" : "false",
+    );
+    elements.formalityOptionSelect.disabled =
+      disableSelectors || selectedAction !== "formality";
+    elements.formalityOptionSelect.setAttribute(
+      "aria-disabled",
+      elements.formalityOptionSelect.disabled ? "true" : "false",
+    );
+    elements.socialMediaOptionSelect.disabled =
+      disableSelectors || selectedAction !== "social-media";
+    elements.socialMediaOptionSelect.setAttribute(
+      "aria-disabled",
+      elements.socialMediaOptionSelect.disabled ? "true" : "false",
+    );
+    elements.mediumOptionSelect.disabled = disableSelectors || selectedAction !== "medium";
+    elements.mediumOptionSelect.setAttribute(
+      "aria-disabled",
+      elements.mediumOptionSelect.disabled ? "true" : "false",
+    );
+    elements.characterSpeechOptionSelect.disabled =
+      disableSelectors || selectedAction !== "character-speech";
+    elements.characterSpeechOptionSelect.setAttribute(
+      "aria-disabled",
+      elements.characterSpeechOptionSelect.disabled ? "true" : "false",
+    );
+    elements.customPromptInput.disabled = disableSelectors || selectedAction !== "custom";
+    elements.customPromptInput.setAttribute(
+      "aria-disabled",
+      elements.customPromptInput.disabled ? "true" : "false",
+    );
+
+    const selectedActionNeedsPrompt = selectedAction === "custom";
+    const runDisabled =
+      streaming ||
+      apiLocked ||
+      !hasText ||
+      (selectedActionNeedsPrompt && !hasValidCustomPrompt(elements.customPromptInput.value));
+
+    elements.runButton.disabled = runDisabled;
+    elements.runButton.setAttribute("aria-disabled", runDisabled ? "true" : "false");
+    elements.runButton.textContent =
+      streaming
+        ? "Aktion läuft..."
+        : `${ACTION_LABELS[selectedAction]} anwenden`;
   }
 
   function applyEditorText(text: string): void {
@@ -368,40 +452,14 @@ export function mountQuickActionStream(
     }
   }
 
-  elements.plainLanguageButton.addEventListener("click", () => {
-    void runQuickAction("plain-language");
+  (Object.keys(quickActions) as QuickActionKey[]).forEach((actionKey) => {
+    quickActions[actionKey].button.addEventListener("click", () => {
+      setSelectedAction(actionKey);
+    });
   });
 
-  elements.bulletPointsButton.addEventListener("click", () => {
-    void runQuickAction("bullet-points");
-  });
-
-  elements.proofreadButton.addEventListener("click", () => {
-    void runQuickAction("proofread");
-  });
-
-  elements.summarizeButton.addEventListener("click", () => {
-    void runQuickAction("summarize");
-  });
-
-  elements.formalityButton.addEventListener("click", () => {
-    void runQuickAction("formality");
-  });
-
-  elements.socialMediaButton.addEventListener("click", () => {
-    void runQuickAction("social-media");
-  });
-
-  elements.mediumButton.addEventListener("click", () => {
-    void runQuickAction("medium");
-  });
-
-  elements.characterSpeechButton.addEventListener("click", () => {
-    void runQuickAction("character-speech");
-  });
-
-  elements.customButton.addEventListener("click", () => {
-    void runQuickAction("custom");
+  elements.runButton.addEventListener("click", () => {
+    void runQuickAction(selectedAction);
   });
 
   elements.customPromptInput.addEventListener("input", () => {
@@ -431,6 +489,7 @@ export function mountQuickActionStream(
     syncActionAvailability();
   });
 
+  setSelectedAction("plain-language");
   syncActionAvailability();
   resetToIdle(isApiLocked(root) ? AUTH_REQUIRED_MESSAGE : IDLE_MESSAGE);
 }

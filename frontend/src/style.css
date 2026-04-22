@@ -2,6 +2,21 @@
   gap: 1.15rem;
 }
 
+#editor-island-root :where(
+  a,
+  button,
+  input:not([type="hidden"]),
+  select,
+  textarea,
+  [role="button"],
+  [tabindex]:not([tabindex="-1"]),
+  [contenteditable="true"]
+):focus-visible {
+  outline: 3px solid var(--focus-ring, #0b676b);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--focus-ring-soft, rgba(11, 103, 107, 0.25));
+}
+
 #editor-island-root .editor-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -152,7 +167,6 @@
   transform: translateY(-1px);
   border-color: rgba(15, 109, 104, 0.58);
   box-shadow: 0 14px 32px rgba(28, 39, 48, 0.1);
-  outline: none;
 }
 
 #editor-island-root .document-import-dropzone[data-busy="true"] {
@@ -223,21 +237,83 @@
   color: #8d2f2f;
 }
 
-#editor-island-root .quick-action-row {
-  display: flex;
-  flex-wrap: wrap;
+#editor-island-root .quick-action-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: start;
+}
+
+#editor-island-root .quick-action-groups {
+  display: grid;
   gap: 0.75rem;
 }
 
-#editor-island-root .quick-action-menu {
+#editor-island-root .quick-action-group {
   display: grid;
   gap: 0.55rem;
-  min-width: min(100%, 18rem);
+  padding: 0.8rem;
+  border: 1px solid rgba(15, 109, 104, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
 }
 
-#editor-island-root .quick-action-menu-wide {
-  flex: 1 1 100%;
-  min-width: min(100%, 28rem);
+#editor-island-root .quick-action-group h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #164d53;
+}
+
+#editor-island-root .quick-action-group-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+#editor-island-root .quick-action-config-shell {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 109, 104, 0.14);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+#editor-island-root .quick-action-config-head h4 {
+  margin: 0.2rem 0 0;
+  font-size: 1.05rem;
+  color: #164d53;
+}
+
+#editor-island-root .quick-action-config-copy {
+  margin: 0;
+  color: #4d646c;
+}
+
+#editor-island-root .quick-action-configs {
+  display: grid;
+}
+
+#editor-island-root .quick-action-config {
+  display: none;
+}
+
+#editor-island-root .quick-action-config p {
+  margin: 0;
+  color: #4d646c;
+}
+
+#editor-island-root .quick-action-panel[data-quick-action-selected-action="plain-language"] .quick-action-config[data-quick-action-config="plain-language"],
+#editor-island-root .quick-action-panel[data-quick-action-selected-action="proofread"] .quick-action-config[data-quick-action-config="proofread"],
+#editor-island-root .quick-action-panel[data-quick-action-selected-action="bullet-points"] .quick-action-config[data-quick-action-config="bullet-points"],
+#editor-island-root .quick-action-panel[data-quick-action-selected-action="summarize"] .quick-action-config[data-quick-action-config="summarize"],
+#editor-island-root .quick-action-panel[data-quick-action-selected-action="formality"] .quick-action-config[data-quick-action-config="formality"],
+#editor-island-root .quick-action-panel[data-quick-action-selected-action="social-media"] .quick-action-config[data-quick-action-config="social-media"],
+#editor-island-root .quick-action-panel[data-quick-action-selected-action="medium"] .quick-action-config[data-quick-action-config="medium"],
+#editor-island-root .quick-action-panel[data-quick-action-selected-action="character-speech"] .quick-action-config[data-quick-action-config="character-speech"],
+#editor-island-root .quick-action-panel[data-quick-action-selected-action="custom"] .quick-action-config[data-quick-action-config="custom"] {
+  display: grid;
+  gap: 0.5rem;
 }
 
 #editor-island-root .quick-action-select-shell {
@@ -284,9 +360,9 @@
 }
 
 #editor-island-root .quick-action-button {
-  min-width: min(100%, 16rem);
-  padding: 0.9rem 1rem;
-  background: linear-gradient(135deg, rgba(15, 109, 104, 0.14), rgba(15, 109, 104, 0.24));
+  min-width: min(100%, 10.5rem);
+  padding: 0.74rem 0.9rem;
+  background: rgba(255, 255, 255, 0.92);
   color: #164d53;
   cursor: pointer;
   transition:
@@ -294,6 +370,12 @@
     box-shadow 140ms ease,
     border-color 140ms ease;
   box-shadow: 0 12px 30px rgba(28, 39, 48, 0.08);
+}
+
+#editor-island-root .quick-action-button[data-active-action="true"] {
+  background: linear-gradient(135deg, rgba(15, 109, 104, 0.16), rgba(15, 109, 104, 0.24));
+  border-color: rgba(15, 109, 104, 0.42);
+  box-shadow: 0 12px 24px rgba(28, 39, 48, 0.12);
 }
 
 #editor-island-root .quick-action-button:hover:enabled,
@@ -313,6 +395,35 @@
 #editor-island-root .quick-action-select:disabled,
 #editor-island-root .quick-action-textarea:disabled {
   color: rgba(22, 77, 83, 0.42);
+  box-shadow: none;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+#editor-island-root .quick-action-apply {
+  border-radius: 14px;
+  border: 1px solid rgba(15, 109, 104, 0.18);
+  padding: 0.84rem 0.95rem;
+  background: linear-gradient(135deg, rgba(15, 109, 104, 0.14), rgba(15, 109, 104, 0.24));
+  color: #164d53;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+  box-shadow: 0 12px 30px rgba(28, 39, 48, 0.08);
+}
+
+#editor-island-root .quick-action-apply:hover:enabled {
+  transform: translateY(-1px);
+  border-color: rgba(15, 109, 104, 0.4);
+  box-shadow: 0 14px 32px rgba(28, 39, 48, 0.12);
+}
+
+#editor-island-root .quick-action-apply:disabled {
+  color: rgba(22, 77, 83, 0.42);
+  cursor: not-allowed;
   box-shadow: none;
   background: rgba(255, 255, 255, 0.6);
 }
@@ -339,7 +450,6 @@
 
 #editor-island-root .editor-input {
   min-height: 340px;
-  outline: none;
   color: #1c2730;
   white-space: pre-wrap;
 }
@@ -381,7 +491,7 @@
 }
 
 #editor-island-root .editor-input:focus-visible {
-  outline: none;
+  border-radius: 8px;
 }
 
 @media (max-width: 900px) {
@@ -605,8 +715,8 @@
   }
 
   #editor-island-root .quick-action-status,
-  #editor-island-root .quick-action-menu,
   #editor-island-root .quick-action-button,
+  #editor-island-root .quick-action-apply,
   #editor-island-root .quick-action-select,
   #editor-island-root .quick-action-textarea,
   #editor-island-root .rewrite-diff-undo {
@@ -629,5 +739,9 @@
   #editor-island-root .rewrite-primary-action,
   #editor-island-root .rewrite-secondary-action {
     width: 100%;
+  }
+
+  #editor-island-root .quick-action-layout {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

@@ -5,9 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -87,5 +90,47 @@ class AuthEnabledMvcTest {
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.blocks[0].shortMessage").value("Spelling"));
+    }
+
+    @Test
+    void authenticatedUsersWithoutAdvisorRoleGetForbiddenOnRestrictedDocument() throws Exception {
+        mockMvc.perform(get("/api/advisor/docs").with(oauth2Login()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].name", not(hasItem("schreibweisungen"))));
+
+        mockMvc.perform(get("/api/advisor/doc/schreibweisungen").with(oauth2Login()))
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.detail").value("Zugriff auf dieses Advisor-Dokument ist nicht erlaubt."));
+    }
+
+    @Test
+    void authenticatedUsersWithAdvisorRoleCanOpenRestrictedDocument() throws Exception {
+        mockMvc.perform(get("/api/advisor/docs")
+                        .with(oauth2Login().authorities(new SimpleGrantedAuthority("ROLE_ADVISOR_INTERNAL"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].name", hasItem("schreibweisungen")));
+
+        mockMvc.perform(get("/api/advisor/doc/schreibweisungen")
+                        .with(oauth2Login().authorities(new SimpleGrantedAuthority("ROLE_ADVISOR_INTERNAL"))))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PDF));
+    }
+
+    @Test
+    void advisorValidationRejectsRestrictedSelectionWithoutRole() throws Exception {
+        mockMvc.perform(post("/api/advisor/validate")
+                        .with(oauth2Login())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "text": "Bitte per sofort antworten.",
+                                  "docs": ["schreibweisungen"]
+                                }
+                                """))
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.detail")
+                        .value("Zugriff auf mindestens ein ausgewähltes Advisor-Dokument ist nicht erlaubt."));
     }
 }

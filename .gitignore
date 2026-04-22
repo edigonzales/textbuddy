@@ -2,6 +2,10 @@
 .gradle/
 build/
 bin/
+!distribution/
+!distribution/bin/
+!distribution/bin/start-textbuddy.sh
+!distribution/bin/start-textbuddy.cmd
 frontend/dist/
 frontend/node_modules/
 playwright/node_modules/

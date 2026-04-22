@@ -69,6 +69,10 @@ export function mountDocumentImport(
     message: string,
   ): void {
     elements.panel.dataset.documentImportState = state;
+    elements.panel.setAttribute("aria-busy", state === "loading" ? "true" : "false");
+    elements.status.setAttribute("role", state === "error" ? "alert" : "status");
+    elements.status.setAttribute("aria-live", state === "error" ? "assertive" : "polite");
+    elements.status.setAttribute("aria-atomic", "true");
     elements.status.textContent = message;
   }
 
@@ -78,8 +82,16 @@ export function mountDocumentImport(
     elements.button.disabled = busy || authLocked;
     elements.input.disabled = busy || authLocked;
     elements.ocrLanguageSelect.disabled = busy || authLocked;
+    elements.button.setAttribute("aria-disabled", elements.button.disabled ? "true" : "false");
+    elements.input.setAttribute("aria-disabled", elements.input.disabled ? "true" : "false");
+    elements.ocrLanguageSelect.setAttribute(
+      "aria-disabled",
+      elements.ocrLanguageSelect.disabled ? "true" : "false",
+    );
     elements.dropzone.dataset.busy = busy ? "true" : "false";
     elements.dropzone.dataset.authLocked = authLocked ? "true" : "false";
+    elements.dropzone.setAttribute("aria-busy", busy ? "true" : "false");
+    elements.dropzone.setAttribute("aria-disabled", busy || authLocked ? "true" : "false");
   }
 
   function openFilePicker(): void {
@@ -158,19 +170,16 @@ export function mountDocumentImport(
   });
 
   elements.dropzone.addEventListener("click", (event) => {
-    if (event.target === elements.input) {
+    const target = event.target;
+
+    if (
+      target === elements.input ||
+      (target instanceof Element &&
+        target.closest("button,select,option,textarea,input,a,label"))
+    ) {
       return;
     }
 
-    openFilePicker();
-  });
-
-  elements.dropzone.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter" && event.key !== " ") {
-      return;
-    }
-
-    event.preventDefault();
     openFilePicker();
   });
 

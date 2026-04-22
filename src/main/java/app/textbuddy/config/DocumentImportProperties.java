@@ -22,6 +22,7 @@ public class DocumentImportProperties {
     private String apiKey = "";
     private DataSize maxUploadSize = DEFAULT_MAX_UPLOAD_SIZE;
     private Duration timeout = DEFAULT_TIMEOUT;
+    private int maxRetries = 1;
 
     public Mode getMode() {
         return mode;
@@ -63,6 +64,14 @@ public class DocumentImportProperties {
         this.timeout = timeout == null ? DEFAULT_TIMEOUT : timeout;
     }
 
+    public int getMaxRetries() {
+        return maxRetries;
+    }
+
+    public void setMaxRetries(int maxRetries) {
+        this.maxRetries = maxRetries;
+    }
+
     public boolean isKreuzbergMode() {
         return mode == Mode.KREUZBERG;
     }
@@ -98,6 +107,10 @@ public class DocumentImportProperties {
     public long normalizedTimeoutSeconds() {
         long seconds = normalizedTimeout().toSeconds();
         return Math.max(1L, seconds);
+    }
+
+    public int normalizedMaxRetries() {
+        return Math.max(0, maxRetries);
     }
 
     public String describeMaxUploadSize() {

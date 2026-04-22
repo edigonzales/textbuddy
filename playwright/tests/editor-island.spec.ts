@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 interface CorrectionRequestPayload {
   text: string;
@@ -78,6 +78,11 @@ function createSseBody(events: Array<{ event: string; payload: unknown }>): stri
   return events
     .map(({ event, payload }) => `event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`)
     .join("");
+}
+
+async function runQuickAction(page: Page, actionTestId: string) {
+  await page.getByTestId(actionTestId).click();
+  await page.getByTestId("quick-action-run").click();
 }
 
 test("typing updates mirror and undo redo state", async ({ page }) => {
@@ -617,7 +622,7 @@ test("plain language streams into the editor, shows a diff and supports full und
 
   await editor.click();
   await page.keyboard.type("Der komplizierte Sachverhalt ist relevant.");
-  await page.getByTestId("quick-action-plain-language").click();
+  await runQuickAction(page, "quick-action-plain-language");
 
   await expect.poll(() => requestBodies.at(-1)?.text).toBe(
     "Der komplizierte Sachverhalt ist relevant.",
@@ -684,7 +689,7 @@ test("bullet points stream into the editor, show a diff and support full undo", 
 
   await editor.click();
   await page.keyboard.type("Projektlage klaeren. Naechste Schritte festhalten.");
-  await page.getByTestId("quick-action-bullet-points").click();
+  await runQuickAction(page, "quick-action-bullet-points");
 
   await expect.poll(() => requestBodies.at(-1)?.text).toBe(
     "Projektlage klaeren. Naechste Schritte festhalten.",
@@ -754,7 +759,7 @@ test("proofread streams into the editor, shows a diff and supports full undo", a
 
   await editor.click();
   await page.keyboard.type("This is teh text.");
-  await page.getByTestId("quick-action-proofread").click();
+  await runQuickAction(page, "quick-action-proofread");
 
   await expect.poll(() => requestBodies.at(-1)?.text).toBe("This is teh text.");
   await expect.poll(() => requestBodies.at(-1)?.language).toBe("auto");
@@ -815,8 +820,9 @@ test("summarize with the sentence option streams into the editor and sends the s
 
   await editor.click();
   await page.keyboard.type("Der Kernpunkt steht fest. Weitere Details folgen.");
-  await expect(page.getByTestId("quick-action-summarize-option")).toHaveValue("sentence");
   await page.getByTestId("quick-action-summarize").click();
+  await expect(page.getByTestId("quick-action-summarize-option")).toHaveValue("sentence");
+  await page.getByTestId("quick-action-run").click();
 
   await expect.poll(() => requestBodies.at(-1)?.text).toBe(
     "Der Kernpunkt steht fest. Weitere Details folgen.",
@@ -875,8 +881,9 @@ test("summarize with the management summary option streams the selected variant"
 
   await editor.click();
   await page.keyboard.type("Projekt ist freigegeben. Umsetzung kann starten.");
-  await page.getByTestId("quick-action-summarize-option").selectOption("management_summary");
   await page.getByTestId("quick-action-summarize").click();
+  await page.getByTestId("quick-action-summarize-option").selectOption("management_summary");
+  await page.getByTestId("quick-action-run").click();
 
   await expect.poll(() => requestBodies.at(-1)?.option).toBe("management_summary");
   await expect(page.getByTestId("quick-action-status")).toContainText("Summarize abgeschlossen");
@@ -941,8 +948,9 @@ test("formality streams both formal and informal variants with the selected opti
 
   await editor.click();
   await page.keyboard.type("Hallo, wir brauchen schnell deine Rueckmeldung.");
-  await expect(optionSelect).toHaveValue("formal");
   await page.getByTestId("quick-action-formality").click();
+  await expect(optionSelect).toHaveValue("formal");
+  await page.getByTestId("quick-action-run").click();
 
   await expect.poll(() => requestBodies.at(-1)?.option).toBe("formal");
   await expect(page.getByTestId("quick-action-status")).toContainText("Formality abgeschlossen");
@@ -954,8 +962,9 @@ test("formality streams both formal and informal variants with the selected opti
   await page.getByTestId("rewrite-diff-undo").click();
 
   await expect(mirror).toHaveValue("Hallo, wir brauchen schnell deine Rueckmeldung.");
-  await optionSelect.selectOption("informal");
   await page.getByTestId("quick-action-formality").click();
+  await optionSelect.selectOption("informal");
+  await page.getByTestId("quick-action-run").click();
 
   await expect.poll(() => requestBodies.at(-1)?.option).toBe("informal");
   await expect(page.getByTestId("quick-action-status")).toContainText("Formality abgeschlossen");
@@ -1018,8 +1027,9 @@ test("social media streams multiple channel variants with the selected option", 
 
   await editor.click();
   await page.keyboard.type("Produktstart ist live. Team ist bereit.");
-  await expect(optionSelect).toHaveValue("bluesky");
   await page.getByTestId("quick-action-social-media").click();
+  await expect(optionSelect).toHaveValue("bluesky");
+  await page.getByTestId("quick-action-run").click();
 
   await expect.poll(() => requestBodies.at(-1)?.option).toBe("bluesky");
   await expect(page.getByTestId("quick-action-status")).toContainText("Social Media abgeschlossen");
@@ -1029,8 +1039,9 @@ test("social media streams multiple channel variants with the selected option", 
   await page.getByTestId("rewrite-diff-undo").click();
 
   await expect(mirror).toHaveValue("Produktstart ist live. Team ist bereit.");
-  await optionSelect.selectOption("linkedin");
   await page.getByTestId("quick-action-social-media").click();
+  await optionSelect.selectOption("linkedin");
+  await page.getByTestId("quick-action-run").click();
 
   await expect.poll(() => requestBodies.at(-1)?.option).toBe("linkedin");
   await expect(page.getByTestId("quick-action-status")).toContainText("Social Media abgeschlossen");
@@ -1088,8 +1099,9 @@ test("medium streams multiple medium variants with the selected option", async (
 
   await editor.click();
   await page.keyboard.type("Projekt ist freigegeben. Team startet am Montag.");
-  await expect(optionSelect).toHaveValue("email");
   await page.getByTestId("quick-action-medium").click();
+  await expect(optionSelect).toHaveValue("email");
+  await page.getByTestId("quick-action-run").click();
 
   await expect.poll(() => requestBodies.at(-1)?.option).toBe("email");
   await expect(page.getByTestId("quick-action-status")).toContainText("Medium abgeschlossen");
@@ -1101,8 +1113,9 @@ test("medium streams multiple medium variants with the selected option", async (
   await page.getByTestId("rewrite-diff-undo").click();
 
   await expect(mirror).toHaveValue("Projekt ist freigegeben. Team startet am Montag.");
-  await optionSelect.selectOption("report");
   await page.getByTestId("quick-action-medium").click();
+  await optionSelect.selectOption("report");
+  await page.getByTestId("quick-action-run").click();
 
   await expect.poll(() => requestBodies.at(-1)?.option).toBe("report");
   await expect(page.getByTestId("quick-action-status")).toContainText("Medium abgeschlossen");
@@ -1164,8 +1177,9 @@ test("character speech streams both direct and indirect variants with the select
 
   await editor.click();
   await page.keyboard.type("Projekt ist freigegeben. Team startet am Montag.");
-  await expect(optionSelect).toHaveValue("direct_speech");
   await page.getByTestId("quick-action-character-speech").click();
+  await expect(optionSelect).toHaveValue("direct_speech");
+  await page.getByTestId("quick-action-run").click();
 
   await expect.poll(() => requestBodies.at(-1)?.option).toBe("direct_speech");
   await expect(page.getByTestId("quick-action-status")).toContainText(
@@ -1179,8 +1193,9 @@ test("character speech streams both direct and indirect variants with the select
   await page.getByTestId("rewrite-diff-undo").click();
 
   await expect(mirror).toHaveValue("Projekt ist freigegeben. Team startet am Montag.");
-  await optionSelect.selectOption("indirect_speech");
   await page.getByTestId("quick-action-character-speech").click();
+  await optionSelect.selectOption("indirect_speech");
+  await page.getByTestId("quick-action-run").click();
 
   await expect.poll(() => requestBodies.at(-1)?.option).toBe("indirect_speech");
   await expect(page.getByTestId("quick-action-status")).toContainText(
@@ -1239,14 +1254,16 @@ test("custom quick action sends the custom prompt and streams the result", async
   const mirror = page.getByTestId("editor-mirror");
   const promptInput = page.getByTestId("quick-action-custom-prompt");
   const customButton = page.getByTestId("quick-action-custom");
+  const runButton = page.getByTestId("quick-action-run");
 
   await editor.click();
   await page.keyboard.type("Projektstart ist morgen.");
-  await expect(customButton).toBeDisabled();
+  await customButton.click();
+  await expect(runButton).toBeDisabled();
 
   await promptInput.fill("Formuliere den Text als interne Ankuendigung.");
-  await expect(customButton).toBeEnabled();
-  await customButton.click();
+  await expect(runButton).toBeEnabled();
+  await runButton.click();
 
   await expect.poll(() => requestBodies.at(-1)?.text).toBe("Projektstart ist morgen.");
   await expect.poll(() => requestBodies.at(-1)?.language).toBe("auto");
@@ -1349,7 +1366,7 @@ test("language selection is sent with quick action requests", async ({ page }) =
   await page.getByTestId("correction-language").selectOption("en-GB");
   await page.getByTestId("editor-input").click();
   await page.keyboard.type("This is a test.");
-  await page.getByTestId("quick-action-plain-language").click();
+  await runQuickAction(page, "quick-action-plain-language");
 
   await expect.poll(() => requestBodies.at(-1)?.language).toBe("en-GB");
   await expect(page.getByTestId("quick-action-status")).toContainText("abgeschlossen");

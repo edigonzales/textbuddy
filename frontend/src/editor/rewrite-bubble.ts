@@ -185,6 +185,7 @@ export function mountRewriteBubble(
   let activeContext: ActiveRewriteContext | null = null;
   let latestRequestId = 0;
   let inFlightRequest: AbortController | null = null;
+  let dismissedSelection: { from: number; to: number } | null = null;
 
   function applyModeAppearance(mode: RewriteBubbleState["mode"]): void {
     elements.bubble.dataset.rewriteMode = mode;
@@ -213,6 +214,7 @@ export function mountRewriteBubble(
     elements.primaryAction.hidden = false;
     elements.secondaryAction.hidden = true;
     elements.bubble.hidden = true;
+    elements.bubble.setAttribute("aria-hidden", "true");
   }
 
   function setOverlayState(
@@ -221,6 +223,9 @@ export function mountRewriteBubble(
   ): void {
     elements.bubble.dataset.rewriteState = state;
     elements.overlay.hidden = false;
+    elements.status.setAttribute("role", state === "error" ? "alert" : "status");
+    elements.status.setAttribute("aria-live", state === "error" ? "assertive" : "polite");
+    elements.status.setAttribute("aria-atomic", "true");
     elements.status.textContent = message;
   }
 
@@ -278,18 +283,33 @@ export function mountRewriteBubble(
       return;
     }
 
+    const currentSelection = {
+      from: editor.state.selection.from,
+      to: editor.state.selection.to,
+    };
+
+    if (
+      dismissedSelection &&
+      dismissedSelection.from === currentSelection.from &&
+      dismissedSelection.to === currentSelection.to
+    ) {
+      hideBubble();
+      return;
+    }
+
+    dismissedSelection = null;
     const nextContext = resolveActiveContext(editor);
 
     if (!nextContext) {
       hideBubble();
       return;
     }
-
     const previousKey = activeContext ? createContextKey(activeContext) : "";
     const nextKey = createContextKey(nextContext);
 
     activeContext = nextContext;
     elements.bubble.hidden = false;
+    elements.bubble.setAttribute("aria-hidden", "false");
     syncBubbleChrome(nextContext);
 
     if (previousKey !== nextKey) {
@@ -402,6 +422,12 @@ export function mountRewriteBubble(
       }
 
       setOverlayState("loaded", WORD_READY_MESSAGE);
+      if (
+        document.activeElement === elements.primaryAction ||
+        document.activeElement === elements.secondaryAction
+      ) {
+        elements.options.querySelector<HTMLButtonElement>("button")?.focus();
+      }
       positionBubble();
     } catch (error) {
       if (isAbortError(error) || requestId !== latestRequestId) {
@@ -493,6 +519,12 @@ export function mountRewriteBubble(
       }
 
       setOverlayState("loaded", SENTENCE_READY_MESSAGE);
+      if (
+        document.activeElement === elements.primaryAction ||
+        document.activeElement === elements.secondaryAction
+      ) {
+        elements.options.querySelector<HTMLButtonElement>("button")?.focus();
+      }
       positionBubble();
     } catch (error) {
       if (isAbortError(error) || requestId !== latestRequestId) {
@@ -556,6 +588,23 @@ export function mountRewriteBubble(
 
     hideBubble();
   });
+
+  window.addEventListener(
+    "keydown",
+    (event) => {
+      if (event.key !== "Escape" || elements.bubble.hidden) {
+        return;
+      }
+
+      event.preventDefault();
+      dismissedSelection = {
+        from: editor.state.selection.from,
+        to: editor.state.selection.to,
+      };
+      hideBubble();
+    },
+    true,
+  );
 
   window.addEventListener("resize", () => {
     if (!elements.bubble.hidden) {

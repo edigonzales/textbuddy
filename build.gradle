@@ -5,7 +5,7 @@ plugins {
 
 group = 'app.textbuddy'
 version = '0.0.1-SNAPSHOT'
-description = 'Phase 01 produktiver Kern for Textbuddy'
+description = 'Phase 05 release distribution and production acceptance for Textbuddy'
 
 ext {
     jteVersion = '3.2.3'
@@ -24,6 +24,9 @@ java {
 def frontendDir = layout.projectDirectory.dir('frontend')
 def frontendBuildDir = layout.buildDirectory.dir('frontend-dist')
 def generatedFrontendResourcesDir = layout.buildDirectory.dir('generated/frontend-resources')
+def releaseDir = layout.buildDirectory.dir('release')
+def installerScriptsDir = layout.projectDirectory.dir('distribution/bin')
+def releaseVersion = providers.gradleProperty('releaseVersion').getOrElse(version.toString())
 
 dependencies {
     implementation platform('org.springframework.boot:spring-boot-dependencies:4.0.5')
@@ -115,7 +118,59 @@ tasks.named('processResources') {
 }
 
 tasks.named('bootJar') {
+    archiveFileName = 'textbuddy.jar'
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.register('releaseBundle', Sync) {
+    dependsOn 'bootJar'
+    into releaseDir
+
+    from(tasks.named('bootJar').flatMap { it.archiveFile })
+    from(layout.projectDirectory.dir('docs/release')) {
+        into 'docs/release'
+    }
+    from(layout.projectDirectory.dir('config/examples')) {
+        into 'config/examples'
+    }
+}
+
+tasks.register('verifyReleaseBundle') {
+    dependsOn 'releaseBundle'
+    doLast {
+        List<String> requiredPaths = [
+                'textbuddy.jar',
+                'docs/release/runbook-produktionsbetrieb.md',
+                'docs/release/abnahme-checkliste.md',
+                'docs/release/konfigurationsbeispiele.md',
+                'config/examples/textbuddy.env.example',
+                'config/examples/application-production.properties.example'
+        ]
+
+        requiredPaths.each { relativePath ->
+            File candidate = releaseDir.get().file(relativePath).asFile
+
+            if (!candidate.exists() || !candidate.isFile()) {
+                throw new GradleException("Fehlende Release-Datei: ${relativePath}")
+            }
+        }
+    }
+}
+
+tasks.register('installerZip', Zip) {
+    dependsOn 'verifyReleaseBundle'
+    destinationDirectory = releaseDir
+    archiveFileName = "textbuddy-${releaseVersion}.zip"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from(releaseDir) {
+        include 'textbuddy.jar'
+        include 'docs/**'
+        include 'config/**'
+    }
+    from(installerScriptsDir) {
+        into 'bin'
+    }
 }
 
 tasks.named('test') {

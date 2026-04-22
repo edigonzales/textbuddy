@@ -34,11 +34,11 @@
         </div>
     </header>
 
-    <main class="workspace-grid">
-        <section class="panel" data-testid="editor-shell">
+    <main id="main-content" class="workspace-grid" tabindex="-1">
+        <section class="panel" data-testid="editor-shell" aria-labelledby="editor-shell-title">
             <div class="panel-body">
                 <p class="eyebrow">Arbeitsfläche</p>
-                <h2>Quick Actions + Rewrite Bubble</h2>
+                <h2 id="editor-shell-title">Quick Actions + Rewrite Bubble</h2>
                 <p class="panel-copy">Die Insel bündelt Wort-/Satz-Rewrite, alle neun streamingfähigen Volltext-Rewrites, Dokumentimport, Advisor-Prüfung und konsistente Fehlerführung in einer produktionsnahen Arbeitsfläche.</p>
 
                 <div
@@ -49,174 +49,17 @@
                     data-authenticated="${Boolean.toString(page.auth().authenticated())}"
                     data-auth-login-url="${page.auth().loginUrl()}"
                 >
-                    <div class="chip-row">
-                        <span class="chip">JTE rendert die Shell</span>
-                        <span class="chip">Tiptap bearbeitet Plain Text</span>
-                        <span class="chip">LanguageTool prüft nur geänderte Segmente</span>
-                        <span class="chip">Fokussiertes Wort hat Vorrang vor Satzfokus</span>
-                        <span class="chip">Dasselbe Bubble-Menü startet Wort-Synonyme oder Satzumformung</span>
-                        <span class="chip">Plain Language streamt über SSE direkt in den Editor</span>
-                        <span class="chip">Bullet Points nutzt dieselbe Streaming- und Diff-Infrastruktur</span>
-                        <span class="chip">Proofread nutzt dieselbe Streaming- und Diff-Infrastruktur</span>
-                        <span class="chip">Summarize wählt seine Variante über ein eigenes Dropdown</span>
-                        <span class="chip">Formality wählt zwischen formal und informal</span>
-                        <span class="chip">Social Media wählt zwischen Bluesky, Instagram und LinkedIn</span>
-                        <span class="chip">Medium wählt zwischen E-Mail, offiziellem Schreiben, Präsentation und Bericht</span>
-                        <span class="chip">Character Speech wählt zwischen direkter und indirekter Rede</span>
-                        <span class="chip">Custom nimmt einen freien Arbeitsauftrag im Rewrite-Bereich entgegen</span>
-                        <span class="chip">Rewrite-Diff und kompletter Undo bauen auf derselben Streaming-Basis auf</span>
-                        <span class="chip">Dokumentimport gleicht Upload-Formate zwischen UI, Runtime und Backend ab</span>
-                        <span class="chip">Lokale OCR unterstützt Deutsch, Englisch, Französisch und Italienisch</span>
-                        <span class="chip">API-Fehler liefern ein konsistentes Problem-JSON mit Trace-ID</span>
-                        <span class="chip">OIDC bleibt per Konfiguration aktivierbar, ohne den lokalen Start zu blockieren</span>
-                    </div>
-
-                    <section
-                        class="document-import-panel"
-                        data-document-import-panel
-                        data-document-import-state="idle"
-                        data-document-import-labels="${String.join(", ", page.documentImportFormats())}"
-                        data-testid="document-import-panel"
-                    >
-                        <div class="document-import-head">
-                            <div>
-                                <p class="eyebrow">Dokumentimport</p>
-                                <h3>Upload oder Drag-and-Drop</h3>
-                                <p class="panel-copy">Unterstützte Dokumente werden standardmässig eingebettet über Kreuzberg mit lokaler OCR verarbeitet. Das zurückgelieferte HTML wird editorfreundlich nachbearbeitet und landet direkt in der bestehenden Tiptap-Insel, ohne Upload-Persistenz ausserhalb des aktuellen Requests. Bei aktiver OIDC-Konfiguration läuft der Endpoint nur für angemeldete Sessions.</p>
-                            </div>
-
-                            <p class="document-import-status" data-document-import-status data-testid="document-import-status" aria-live="polite">Bereit für Upload oder Drag-and-Drop.</p>
+                    <details class="workspace-notes" data-testid="workspace-notes">
+                        <summary>Systemstatus und Hinweise</summary>
+                        <div class="chip-row chip-row-compact">
+                            <span class="chip">SSE-Rewrites mit Diff + Undo</span>
+                            <span class="chip">Korrektur prüft nur geänderte Segmente</span>
+                            <span class="chip">Lokales Wörterbuch bleibt browserlokal</span>
+                            <span class="chip">Advisor validiert gegen statische Referenzen</span>
+                            <span class="chip">Dokumentimport unterstützt lokale OCR</span>
+                            <span class="chip">OIDC bleibt konfigurierbar</span>
                         </div>
-
-                        <div class="document-import-body">
-                            <div
-                                class="document-import-dropzone"
-                                data-document-import-dropzone
-                                data-dragging="false"
-                                data-busy="false"
-                                data-testid="document-import-dropzone"
-                                role="button"
-                                tabindex="0"
-                                aria-controls="document-import-input"
-                            >
-                                <input
-                                    id="document-import-input"
-                                    class="document-import-input"
-                                    data-document-import-input
-                                    data-testid="document-import-input"
-                                    type="file"
-                                    accept="${page.documentImportAccept()}"
-                                >
-                                <strong>Dokument hier ablegen</strong>
-                                <span>Ziehe eine Datei auf diese Fläche oder wähle sie über den Upload-Button aus.</span>
-                                <label class="quick-action-select-shell document-import-select-shell" for="document-import-ocr-language">
-                                    <span class="quick-action-select-label">OCR-Sprache</span>
-                                    <select
-                                        id="document-import-ocr-language"
-                                        class="quick-action-select document-import-ocr-language"
-                                        data-document-import-ocr-language
-                                        data-testid="document-import-ocr-language"
-                                    >
-                                        @for (var ocrLanguage : DocumentOcrLanguage.supportedLanguages())
-                                            @if (ocrLanguage == DocumentOcrLanguage.DEFAULT)
-                                                <option value="${ocrLanguage.code()}" selected>${ocrLanguage.label()}</option>
-                                            @else
-                                                <option value="${ocrLanguage.code()}">${ocrLanguage.label()}</option>
-                                            @endif
-                                        @endfor
-                                    </select>
-                                </label>
-                                <div class="document-import-format-list" data-testid="document-import-format-list">
-                                    @for (var format : page.documentImportFormats())
-                                        <span class="document-import-format">${format}</span>
-                                    @endfor
-                                </div>
-                            </div>
-
-                            <button type="button" class="editor-button document-import-button" data-document-import-button data-testid="document-import-button">Upload starten</button>
-                        </div>
-                    </section>
-
-                    <section class="quick-action-panel" data-quick-action-panel data-testid="quick-action-panel" data-quick-action-state="idle">
-                        <div class="quick-action-panel-head">
-                            <div>
-                                <p class="eyebrow">Quick Actions</p>
-                                <h3>Rewrite mit Streaming</h3>
-                                <p class="panel-copy">Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom bleiben bewusst getrennte Aktionen mit klaren Optionen statt einer generischen Schalter-API.</p>
-                            </div>
-
-                            <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" aria-live="polite">Bereit für Plain Language, Bullet Points, Proofread, Summarize, Formality, Social Media, Medium, Character Speech und Custom.</p>
-                        </div>
-
-                        <div class="quick-action-row">
-                            <button type="button" class="quick-action-button" data-quick-action="plain-language" data-testid="quick-action-plain-language">Plain Language</button>
-                            <button type="button" class="quick-action-button" data-quick-action="bullet-points" data-testid="quick-action-bullet-points">Bullet Points</button>
-                            <button type="button" class="quick-action-button" data-quick-action="proofread" data-testid="quick-action-proofread">Proofread</button>
-                            <div class="quick-action-menu" data-testid="quick-action-summarize-menu">
-                                <label class="quick-action-select-shell" for="quick-action-summarize-option">
-                                    <span class="quick-action-select-label">Summarize-Variante</span>
-                                    <select id="quick-action-summarize-option" class="quick-action-select" data-quick-action-option="summarize" data-testid="quick-action-summarize-option">
-                                        <option value="sentence" selected>Ein Satz</option>
-                                        <option value="three_sentence">Drei Sätze</option>
-                                        <option value="paragraph">Ein Absatz</option>
-                                        <option value="page">Eine Seite</option>
-                                        <option value="management_summary">Management Summary</option>
-                                    </select>
-                                </label>
-                                <button type="button" class="quick-action-button" data-quick-action="summarize" data-testid="quick-action-summarize">Summarize</button>
-                            </div>
-                            <div class="quick-action-menu" data-testid="quick-action-formality-menu">
-                                <label class="quick-action-select-shell" for="quick-action-formality-option">
-                                    <span class="quick-action-select-label">Formality-Variante</span>
-                                    <select id="quick-action-formality-option" class="quick-action-select" data-quick-action-option="formality" data-testid="quick-action-formality-option">
-                                        <option value="formal" selected>Formell</option>
-                                        <option value="informal">Informell</option>
-                                    </select>
-                                </label>
-                                <button type="button" class="quick-action-button" data-quick-action="formality" data-testid="quick-action-formality">Formality</button>
-                            </div>
-                            <div class="quick-action-menu" data-testid="quick-action-social-media-menu">
-                                <label class="quick-action-select-shell" for="quick-action-social-media-option">
-                                    <span class="quick-action-select-label">Social-Media-Kanal</span>
-                                    <select id="quick-action-social-media-option" class="quick-action-select" data-quick-action-option="social-media" data-testid="quick-action-social-media-option">
-                                        <option value="bluesky" selected>Bluesky</option>
-                                        <option value="instagram">Instagram</option>
-                                        <option value="linkedin">LinkedIn</option>
-                                    </select>
-                                </label>
-                                <button type="button" class="quick-action-button" data-quick-action="social-media" data-testid="quick-action-social-media">Social Media</button>
-                            </div>
-                            <div class="quick-action-menu" data-testid="quick-action-medium-menu">
-                                <label class="quick-action-select-shell" for="quick-action-medium-option">
-                                    <span class="quick-action-select-label">Medium-Typ</span>
-                                    <select id="quick-action-medium-option" class="quick-action-select" data-quick-action-option="medium" data-testid="quick-action-medium-option">
-                                        <option value="email" selected>E-Mail</option>
-                                        <option value="official_letter">Offizieller Brief</option>
-                                        <option value="presentation">Präsentation</option>
-                                        <option value="report">Bericht</option>
-                                    </select>
-                                </label>
-                                <button type="button" class="quick-action-button" data-quick-action="medium" data-testid="quick-action-medium">Medium</button>
-                            </div>
-                            <div class="quick-action-menu" data-testid="quick-action-character-speech-menu">
-                                <label class="quick-action-select-shell" for="quick-action-character-speech-option">
-                                    <span class="quick-action-select-label">Redeform</span>
-                                    <select id="quick-action-character-speech-option" class="quick-action-select" data-quick-action-option="character-speech" data-testid="quick-action-character-speech-option">
-                                        <option value="direct_speech" selected>Direkte Rede</option>
-                                        <option value="indirect_speech">Indirekte Rede</option>
-                                    </select>
-                                </label>
-                                <button type="button" class="quick-action-button" data-quick-action="character-speech" data-testid="quick-action-character-speech">Character Speech</button>
-                            </div>
-                            <div class="quick-action-menu quick-action-menu-wide" data-testid="quick-action-custom-menu">
-                                <label class="quick-action-select-shell" for="quick-action-custom-prompt">
-                                    <span class="quick-action-select-label">Custom-Auftrag</span>
-                                    <textarea id="quick-action-custom-prompt" class="quick-action-textarea" data-quick-action-prompt="custom" data-testid="quick-action-custom-prompt" rows="3" maxlength="400" placeholder="Beschreibe frei, wie der Volltext umgeschrieben werden soll."></textarea>
-                                </label>
-                                <button type="button" class="quick-action-button" data-quick-action="custom" data-testid="quick-action-custom">Custom</button>
-                            </div>
-                        </div>
-                    </section>
+                    </details>
 
                     <div class="editor-toolbar" data-testid="editor-toolbar">
                         <div class="editor-toolbar-group">
@@ -273,15 +116,220 @@
                             </article>
                         </div>
                     </section>
+
+                    <section
+                        class="quick-action-panel"
+                        data-quick-action-panel
+                        data-testid="quick-action-panel"
+                        data-quick-action-state="idle"
+                        data-quick-action-selected-action="plain-language"
+                        aria-labelledby="quick-action-title"
+                    >
+                        <div class="quick-action-panel-head">
+                            <div>
+                                <p class="eyebrow">Quick Actions</p>
+                                <h3 id="quick-action-title">Aktion wählen, konfigurieren, anwenden</h3>
+                                <p class="panel-copy">Alle neun Volltext-Rewrites bleiben als getrennte Aktionen erhalten, werden aber gruppiert und kontextabhängig konfiguriert.</p>
+                            </div>
+
+                            <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" role="status" aria-live="polite" aria-atomic="true">Aktion wählen und anwenden.</p>
+                        </div>
+
+                        <div class="quick-action-layout">
+                            <div class="quick-action-groups">
+                                <article class="quick-action-group" data-testid="quick-action-group-editing">
+                                    <h4>Überarbeiten</h4>
+                                    <div class="quick-action-group-buttons">
+                                        <button type="button" class="quick-action-button" data-quick-action="plain-language" data-testid="quick-action-plain-language">Plain Language</button>
+                                        <button type="button" class="quick-action-button" data-quick-action="proofread" data-testid="quick-action-proofread">Proofread</button>
+                                        <button type="button" class="quick-action-button" data-quick-action="bullet-points" data-testid="quick-action-bullet-points">Bullet Points</button>
+                                        <button type="button" class="quick-action-button" data-quick-action="summarize" data-testid="quick-action-summarize">Summarize</button>
+                                    </div>
+                                </article>
+
+                                <article class="quick-action-group" data-testid="quick-action-group-style-channel">
+                                    <h4>Stil & Kanal</h4>
+                                    <div class="quick-action-group-buttons">
+                                        <button type="button" class="quick-action-button" data-quick-action="formality" data-testid="quick-action-formality">Formality</button>
+                                        <button type="button" class="quick-action-button" data-quick-action="social-media" data-testid="quick-action-social-media">Social Media</button>
+                                        <button type="button" class="quick-action-button" data-quick-action="medium" data-testid="quick-action-medium">Medium</button>
+                                    </div>
+                                </article>
+
+                                <article class="quick-action-group" data-testid="quick-action-group-narrative">
+                                    <h4>Narrativ</h4>
+                                    <div class="quick-action-group-buttons">
+                                        <button type="button" class="quick-action-button" data-quick-action="character-speech" data-testid="quick-action-character-speech">Character Speech</button>
+                                    </div>
+                                </article>
+
+                                <article class="quick-action-group" data-testid="quick-action-group-custom">
+                                    <h4>Custom</h4>
+                                    <div class="quick-action-group-buttons">
+                                        <button type="button" class="quick-action-button" data-quick-action="custom" data-testid="quick-action-custom">Custom</button>
+                                    </div>
+                                </article>
+                            </div>
+
+                            <section class="quick-action-config-shell" data-testid="quick-action-config-shell">
+                                <div class="quick-action-config-head">
+                                    <p class="eyebrow">Konfiguration</p>
+                                    <h4 data-quick-action-active-label data-testid="quick-action-active-label">Plain Language</h4>
+                                </div>
+                                <p class="quick-action-config-copy">Optionen werden erst nach Auswahl der Aktion angezeigt.</p>
+
+                                <div class="quick-action-configs">
+                                    <div class="quick-action-config" data-quick-action-config="plain-language" data-testid="quick-action-config-plain-language">
+                                        <p>Keine Zusatzoption nötig. Der gesamte Text wird in verständliche Sprache umgeschrieben.</p>
+                                    </div>
+                                    <div class="quick-action-config" data-quick-action-config="proofread" data-testid="quick-action-config-proofread" hidden>
+                                        <p>Keine Zusatzoption nötig. Der gesamte Text wird stilistisch und orthografisch geglättet.</p>
+                                    </div>
+                                    <div class="quick-action-config" data-quick-action-config="bullet-points" data-testid="quick-action-config-bullet-points" hidden>
+                                        <p>Keine Zusatzoption nötig. Der gesamte Text wird als Stichpunkte strukturiert.</p>
+                                    </div>
+                                    <div class="quick-action-config" data-quick-action-config="summarize" data-testid="quick-action-config-summarize" hidden>
+                                        <label class="quick-action-select-shell" for="quick-action-summarize-option">
+                                            <span class="quick-action-select-label">Summarize-Variante</span>
+                                            <select id="quick-action-summarize-option" class="quick-action-select" data-quick-action-option="summarize" data-testid="quick-action-summarize-option">
+                                                <option value="sentence" selected>Ein Satz</option>
+                                                <option value="three_sentence">Drei Sätze</option>
+                                                <option value="paragraph">Ein Absatz</option>
+                                                <option value="page">Eine Seite</option>
+                                                <option value="management_summary">Management Summary</option>
+                                            </select>
+                                        </label>
+                                    </div>
+                                    <div class="quick-action-config" data-quick-action-config="formality" data-testid="quick-action-config-formality" hidden>
+                                        <label class="quick-action-select-shell" for="quick-action-formality-option">
+                                            <span class="quick-action-select-label">Formality-Variante</span>
+                                            <select id="quick-action-formality-option" class="quick-action-select" data-quick-action-option="formality" data-testid="quick-action-formality-option">
+                                                <option value="formal" selected>Formell</option>
+                                                <option value="informal">Informell</option>
+                                            </select>
+                                        </label>
+                                    </div>
+                                    <div class="quick-action-config" data-quick-action-config="social-media" data-testid="quick-action-config-social-media" hidden>
+                                        <label class="quick-action-select-shell" for="quick-action-social-media-option">
+                                            <span class="quick-action-select-label">Social-Media-Kanal</span>
+                                            <select id="quick-action-social-media-option" class="quick-action-select" data-quick-action-option="social-media" data-testid="quick-action-social-media-option">
+                                                <option value="bluesky" selected>Bluesky</option>
+                                                <option value="instagram">Instagram</option>
+                                                <option value="linkedin">LinkedIn</option>
+                                            </select>
+                                        </label>
+                                    </div>
+                                    <div class="quick-action-config" data-quick-action-config="medium" data-testid="quick-action-config-medium" hidden>
+                                        <label class="quick-action-select-shell" for="quick-action-medium-option">
+                                            <span class="quick-action-select-label">Medium-Typ</span>
+                                            <select id="quick-action-medium-option" class="quick-action-select" data-quick-action-option="medium" data-testid="quick-action-medium-option">
+                                                <option value="email" selected>E-Mail</option>
+                                                <option value="official_letter">Offizieller Brief</option>
+                                                <option value="presentation">Präsentation</option>
+                                                <option value="report">Bericht</option>
+                                            </select>
+                                        </label>
+                                    </div>
+                                    <div class="quick-action-config" data-quick-action-config="character-speech" data-testid="quick-action-config-character-speech" hidden>
+                                        <label class="quick-action-select-shell" for="quick-action-character-speech-option">
+                                            <span class="quick-action-select-label">Redeform</span>
+                                            <select id="quick-action-character-speech-option" class="quick-action-select" data-quick-action-option="character-speech" data-testid="quick-action-character-speech-option">
+                                                <option value="direct_speech" selected>Direkte Rede</option>
+                                                <option value="indirect_speech">Indirekte Rede</option>
+                                            </select>
+                                        </label>
+                                    </div>
+                                    <div class="quick-action-config" data-quick-action-config="custom" data-testid="quick-action-config-custom" hidden>
+                                        <label class="quick-action-select-shell" for="quick-action-custom-prompt">
+                                            <span class="quick-action-select-label">Custom-Auftrag</span>
+                                            <textarea id="quick-action-custom-prompt" class="quick-action-textarea" data-quick-action-prompt="custom" data-testid="quick-action-custom-prompt" rows="4" maxlength="400" placeholder="Beschreibe frei, wie der Volltext umgeschrieben werden soll."></textarea>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="quick-action-apply" data-quick-action-run data-testid="quick-action-run">Aktion anwenden</button>
+                            </section>
+                        </div>
+                    </section>
+
+                    <section
+                        class="document-import-panel"
+                        data-document-import-panel
+                        data-document-import-state="idle"
+                        data-document-import-labels="${String.join(", ", page.documentImportFormats())}"
+                        data-testid="document-import-panel"
+                        aria-labelledby="document-import-title"
+                    >
+                        <div class="document-import-head">
+                            <div>
+                                <p class="eyebrow">Dokumentimport</p>
+                                <h3 id="document-import-title">Upload oder Drag-and-Drop</h3>
+                                <p class="panel-copy">Importierte Dokumente werden als editorfreundliches HTML direkt in den aktuellen Textfluss übernommen.</p>
+                            </div>
+
+                            <p class="document-import-status" data-document-import-status data-testid="document-import-status" role="status" aria-live="polite" aria-atomic="true">Bereit für Upload oder Drag-and-Drop.</p>
+                        </div>
+
+                        <div class="document-import-body">
+                            <div
+                                class="document-import-dropzone"
+                                data-document-import-dropzone
+                                data-dragging="false"
+                                data-busy="false"
+                                data-testid="document-import-dropzone"
+                                aria-label="Dokument hier ablegen oder Datei auswählen"
+                                aria-describedby="document-import-dropzone-hint"
+                                aria-disabled="false"
+                                aria-busy="false"
+                            >
+                                <input
+                                    id="document-import-input"
+                                    class="document-import-input"
+                                    data-document-import-input
+                                    data-testid="document-import-input"
+                                    type="file"
+                                    accept="${page.documentImportAccept()}"
+                                    aria-hidden="true"
+                                    tabindex="-1"
+                                >
+                                <strong>Dokument hier ablegen</strong>
+                                <span id="document-import-dropzone-hint">Datei hineinziehen oder über den Upload-Button auswählen.</span>
+                                <label class="quick-action-select-shell document-import-select-shell" for="document-import-ocr-language">
+                                    <span class="quick-action-select-label">OCR-Sprache</span>
+                                    <select
+                                        id="document-import-ocr-language"
+                                        class="quick-action-select document-import-ocr-language"
+                                        data-document-import-ocr-language
+                                        data-testid="document-import-ocr-language"
+                                    >
+                                        @for (var ocrLanguage : DocumentOcrLanguage.supportedLanguages())
+                                            @if (ocrLanguage == DocumentOcrLanguage.DEFAULT)
+                                                <option value="${ocrLanguage.code()}" selected>${ocrLanguage.label()}</option>
+                                            @else
+                                                <option value="${ocrLanguage.code()}">${ocrLanguage.label()}</option>
+                                            @endif
+                                        @endfor
+                                    </select>
+                                </label>
+                                <div class="document-import-format-list" data-testid="document-import-format-list">
+                                    @for (var format : page.documentImportFormats())
+                                        <span class="document-import-format">${format}</span>
+                                    @endfor
+                                </div>
+                            </div>
+
+                            <button type="button" class="editor-button document-import-button" data-document-import-button data-testid="document-import-button">Upload starten</button>
+                        </div>
+                    </section>
                 </div>
             </div>
         </section>
 
         <aside class="workspace-sidebar">
-            <section class="panel correction-panel" data-testid="correction-panel" data-correction-panel data-correction-state="idle">
+            <section class="panel correction-panel" data-testid="correction-panel" data-correction-panel data-correction-state="idle" aria-labelledby="correction-panel-title">
                 <div class="panel-body">
                     <p class="eyebrow">Korrekturpanel</p>
-                    <h2>Textkorrektur</h2>
+                    <h2 id="correction-panel-title">Textkorrektur</h2>
                     <p class="panel-copy">Die Insel steuert die gemeinsame Textsprache für Korrektur und Quick Actions, das lokale Wörterbuch sowie differenzierte Re-Checks. Der Server bleibt beim bestehenden Korrektur-Endpoint.</p>
 
                     <div class="correction-controls" data-testid="correction-controls">
@@ -304,7 +352,8 @@
                             </div>
 
                             <form class="dictionary-form" data-dictionary-form data-testid="dictionary-form">
-                                <input type="text" class="dictionary-input" data-dictionary-input data-testid="dictionary-input" placeholder="Wort hinzufügen" autocomplete="off" />
+                                <label class="sr-only" for="dictionary-input">Wort für lokales Wörterbuch</label>
+                                <input id="dictionary-input" type="text" class="dictionary-input" data-dictionary-input data-testid="dictionary-input" placeholder="Wort hinzufügen" autocomplete="off" />
                                 <button type="submit" class="dictionary-submit" data-testid="dictionary-submit">Hinzufügen</button>
                             </form>
 
@@ -360,8 +409,8 @@
                         </div>
                     </section>
 
-                    <p class="problem-status" data-correction-status data-testid="correction-status">Schreibe Text, um Korrekturen zu sehen.</p>
-                    <div class="problem-list" data-correction-list data-testid="correction-problem-list"></div>
+                    <p class="problem-status" data-correction-status data-testid="correction-status" role="status" aria-live="polite" aria-atomic="true">Schreibe Text, um Korrekturen zu sehen.</p>
+                    <div class="problem-list" data-correction-list data-testid="correction-problem-list" role="list" aria-label="Korrekturprobleme"></div>
 
                     <div class="stack-list problems-footnotes">
                         <div class="stack-item">
@@ -376,22 +425,22 @@
                 </div>
             </section>
 
-            <section class="panel advisor-panel" data-testid="advisor-panel" data-advisor-panel data-advisor-state="idle">
+            <section class="panel advisor-panel" data-testid="advisor-panel" data-advisor-panel data-advisor-state="idle" aria-labelledby="advisor-panel-title">
                 <div class="panel-body">
                     <p class="eyebrow">Advisor-Katalog</p>
-                    <h2>Referenzdokumente</h2>
+                    <h2 id="advisor-panel-title">Referenzdokumente</h2>
                     <p class="panel-copy">Dokumente lassen sich direkt im Browser anzeigen, seitenweise prüfen und mit Zoom steuern. Treffer laufen während des Streams in dieselbe konsistente Ergebnisansicht.</p>
 
                     <div class="advisor-toolbar">
-                        <p class="advisor-status" data-advisor-status data-testid="advisor-status" aria-live="polite">
+                        <p class="advisor-status" data-advisor-status data-testid="advisor-status" role="status" aria-live="polite" aria-atomic="true">
                             ${page.advisorDocs().size()} Dokumente verfügbar. Wähle Referenzen, schreibe Text im Editor und starte dann die Advisor-Prüfung.
                         </p>
                         <button type="button" class="advisor-validate" data-advisor-validate data-testid="advisor-validate">Prüfung starten</button>
                     </div>
 
-                    <div class="advisor-list" data-testid="advisor-doc-list">
+                    <div class="advisor-list" data-testid="advisor-doc-list" role="list" aria-label="Advisor-Dokumente">
                         @for (var advisorDoc : page.advisorDocs())
-                            <article class="advisor-item" data-testid="advisor-doc-item">
+                            <article class="advisor-item" data-testid="advisor-doc-item" role="listitem">
                                 <label class="advisor-select">
                                     <input type="checkbox" name="advisor-docs" value="${advisorDoc.name()}" data-testid="advisor-doc-checkbox">
                                     <span>Auswählen</span>
@@ -420,11 +469,11 @@
                         @endfor
                     </div>
 
-                    <section class="advisor-results-panel" data-testid="advisor-results-panel">
+                    <section class="advisor-results-panel" data-testid="advisor-results-panel" aria-labelledby="advisor-results-title">
                         <div class="advisor-results-head">
                             <div>
                                 <p class="eyebrow">Validierungsstream</p>
-                                <h3>Trefferliste</h3>
+                                <h3 id="advisor-results-title">Trefferliste</h3>
                                 <p class="panel-copy">Die Liste aktualisiert sich während des Streams. Der Client dedupliziert Treffer über einen stabilen Schlüssel.</p>
                             </div>
 
@@ -435,13 +484,13 @@
                             Noch keine Advisor-Treffer. Starte die Prüfung mit markierten Dokumenten.
                         </p>
 
-                        <div class="advisor-results" data-advisor-result-list data-testid="advisor-result-list"></div>
+                        <div class="advisor-results" data-advisor-result-list data-testid="advisor-result-list" role="list" aria-label="Advisor-Treffer"></div>
 
-                        <section class="advisor-detail" data-advisor-result-detail data-testid="advisor-result-detail" hidden>
+                        <section class="advisor-detail" data-advisor-result-detail data-testid="advisor-result-detail" role="region" aria-live="polite" aria-atomic="true" aria-labelledby="advisor-result-detail-title" hidden>
                             <div class="advisor-detail-head">
                                 <div>
                                     <p class="eyebrow">Ausgewählter Treffer</p>
-                                    <h3 data-advisor-result-detail-title data-testid="advisor-result-detail-title"></h3>
+                                    <h3 id="advisor-result-detail-title" data-advisor-result-detail-title data-testid="advisor-result-detail-title"></h3>
                                 </div>
 
                                 <div class="advisor-detail-actions">
@@ -458,11 +507,11 @@
                         </section>
                     </section>
 
-                    <section class="advisor-pdf-viewer" data-advisor-pdf-viewer data-testid="advisor-pdf-viewer" hidden>
+                    <section class="advisor-pdf-viewer" data-advisor-pdf-viewer data-testid="advisor-pdf-viewer" role="region" aria-labelledby="advisor-pdf-title" hidden>
                         <div class="advisor-pdf-head">
                             <div>
                                 <p class="eyebrow">PDF-Viewer</p>
-                                <h3 data-advisor-pdf-title data-testid="advisor-pdf-title">Dokumentansicht</h3>
+                                <h3 id="advisor-pdf-title" data-advisor-pdf-title data-testid="advisor-pdf-title">Dokumentansicht</h3>
                             </div>
 
                             <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-close data-testid="advisor-pdf-close">Viewer schließen</button>

@@ -4,6 +4,8 @@ import app.textbuddy.quickaction.QuickActionSsePayloadFactory;
 import app.textbuddy.quickaction.QuickActionStreamRequest;
 import app.textbuddy.quickaction.SocialMediaPrompt;
 import app.textbuddy.quickaction.SocialMediaQuickActionService;
+import app.textbuddy.web.error.TraceIdSupport;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -36,17 +38,21 @@ public class SocialMediaQuickActionController {
     }
 
     @PostMapping(path = "/social-media/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter streamSocialMedia(@RequestBody QuickActionStreamRequest request) {
+    public SseEmitter streamSocialMedia(
+            @RequestBody QuickActionStreamRequest request,
+            HttpServletRequest httpServletRequest
+    ) {
         validateOption(request);
 
+        String traceId = TraceIdSupport.resolve(httpServletRequest);
         SseEmitter emitter = new SseEmitter(0L);
-        QuickActionSseEmitterWriter writer = new QuickActionSseEmitterWriter(emitter, payloadFactory);
+        QuickActionSseEmitterWriter writer = new QuickActionSseEmitterWriter(emitter, payloadFactory, traceId);
 
         Thread.startVirtualThread(() -> {
             try {
                 socialMediaQuickActionService.stream(request, writer);
             } catch (RuntimeException exception) {
-                log.error("Social Media stream failed.", exception);
+                log.error("[{}] Social Media stream failed.", traceId, exception);
                 writer.error(DEFAULT_ERROR_MESSAGE);
             }
         });

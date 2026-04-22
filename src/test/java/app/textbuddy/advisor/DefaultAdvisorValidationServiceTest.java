@@ -143,6 +143,7 @@ class DefaultAdvisorValidationServiceTest {
                 title,
                 "Zusammenfassung",
                 "Quelle",
+                List.of(),
                 name + ".pdf",
                 rules
         );

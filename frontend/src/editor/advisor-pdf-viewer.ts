@@ -164,6 +164,7 @@ export function mountAdvisorPdfViewer(): void {
 
   const resolvedElements = elements;
   let state: AdvisorPdfViewerState | null = null;
+  let lastOpenTrigger: HTMLElement | null = null;
 
   function render(): void {
     if (!state) {
@@ -174,6 +175,11 @@ export function mountAdvisorPdfViewer(): void {
       resolvedElements.downloadLink.href = "#";
       resolvedElements.downloadLink.download = "advisor.pdf";
       resolvedElements.frame.src = "about:blank";
+      resolvedElements.pageInput.disabled = true;
+      resolvedElements.previousButton.disabled = true;
+      resolvedElements.nextButton.disabled = true;
+      resolvedElements.zoomOutButton.disabled = true;
+      resolvedElements.zoomInButton.disabled = true;
       return;
     }
 
@@ -184,6 +190,11 @@ export function mountAdvisorPdfViewer(): void {
     resolvedElements.downloadLink.href = state.docUrl;
     resolvedElements.downloadLink.download = `${state.docName}.pdf`;
     resolvedElements.frame.src = buildViewerUrl(state.docUrl, state.page, state.zoom);
+    resolvedElements.pageInput.disabled = false;
+    resolvedElements.previousButton.disabled = false;
+    resolvedElements.nextButton.disabled = false;
+    resolvedElements.zoomOutButton.disabled = false;
+    resolvedElements.zoomInButton.disabled = false;
   }
 
   function openViewer(url: string, title: string, docName: string, page: number): void {
@@ -196,6 +207,19 @@ export function mountAdvisorPdfViewer(): void {
     };
     render();
     resolvedElements.panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    resolvedElements.closeButton.focus();
+  }
+
+  function closeViewer(): void {
+    state = null;
+    render();
+
+    if (lastOpenTrigger && document.contains(lastOpenTrigger)) {
+      lastOpenTrigger.focus();
+      return;
+    }
+
+    document.querySelector<HTMLButtonElement>("[data-advisor-validate]")?.focus();
   }
 
   function updatePage(page: number): void {
@@ -233,8 +257,7 @@ export function mountAdvisorPdfViewer(): void {
 
     if (closeTrigger) {
       event.preventDefault();
-      state = null;
-      render();
+      closeViewer();
       return;
     }
 
@@ -253,7 +276,17 @@ export function mountAdvisorPdfViewer(): void {
     }
 
     event.preventDefault();
+    lastOpenTrigger = openTrigger;
     openViewer(openRequest.url, openRequest.title, openRequest.docName, openRequest.page);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !state) {
+      return;
+    }
+
+    event.preventDefault();
+    closeViewer();
   });
 
   resolvedElements.previousButton.addEventListener("click", () => {

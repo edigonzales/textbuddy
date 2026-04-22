@@ -16,14 +16,18 @@ final class QuickActionSseEmitterWriter implements QuickActionStreamHandler {
 
     private final SseEmitter emitter;
     private final QuickActionSsePayloadFactory payloadFactory;
+    private final String traceId;
+    private int chunkCount;
 
-    QuickActionSseEmitterWriter(SseEmitter emitter, QuickActionSsePayloadFactory payloadFactory) {
+    QuickActionSseEmitterWriter(SseEmitter emitter, QuickActionSsePayloadFactory payloadFactory, String traceId) {
         this.emitter = emitter;
         this.payloadFactory = payloadFactory;
+        this.traceId = traceId == null ? "" : traceId.trim();
     }
 
     @Override
     public void chunk(String text) {
+        chunkCount += 1;
         send("chunk", payloadFactory.chunk(text));
     }
 
@@ -31,9 +35,10 @@ final class QuickActionSseEmitterWriter implements QuickActionStreamHandler {
     public void complete(String text) {
         try {
             send("complete", payloadFactory.complete(text));
+            log.info("[{}] Quick-Action-SSE abgeschlossen (chunks={}).", traceId, chunkCount);
             emitter.complete();
         } catch (RuntimeException exception) {
-            log.warn("Failed to finish quick action SSE response.", exception);
+            log.warn("[{}] Failed to finish quick action SSE response.", traceId, exception);
             emitter.completeWithError(exception);
         }
     }
@@ -42,9 +47,10 @@ final class QuickActionSseEmitterWriter implements QuickActionStreamHandler {
     public void error(String message) {
         try {
             send("error", payloadFactory.error(message));
+            log.warn("[{}] Quick-Action-SSE meldet Fehler: {}", traceId, message);
             emitter.complete();
         } catch (RuntimeException exception) {
-            log.warn("Failed to send quick action SSE error response.", exception);
+            log.warn("[{}] Failed to send quick action SSE error response.", traceId, exception);
             emitter.completeWithError(exception);
         }
     }

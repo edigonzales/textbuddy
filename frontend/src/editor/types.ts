@@ -34,6 +34,8 @@ export interface DocumentImportElements {
 export interface QuickActionElements {
   panel: HTMLElement;
   status: HTMLElement;
+  activeLabel: HTMLElement;
+  runButton: HTMLButtonElement;
   languageSelect: HTMLSelectElement;
   plainLanguageButton: HTMLButtonElement;
   bulletPointsButton: HTMLButtonElement;

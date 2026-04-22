@@ -47,6 +47,11 @@ class ClasspathAdvisorDocumentRepositoryTest {
         assertThat(documents)
                 .extracting(document -> document.rules().size())
                 .containsOnly(2);
+        assertThat(documents)
+                .filteredOn((document) -> document.name().equals("schreibweisungen"))
+                .singleElement()
+                .extracting(AdvisorDocument::allowedRoles)
+                .isEqualTo(List.of("ROLE_ADVISOR_INTERNAL"));
         assertThat(documents.getFirst().rules())
                 .extracting(AdvisorRule::id)
                 .containsExactly("downloaden-statt-herunterladen", "meeting-und-feedback-pruefen");

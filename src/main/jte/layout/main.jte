@@ -12,6 +12,7 @@
     <script src="/webjars/htmx.org/2.0.8/dist/htmx.min.js" defer></script>
 </head>
 <body>
+<a class="skip-link" href="#main-content" data-testid="skip-link">Zum Hauptinhalt springen</a>
 ${content}
 <script type="module" src="/editor/editor-island.js"></script>
 </body>

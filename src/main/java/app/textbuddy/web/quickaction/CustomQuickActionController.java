@@ -4,6 +4,8 @@ import app.textbuddy.quickaction.CustomQuickActionRequestValidator;
 import app.textbuddy.quickaction.CustomQuickActionService;
 import app.textbuddy.quickaction.QuickActionSsePayloadFactory;
 import app.textbuddy.quickaction.QuickActionStreamRequest;
+import app.textbuddy.web.error.TraceIdSupport;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -35,17 +37,21 @@ public class CustomQuickActionController {
     }
 
     @PostMapping(path = "/custom/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter streamCustom(@RequestBody QuickActionStreamRequest request) {
+    public SseEmitter streamCustom(
+            @RequestBody QuickActionStreamRequest request,
+            HttpServletRequest httpServletRequest
+    ) {
         requestValidator.validateOrThrow(request);
 
+        String traceId = TraceIdSupport.resolve(httpServletRequest);
         SseEmitter emitter = new SseEmitter(0L);
-        QuickActionSseEmitterWriter writer = new QuickActionSseEmitterWriter(emitter, payloadFactory);
+        QuickActionSseEmitterWriter writer = new QuickActionSseEmitterWriter(emitter, payloadFactory, traceId);
 
         Thread.startVirtualThread(() -> {
             try {
                 customQuickActionService.stream(request, writer);
             } catch (RuntimeException exception) {
-                log.error("Custom stream failed.", exception);
+                log.error("[{}] Custom stream failed.", traceId, exception);
                 writer.error(DEFAULT_ERROR_MESSAGE);
             }
         });

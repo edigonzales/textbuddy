@@ -54,12 +54,17 @@ export function mountAdvisorValidation(): void {
     message: string,
   ): void {
     elements.panel.dataset.advisorState = state;
+    elements.panel.setAttribute("aria-busy", state === "streaming" ? "true" : "false");
+    elements.status.setAttribute("role", state === "error" ? "alert" : "status");
+    elements.status.setAttribute("aria-live", state === "error" ? "assertive" : "polite");
+    elements.status.setAttribute("aria-atomic", "true");
     elements.status.textContent = message;
   }
 
   function syncValidateButton(): void {
     if (activeValidation) {
       elements.validateButton.disabled = true;
+      elements.validateButton.setAttribute("aria-disabled", "true");
       elements.validateButton.textContent = RUNNING_LABEL;
       return;
     }
@@ -68,6 +73,10 @@ export function mountAdvisorValidation(): void {
     elements.validateButton.disabled =
       isApiLocked(editorRoot) ||
       mirror.value.trim().length === 0 || selectedDocs().length === 0;
+    elements.validateButton.setAttribute(
+      "aria-disabled",
+      elements.validateButton.disabled ? "true" : "false",
+    );
   }
 
   function syncIdleStatus(): void {
@@ -148,6 +157,7 @@ export function mountAdvisorValidation(): void {
       ...results.map((result) => {
         const article = document.createElement("article");
         article.className = "advisor-result";
+        article.setAttribute("role", "listitem");
         article.dataset.selected =
           createAdvisorValidationKey(result) === selectedResultKey ? "true" : "false";
         article.setAttribute("data-testid", "advisor-result-item");
@@ -156,6 +166,10 @@ export function mountAdvisorValidation(): void {
         button.type = "button";
         button.className = "advisor-result-button";
         button.setAttribute("data-testid", "advisor-result-select");
+        button.setAttribute(
+          "aria-pressed",
+          createAdvisorValidationKey(result) === selectedResultKey ? "true" : "false",
+        );
         button.addEventListener("click", () => {
           selectedResultKey = createAdvisorValidationKey(result);
           renderResults();

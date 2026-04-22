@@ -204,6 +204,8 @@ export function findRewriteBubbleElements(root: HTMLElement): RewriteBubbleEleme
 export function findQuickActionElements(root: HTMLElement): QuickActionElements | null {
   const panel = queryRequired<HTMLElement>(root, "[data-quick-action-panel]");
   const status = queryRequired<HTMLElement>(root, "[data-quick-action-status]");
+  const activeLabel = queryRequired<HTMLElement>(root, "[data-quick-action-active-label]");
+  const runButton = queryRequired<HTMLButtonElement>(root, "[data-quick-action-run]");
   const languageSelect = document.querySelector<HTMLSelectElement>("[data-correction-language]");
   const plainLanguageButton = queryRequired<HTMLButtonElement>(
     root,
@@ -264,6 +266,8 @@ export function findQuickActionElements(root: HTMLElement): QuickActionElements 
   if (
     !panel ||
     !status ||
+    !activeLabel ||
+    !runButton ||
     !languageSelect ||
     !plainLanguageButton ||
     !bulletPointsButton ||
@@ -291,6 +295,8 @@ export function findQuickActionElements(root: HTMLElement): QuickActionElements 
   return {
     panel,
     status,
+    activeLabel,
+    runButton,
     languageSelect,
     plainLanguageButton,
     bulletPointsButton,

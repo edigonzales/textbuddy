@@ -3,6 +3,8 @@ package app.textbuddy.web.quickaction;
 import app.textbuddy.quickaction.QuickActionService;
 import app.textbuddy.quickaction.QuickActionSsePayloadFactory;
 import app.textbuddy.quickaction.QuickActionStreamRequest;
+import app.textbuddy.web.error.TraceIdSupport;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -31,15 +33,16 @@ public class BulletPointsQuickActionController {
     }
 
     @PostMapping(path = "/bullet-points/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter streamBulletPoints(@RequestBody QuickActionStreamRequest request) {
+    public SseEmitter streamBulletPoints(@RequestBody QuickActionStreamRequest request, HttpServletRequest httpServletRequest) {
+        String traceId = TraceIdSupport.resolve(httpServletRequest);
         SseEmitter emitter = new SseEmitter(0L);
-        QuickActionSseEmitterWriter writer = new QuickActionSseEmitterWriter(emitter, payloadFactory);
+        QuickActionSseEmitterWriter writer = new QuickActionSseEmitterWriter(emitter, payloadFactory, traceId);
 
         Thread.startVirtualThread(() -> {
             try {
                 quickActionService.streamBulletPoints(request, writer);
             } catch (RuntimeException exception) {
-                log.error("Bullet Points stream failed.", exception);
+                log.error("[{}] Bullet Points stream failed.", traceId, exception);
                 writer.error(DEFAULT_ERROR_MESSAGE);
             }
         });

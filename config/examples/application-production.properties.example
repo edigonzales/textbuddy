@@ -1,0 +1,29 @@
+# Produktionsprofil ohne externe Sidecars
+textbuddy.auth.enabled=false
+
+# Runtime-Verzeichnis (wird bei Start initialisiert)
+textbuddy.runtime.home=/opt/textbuddy/runtime
+textbuddy.runtime.initialize-local-resources=true
+
+# LLM-Provider (Pflicht)
+textbuddy.llm.mode=provider
+textbuddy.llm.base-url=https://api.openai.com/v1
+textbuddy.llm.api-key=<set-your-key>
+textbuddy.llm.model=gpt-5.4-mini
+textbuddy.llm.timeout=30s
+textbuddy.llm.max-retries=1
+
+# Sidecar-freier Standardbetrieb
+textbuddy.languagetool.mode=embedded
+textbuddy.languagetool.timeout=10s
+textbuddy.languagetool.max-retries=1
+
+textbuddy.document.mode=kreuzberg
+textbuddy.document.max-upload-size=20MB
+textbuddy.document.timeout=45s
+textbuddy.document.max-retries=1
+
+# Actuator
+management.endpoints.web.exposure.include=health,info
+management.endpoint.health.show-components=always
+management.endpoint.health.show-details=always
