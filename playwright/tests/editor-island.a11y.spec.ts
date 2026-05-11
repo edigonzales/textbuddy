@@ -7,6 +7,8 @@ interface QuickActionRequestPayload {
   option?: string;
 }
 
+type InspectorTab = "correction" | "actions" | "advisor" | "import" | "stats";
+
 function createSseBody(events: Array<{ event: string; payload: unknown }>): string {
   return events
     .map(({ event, payload }) => `event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`)
@@ -34,6 +36,10 @@ async function expectNoCriticalOrSeriousViolations(page: Page): Promise<void> {
       snippets: violation.nodes.map((node) => node.html),
     })),
   ).toEqual([]);
+}
+
+async function openInspectorTab(page: Page, tab: InspectorTab): Promise<void> {
+  await page.getByTestId(`inspector-tab-${tab}`).click();
 }
 
 test("axe: idle state has no critical or serious violations", async ({ page }) => {
@@ -126,6 +132,7 @@ test("axe: advisor results plus viewer state has no critical or serious violatio
   });
 
   await page.goto("/");
+  await openInspectorTab(page, "advisor");
   await page.getByTestId("editor-input").click();
   await page.keyboard.type("Bitte downloaden Sie das Formular per sofort.");
   await page.getByTestId("advisor-doc-checkbox").first().check();
@@ -159,6 +166,7 @@ test("keyboard: upload button supports Enter and keeps OCR select interaction is
   page,
 }) => {
   await page.goto("/");
+  await openInspectorTab(page, "import");
 
   const uploadButton = page.getByTestId("document-import-button");
   await uploadButton.focus();
@@ -200,6 +208,7 @@ test("keyboard: advisor viewer closes with Escape and restores focus to opener",
   page,
 }) => {
   await page.goto("/");
+  await openInspectorTab(page, "advisor");
 
   const openButton = page.getByTestId("advisor-doc-open").first();
   await openButton.click();

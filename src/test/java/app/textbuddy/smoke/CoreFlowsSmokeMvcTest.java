@@ -64,7 +64,7 @@ class CoreFlowsSmokeMvcTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.alternatives[0]").value(containsString("Kurz gesagt")));
+                .andExpect(jsonPath("$.options[0]").value(containsString("Kurz gesagt")));
     }
 
     @Test

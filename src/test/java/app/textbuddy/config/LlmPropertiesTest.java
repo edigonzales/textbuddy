@@ -41,4 +41,15 @@ class LlmPropertiesTest {
         assertThat(properties.normalizedTemperature()).isEqualTo(2.0d);
         assertThat(properties.normalizedMaxRetries()).isZero();
     }
+
+    @Test
+    void disablesProviderHealthProbeByDefault() {
+        LlmProperties properties = new LlmProperties();
+
+        assertThat(properties.isHealthProbeEnabled()).isFalse();
+
+        properties.setHealthProbeEnabled(true);
+
+        assertThat(properties.isHealthProbeEnabled()).isTrue();
+    }
 }

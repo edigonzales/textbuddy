@@ -2,5 +2,5 @@ package app.textbuddy.sentencerewrite;
 
 import java.util.List;
 
-public record SentenceRewriteResponse(String original, List<String> alternatives) {
+public record SentenceRewriteResponse(String sentence, List<String> options) {
 }

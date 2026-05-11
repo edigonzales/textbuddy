@@ -314,9 +314,7 @@ export function mountQuickActionStream(
 
     elements.runButton.disabled = runDisabled;
     elements.runButton.setAttribute("aria-disabled", runDisabled ? "true" : "false");
-    elements.runButton.textContent = streaming
-      ? t("quickAction.status.running")
-      : `${ACTION_LABELS[selectedAction]} ${t("quickAction.runSuffix")}`;
+    elements.runButton.textContent = streaming ? t("quickAction.status.running") : t("quickAction.run");
   }
 
   function applyEditorText(text: string): void {

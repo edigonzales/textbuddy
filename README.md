@@ -145,6 +145,7 @@ Wichtige Properties:
 - `textbuddy.llm.base-url`
 - `textbuddy.llm.api-key`
 - `textbuddy.llm.model`
+- `textbuddy.llm.health-probe-enabled` (optional, Standard `false`)
 - `textbuddy.languagetool.mode=embedded|http|stub`
 - `textbuddy.languagetool.base-url`
 - `textbuddy.languagetool.ngram-path`
@@ -153,6 +154,14 @@ Wichtige Properties:
 - `textbuddy.document.api-key`
 - `textbuddy.runtime.home`
 - `textbuddy.runtime.initialize-local-resources`
+
+OpenAI-kompatible Provider können direkt angebunden werden. Beispiel Infomaniak ohne Secret:
+
+```properties
+textbuddy.llm.base-url=https://api.infomaniak.com/2/ai/<project-id>/openai/v1
+textbuddy.llm.model=qwen3
+textbuddy.llm.api-key=<nicht-einchecken>
+```
 
 ## Arbeitsmodus
 

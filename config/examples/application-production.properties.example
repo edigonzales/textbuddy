@@ -12,6 +12,11 @@ textbuddy.llm.api-key=<set-your-key>
 textbuddy.llm.model=gpt-5.4-mini
 textbuddy.llm.timeout=30s
 textbuddy.llm.max-retries=1
+textbuddy.llm.health-probe-enabled=false
+
+# Infomaniak OpenAI-kompatibel, Beispiel ohne Secret:
+# textbuddy.llm.base-url=https://api.infomaniak.com/2/ai/<project-id>/openai/v1
+# textbuddy.llm.model=qwen3
 
 # Sidecar-freier Standardbetrieb
 textbuddy.languagetool.mode=embedded

@@ -118,8 +118,10 @@ export interface TextCorrectionResponse {
 }
 
 export interface SentenceRewriteResponse {
-  original: string;
-  alternatives: string[];
+  sentence?: string;
+  options?: string[];
+  original?: string;
+  alternatives?: string[];
 }
 
 export interface WordSynonymResponse {

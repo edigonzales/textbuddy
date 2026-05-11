@@ -26,8 +26,8 @@ class DefaultSentenceRewriteServiceTest {
                 "Der Satz steht in einem Absatz."
         ));
 
-        assertThat(response.original()).isEqualTo("Originalsatz.");
-        assertThat(response.alternatives()).containsExactly(
+        assertThat(response.sentence()).isEqualTo("Originalsatz.");
+        assertThat(response.options()).containsExactly(
                 "Das klingt klarer.",
                 "Praeziser formuliert."
         );
@@ -45,8 +45,8 @@ class DefaultSentenceRewriteServiceTest {
         SentenceRewriteResponse response = service.rewrite(new SentenceRewriteRequest("   ", "Kontext"));
 
         assertThat(called).isFalse();
-        assertThat(response.original()).isEqualTo("");
-        assertThat(response.alternatives()).isEmpty();
+        assertThat(response.sentence()).isEqualTo("");
+        assertThat(response.options()).isEmpty();
     }
 
     @Test
@@ -65,6 +65,6 @@ class DefaultSentenceRewriteServiceTest {
         );
 
         assertThat(called).isTrue();
-        assertThat(response.alternatives()).containsExactly("Alternative.");
+        assertThat(response.options()).containsExactly("Alternative.");
     }
 }

@@ -5,8 +5,7 @@
 @template.layout.main(title = page.title(), lang = page.uiLocaleTag(), skipLinkLabel = page.t("layout.skipLink"), content = @`
 <div class="page-shell">
     <header class="app-header panel" data-testid="shell-header">
-        <div>
-            <p class="eyebrow">${page.t("home.header.eyebrow")}</p>
+        <div class="app-brand">
             <h1>${page.t("home.header.brand")}</h1>
             <p>${page.subtitle()}</p>
         </div>
@@ -43,34 +42,23 @@
         </div>
     </header>
 
-    <main id="main-content" class="workspace-grid" tabindex="-1">
-        <section class="panel" data-testid="editor-shell" aria-labelledby="editor-shell-title">
-            <div class="panel-body">
-                <p class="eyebrow">${page.t("editor.shell.eyebrow")}</p>
-                <h2 id="editor-shell-title">${page.t("editor.shell.title")}</h2>
-                <p class="panel-copy">${page.t("editor.shell.copy")}</p>
-
-                <div
-                    id="editor-island-root"
-                    class="editor-root"
-                    data-testid="editor-island-root"
-                    data-auth-enabled="${Boolean.toString(page.auth().enabled())}"
-                    data-authenticated="${Boolean.toString(page.auth().authenticated())}"
-                    data-auth-login-url="${page.auth().loginUrl()}"
-                    data-ui-locale="${page.uiLocaleLanguage()}"
-                    data-ui-messages="${page.uiMessagesJson()}"
-                >
-                    <details class="workspace-notes" data-testid="workspace-notes">
-                        <summary>${page.t("editor.notes.summary")}</summary>
-                        <div class="chip-row chip-row-compact">
-                            <span class="chip">${page.t("editor.notes.chip.sse")}</span>
-                            <span class="chip">${page.t("editor.notes.chip.segments")}</span>
-                            <span class="chip">${page.t("editor.notes.chip.dictionary")}</span>
-                            <span class="chip">${page.t("editor.notes.chip.advisor")}</span>
-                            <span class="chip">${page.t("editor.notes.chip.import")}</span>
-                            <span class="chip">${page.t("editor.notes.chip.oidc")}</span>
-                        </div>
-                    </details>
+    <main id="main-content" tabindex="-1">
+        <div
+            id="editor-island-root"
+            class="editor-root editor-workspace"
+            data-testid="editor-island-root"
+            data-auth-enabled="${Boolean.toString(page.auth().enabled())}"
+            data-authenticated="${Boolean.toString(page.auth().authenticated())}"
+            data-auth-login-url="${page.auth().loginUrl()}"
+            data-ui-locale="${page.uiLocaleLanguage()}"
+            data-ui-messages="${page.uiMessagesJson()}"
+            data-inspector-active-tab="actions"
+        >
+            <section class="panel editor-panel" data-testid="editor-shell" aria-labelledby="editor-shell-title">
+                <div class="panel-body">
+                    <p class="eyebrow">${page.t("editor.shell.eyebrow")}</p>
+                    <h2 id="editor-shell-title">${page.t("editor.shell.title")}</h2>
+                    <p class="panel-copy">${page.t("editor.shell.copy")}</p>
 
                     <div class="editor-toolbar" data-testid="editor-toolbar">
                         <div class="editor-toolbar-group">
@@ -128,17 +116,36 @@
                         </div>
                     </section>
 
-                    <section
-                        class="quick-action-panel"
-                        data-quick-action-panel
-                        data-testid="quick-action-panel"
-                        data-quick-action-state="idle"
-                        data-quick-action-selected-action="plain-language"
-                        aria-labelledby="quick-action-title"
-                    >
+                    <details class="workspace-notes" data-testid="workspace-notes">
+                        <summary>${page.t("editor.notes.summary")}</summary>
+                        <div class="chip-row chip-row-compact">
+                            <span class="chip">${page.t("editor.notes.chip.sse")}</span>
+                            <span class="chip">${page.t("editor.notes.chip.segments")}</span>
+                            <span class="chip">${page.t("editor.notes.chip.dictionary")}</span>
+                            <span class="chip">${page.t("editor.notes.chip.advisor")}</span>
+                            <span class="chip">${page.t("editor.notes.chip.import")}</span>
+                            <span class="chip">${page.t("editor.notes.chip.oidc")}</span>
+                        </div>
+                    </details>
+                </div>
+            </section>
+
+            <aside class="panel inspector-panel" data-testid="inspector-panel" aria-labelledby="inspector-title">
+                <div class="panel-body inspector-body">
+                    <div class="inspector-head">
+                        <p class="eyebrow">${page.t("inspector.title")}</p>
+                        <div class="inspector-tabs" role="tablist" aria-label="${page.t("inspector.tabs.ariaLabel")}">
+                            <button type="button" id="inspector-tab-correction" class="inspector-tab" role="tab" aria-controls="inspector-panel-correction" aria-selected="false" data-inspector-tab="correction" data-testid="inspector-tab-correction">${page.t("inspector.tab.correction")}</button>
+                            <button type="button" id="inspector-tab-actions" class="inspector-tab" role="tab" aria-controls="inspector-panel-actions" aria-selected="true" data-inspector-tab="actions" data-testid="inspector-tab-actions">${page.t("inspector.tab.actions")}</button>
+                            <button type="button" id="inspector-tab-advisor" class="inspector-tab" role="tab" aria-controls="inspector-panel-advisor" aria-selected="false" data-inspector-tab="advisor" data-testid="inspector-tab-advisor">${page.t("inspector.tab.advisor")}</button>
+                            <button type="button" id="inspector-tab-import" class="inspector-tab" role="tab" aria-controls="inspector-panel-import" aria-selected="false" data-inspector-tab="import" data-testid="inspector-tab-import">${page.t("inspector.tab.import")}</button>
+                            <button type="button" id="inspector-tab-stats" class="inspector-tab" role="tab" aria-controls="inspector-panel-stats" aria-selected="false" data-inspector-tab="stats" data-testid="inspector-tab-stats">${page.t("inspector.tab.stats")}</button>
+                        </div>
+                    </div>
+
+                    <section id="inspector-panel-actions" class="inspector-section quick-action-panel" data-inspector-panel="actions" data-quick-action-panel data-testid="quick-action-panel" data-quick-action-state="idle" data-quick-action-selected-action="plain-language" role="tabpanel" aria-labelledby="inspector-tab-actions">
                         <div class="quick-action-panel-head">
                             <div>
-                                <p class="eyebrow">${page.t("quickAction.eyebrow")}</p>
                                 <h3 id="quick-action-title">${page.t("quickAction.title")}</h3>
                                 <p class="panel-copy">${page.t("quickAction.copy")}</p>
                             </div>
@@ -263,17 +270,170 @@
                         </div>
                     </section>
 
-                    <section
-                        class="document-import-panel"
-                        data-document-import-panel
-                        data-document-import-state="idle"
-                        data-document-import-labels="${String.join(", ", page.documentImportFormats())}"
-                        data-testid="document-import-panel"
-                        aria-labelledby="document-import-title"
-                    >
+                    <section id="inspector-panel-correction" class="inspector-section correction-panel" data-inspector-panel="correction" data-testid="correction-panel" data-correction-panel data-correction-state="idle" role="tabpanel" aria-labelledby="inspector-tab-correction" hidden>
+                        <h3 id="correction-panel-title">${page.t("correction.title")}</h3>
+                        <p class="panel-copy">${page.t("correction.copy")}</p>
+
+                        <div class="correction-controls" data-testid="correction-controls">
+                            <label class="control-stack" for="correction-language">
+                                <span class="control-label">${page.t("correction.language.label")}</span>
+                                <select id="correction-language" class="control-select" data-correction-language data-testid="correction-language">
+                                    <option value="auto" selected>${page.t("correction.language.auto")}</option>
+                                    <option value="de-CH">${page.t("correction.language.deCH")}</option>
+                                    <option value="fr">${page.t("correction.language.fr")}</option>
+                                    <option value="it">${page.t("correction.language.it")}</option>
+                                    <option value="en-US">${page.t("correction.language.enUS")}</option>
+                                    <option value="en-GB">${page.t("correction.language.enGB")}</option>
+                                </select>
+                            </label>
+
+                            <div class="dictionary-shell" data-testid="dictionary-shell">
+                                <div class="dictionary-head">
+                                    <strong>${page.t("dictionary.title")}</strong>
+                                    <span>${page.t("dictionary.subtitle")}</span>
+                                </div>
+
+                                <form class="dictionary-form" data-dictionary-form data-testid="dictionary-form">
+                                    <label class="sr-only" for="dictionary-input">${page.t("dictionary.input.label")}</label>
+                                    <input id="dictionary-input" type="text" class="dictionary-input" data-dictionary-input data-testid="dictionary-input" placeholder="${page.t("dictionary.input.placeholder")}" autocomplete="off" />
+                                    <button type="submit" class="dictionary-submit" data-testid="dictionary-submit">${page.t("dictionary.add")}</button>
+                                </form>
+
+                                <p class="dictionary-empty" data-dictionary-empty data-testid="dictionary-empty">${page.t("dictionary.empty")}</p>
+                                <ul class="dictionary-list" data-dictionary-list data-testid="dictionary-list"></ul>
+                            </div>
+                        </div>
+
+                        <p class="problem-status" data-correction-status data-testid="correction-status" role="status" aria-live="polite" aria-atomic="true">${page.t("correction.status.idle")}</p>
+                        <div class="problem-list" data-correction-list data-testid="correction-problem-list" role="list" aria-label="${page.t("correction.problemList.ariaLabel")}"></div>
+
+                        <div class="stack-list problems-footnotes">
+                            <div class="stack-item">
+                                <strong>${page.t("correction.note.production.title")}</strong>
+                                ${page.t("correction.note.production.body")}
+                            </div>
+                            <div class="stack-item">
+                                <strong>${page.t("correction.note.scope.title")}</strong>
+                                ${page.t("correction.note.scope.body")}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="inspector-panel-advisor" class="inspector-section advisor-panel" data-inspector-panel="advisor" data-testid="advisor-panel" data-advisor-panel data-advisor-state="idle" role="tabpanel" aria-labelledby="inspector-tab-advisor" hidden>
+                        <h3 id="advisor-panel-title">${page.t("advisor.title")}</h3>
+                        <p class="panel-copy">${page.t("advisor.copy")}</p>
+
+                        <div class="advisor-toolbar">
+                            <p class="advisor-status" data-advisor-status data-testid="advisor-status" role="status" aria-live="polite" aria-atomic="true">
+                                ${page.advisorDocs().size()} ${page.t("advisor.docsAvailable")} ${page.t("advisor.idleHint")}
+                            </p>
+                            <button type="button" class="advisor-validate" data-advisor-validate data-testid="advisor-validate">${page.t("advisor.validate")}</button>
+                        </div>
+
+                        <div class="advisor-list" data-testid="advisor-doc-list" role="list" aria-label="${page.t("advisor.docList.ariaLabel")}">
+                            @for (var advisorDoc : page.advisorDocs())
+                                <article class="advisor-item" data-testid="advisor-doc-item" role="listitem">
+                                    <label class="advisor-select">
+                                        <input type="checkbox" name="advisor-docs" value="${advisorDoc.name()}" data-testid="advisor-doc-checkbox">
+                                        <span>${page.t("advisor.select")}</span>
+                                    </label>
+
+                                    <div class="advisor-copy">
+                                        <strong data-testid="advisor-doc-title">${advisorDoc.title()}</strong>
+                                        <p>${advisorDoc.summary()}</p>
+                                        <span class="advisor-source">${advisorDoc.source()}</span>
+                                    </div>
+
+                                    <div class="advisor-links">
+                                        <button type="button" class="advisor-link" data-advisor-open data-advisor-doc-url="${advisorDoc.documentUrl()}" data-advisor-doc-title="${advisorDoc.title()}" data-advisor-doc-name="${advisorDoc.name()}" data-testid="advisor-doc-open">${page.t("advisor.openViewer")}</button>
+                                        <a class="advisor-link" href="${advisorDoc.documentUrl()}" target="_blank" rel="noopener noreferrer" data-testid="advisor-doc-open-tab">${page.t("advisor.openTab")}</a>
+                                        <a class="advisor-link advisor-link-secondary" href="${advisorDoc.documentUrl()}" download="${advisorDoc.name()}.pdf" data-testid="advisor-doc-download">${page.t("advisor.downloadPdf")}</a>
+                                    </div>
+                                </article>
+                            @endfor
+                        </div>
+
+                        <section class="advisor-results-panel" data-testid="advisor-results-panel" aria-labelledby="advisor-results-title">
+                            <div class="advisor-results-head">
+                                <div>
+                                    <p class="eyebrow">${page.t("advisor.results.eyebrow")}</p>
+                                    <h3 id="advisor-results-title">${page.t("advisor.results.title")}</h3>
+                                    <p class="panel-copy">${page.t("advisor.results.copy")}</p>
+                                </div>
+
+                                <span class="advisor-result-counter" data-advisor-result-count data-testid="advisor-result-count">0 ${page.t("advisor.results.hits")}</span>
+                            </div>
+
+                            <p class="advisor-results-empty" data-advisor-result-empty data-testid="advisor-result-empty">${page.t("advisor.results.empty")}</p>
+                            <div class="advisor-results" data-advisor-result-list data-testid="advisor-result-list" role="list" aria-label="${page.t("advisor.results.ariaLabel")}"></div>
+
+                            <section class="advisor-detail" data-advisor-result-detail data-testid="advisor-result-detail" role="region" aria-live="polite" aria-atomic="true" aria-labelledby="advisor-result-detail-title" hidden>
+                                <div class="advisor-detail-head">
+                                    <div>
+                                        <p class="eyebrow">${page.t("advisor.detail.eyebrow")}</p>
+                                        <h3 id="advisor-result-detail-title" data-advisor-result-detail-title data-testid="advisor-result-detail-title"></h3>
+                                    </div>
+
+                                    <div class="advisor-detail-actions">
+                                        <button type="button" class="advisor-link" data-advisor-result-detail-open data-testid="advisor-result-detail-open" hidden>${page.t("advisor.detail.openViewer")}</button>
+                                        <a class="advisor-link advisor-link-secondary" href="#" target="_blank" rel="noopener noreferrer" data-advisor-result-detail-link data-testid="advisor-result-detail-link" hidden>${page.t("advisor.detail.openTab")}</a>
+                                    </div>
+                                </div>
+
+                                <p class="advisor-detail-reference" data-advisor-result-detail-reference data-testid="advisor-result-detail-reference"></p>
+                                <p class="advisor-detail-match" data-advisor-result-detail-match data-testid="advisor-result-detail-match"></p>
+                                <p class="advisor-detail-message" data-advisor-result-detail-message data-testid="advisor-result-detail-message"></p>
+                                <blockquote class="advisor-detail-excerpt" data-advisor-result-detail-excerpt data-testid="advisor-result-detail-excerpt"></blockquote>
+                                <p class="advisor-detail-suggestion" data-advisor-result-detail-suggestion data-testid="advisor-result-detail-suggestion"></p>
+                            </section>
+                        </section>
+
+                        <section class="advisor-pdf-viewer" data-advisor-pdf-viewer data-testid="advisor-pdf-viewer" role="region" aria-labelledby="advisor-pdf-title" hidden>
+                            <div class="advisor-pdf-head">
+                                <div>
+                                    <p class="eyebrow">${page.t("viewer.eyebrow")}</p>
+                                    <h3 id="advisor-pdf-title" data-advisor-pdf-title data-testid="advisor-pdf-title">${page.t("viewer.title")}</h3>
+                                </div>
+
+                                <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-close data-testid="advisor-pdf-close">${page.t("viewer.close")}</button>
+                            </div>
+
+                            <div class="advisor-pdf-controls">
+                                <div class="advisor-pdf-control-group">
+                                    <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-prev data-testid="advisor-pdf-prev">${page.t("viewer.prev")}</button>
+                                    <label class="advisor-pdf-page-shell" for="advisor-pdf-page-input">
+                                        <span>${page.t("viewer.page")}</span>
+                                        <input id="advisor-pdf-page-input" type="number" min="1" value="1" data-advisor-pdf-page-input data-testid="advisor-pdf-page-input">
+                                    </label>
+                                    <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-next data-testid="advisor-pdf-next">${page.t("viewer.next")}</button>
+                                </div>
+
+                                <div class="advisor-pdf-control-group">
+                                    <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-zoom-out data-testid="advisor-pdf-zoom-out">${page.t("viewer.zoomOut")}</button>
+                                    <span class="advisor-pdf-zoom-label" data-advisor-pdf-zoom-label data-testid="advisor-pdf-zoom-label">100%</span>
+                                    <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-zoom-in data-testid="advisor-pdf-zoom-in">${page.t("viewer.zoomIn")}</button>
+                                    <a class="advisor-link" href="#" data-advisor-pdf-download data-testid="advisor-pdf-download">${page.t("viewer.download")}</a>
+                                </div>
+                            </div>
+
+                            <iframe class="advisor-pdf-frame" data-advisor-pdf-frame data-testid="advisor-pdf-frame" title="${page.t("viewer.frameTitle")}" loading="lazy"></iframe>
+                        </section>
+
+                        <div class="stack-list advisor-footnotes">
+                            <div class="stack-item">
+                                <strong>${page.t("advisor.note.multiSelect.title")}</strong>
+                                ${page.t("advisor.note.multiSelect.body")}
+                            </div>
+                            <div class="stack-item">
+                                <strong>${page.t("advisor.note.static.title")}</strong>
+                                ${page.t("advisor.note.static.body")}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="inspector-panel-import" class="inspector-section document-import-panel" data-inspector-panel="import" data-document-import-panel data-document-import-state="idle" data-document-import-labels="${String.join(", ", page.documentImportFormats())}" data-testid="document-import-panel" role="tabpanel" aria-labelledby="inspector-tab-import" hidden>
                         <div class="document-import-head">
                             <div>
-                                <p class="eyebrow">${page.t("import.eyebrow")}</p>
                                 <h3 id="document-import-title">${page.t("import.title")}</h3>
                                 <p class="panel-copy">${page.t("import.copy")}</p>
                             </div>
@@ -282,37 +442,13 @@
                         </div>
 
                         <div class="document-import-body">
-                            <div
-                                class="document-import-dropzone"
-                                data-document-import-dropzone
-                                data-dragging="false"
-                                data-busy="false"
-                                data-testid="document-import-dropzone"
-                                aria-label="${page.t("import.dropzone.ariaLabel")}"
-                                aria-describedby="document-import-dropzone-hint"
-                                aria-disabled="false"
-                                aria-busy="false"
-                            >
-                                <input
-                                    id="document-import-input"
-                                    class="document-import-input"
-                                    data-document-import-input
-                                    data-testid="document-import-input"
-                                    type="file"
-                                    accept="${page.documentImportAccept()}"
-                                    aria-hidden="true"
-                                    tabindex="-1"
-                                >
+                            <div class="document-import-dropzone" data-document-import-dropzone data-dragging="false" data-busy="false" data-testid="document-import-dropzone" aria-label="${page.t("import.dropzone.ariaLabel")}" aria-describedby="document-import-dropzone-hint" aria-disabled="false" aria-busy="false">
+                                <input id="document-import-input" class="document-import-input" data-document-import-input data-testid="document-import-input" type="file" accept="${page.documentImportAccept()}" aria-hidden="true" tabindex="-1">
                                 <strong>${page.t("import.dropzone.title")}</strong>
                                 <span id="document-import-dropzone-hint">${page.t("import.dropzone.hint")}</span>
                                 <label class="quick-action-select-shell document-import-select-shell" for="document-import-ocr-language">
                                     <span class="quick-action-select-label">${page.t("import.ocr.label")}</span>
-                                    <select
-                                        id="document-import-ocr-language"
-                                        class="quick-action-select document-import-ocr-language"
-                                        data-document-import-ocr-language
-                                        data-testid="document-import-ocr-language"
-                                    >
+                                    <select id="document-import-ocr-language" class="quick-action-select document-import-ocr-language" data-document-import-ocr-language data-testid="document-import-ocr-language">
                                         @for (var ocrLanguage : DocumentOcrLanguage.supportedLanguages())
                                             @if (ocrLanguage == DocumentOcrLanguage.DEFAULT)
                                                 <option value="${ocrLanguage.code()}" selected>${ocrLanguage.label()}</option>
@@ -332,51 +468,10 @@
                             <button type="button" class="editor-button document-import-button" data-document-import-button data-testid="document-import-button">${page.t("import.button.start")}</button>
                         </div>
                     </section>
-                </div>
-            </div>
-        </section>
 
-        <aside class="workspace-sidebar">
-            <section class="panel correction-panel" data-testid="correction-panel" data-correction-panel data-correction-state="idle" aria-labelledby="correction-panel-title">
-                <div class="panel-body">
-                    <p class="eyebrow">${page.t("correction.eyebrow")}</p>
-                    <h2 id="correction-panel-title">${page.t("correction.title")}</h2>
-                    <p class="panel-copy">${page.t("correction.copy")}</p>
-
-                    <div class="correction-controls" data-testid="correction-controls">
-                        <label class="control-stack" for="correction-language">
-                            <span class="control-label">${page.t("correction.language.label")}</span>
-                            <select id="correction-language" class="control-select" data-correction-language data-testid="correction-language">
-                                <option value="auto" selected>${page.t("correction.language.auto")}</option>
-                                <option value="de-CH">${page.t("correction.language.deCH")}</option>
-                                <option value="fr">${page.t("correction.language.fr")}</option>
-                                <option value="it">${page.t("correction.language.it")}</option>
-                                <option value="en-US">${page.t("correction.language.enUS")}</option>
-                                <option value="en-GB">${page.t("correction.language.enGB")}</option>
-                            </select>
-                        </label>
-
-                        <div class="dictionary-shell" data-testid="dictionary-shell">
-                            <div class="dictionary-head">
-                                <strong>${page.t("dictionary.title")}</strong>
-                                <span>${page.t("dictionary.subtitle")}</span>
-                            </div>
-
-                            <form class="dictionary-form" data-dictionary-form data-testid="dictionary-form">
-                                <label class="sr-only" for="dictionary-input">${page.t("dictionary.input.label")}</label>
-                                <input id="dictionary-input" type="text" class="dictionary-input" data-dictionary-input data-testid="dictionary-input" placeholder="${page.t("dictionary.input.placeholder")}" autocomplete="off" />
-                                <button type="submit" class="dictionary-submit" data-testid="dictionary-submit">${page.t("dictionary.add")}</button>
-                            </form>
-
-                            <p class="dictionary-empty" data-dictionary-empty data-testid="dictionary-empty">${page.t("dictionary.empty")}</p>
-                            <ul class="dictionary-list" data-dictionary-list data-testid="dictionary-list"></ul>
-                        </div>
-                    </div>
-
-                    <section class="text-stats-panel" data-text-stats-panel data-testid="text-stats-panel">
+                    <section id="inspector-panel-stats" class="inspector-section text-stats-panel" data-inspector-panel="stats" data-text-stats-panel data-testid="text-stats-panel" role="tabpanel" aria-labelledby="inspector-tab-stats" hidden>
                         <div class="text-stats-head">
                             <div>
-                                <p class="eyebrow">${page.t("stats.eyebrow")}</p>
                                 <h3>${page.t("stats.title")}</h3>
                             </div>
                         </div>
@@ -419,155 +514,9 @@
                             <p class="text-stats-flesch-label" data-text-stats-flesch-label data-testid="text-stats-flesch-label">${page.t("stats.flesch.none")}</p>
                         </div>
                     </section>
-
-                    <p class="problem-status" data-correction-status data-testid="correction-status" role="status" aria-live="polite" aria-atomic="true">${page.t("correction.status.idle")}</p>
-                    <div class="problem-list" data-correction-list data-testid="correction-problem-list" role="list" aria-label="${page.t("correction.problemList.ariaLabel")}"></div>
-
-                    <div class="stack-list problems-footnotes">
-                        <div class="stack-item">
-                            <strong>${page.t("correction.note.production.title")}</strong>
-                            ${page.t("correction.note.production.body")}
-                        </div>
-                        <div class="stack-item">
-                            <strong>${page.t("correction.note.scope.title")}</strong>
-                            ${page.t("correction.note.scope.body")}
-                        </div>
-                    </div>
                 </div>
-            </section>
-
-            <section class="panel advisor-panel" data-testid="advisor-panel" data-advisor-panel data-advisor-state="idle" aria-labelledby="advisor-panel-title">
-                <div class="panel-body">
-                    <p class="eyebrow">${page.t("advisor.eyebrow")}</p>
-                    <h2 id="advisor-panel-title">${page.t("advisor.title")}</h2>
-                    <p class="panel-copy">${page.t("advisor.copy")}</p>
-
-                    <div class="advisor-toolbar">
-                        <p class="advisor-status" data-advisor-status data-testid="advisor-status" role="status" aria-live="polite" aria-atomic="true">
-                            ${page.advisorDocs().size()} ${page.t("advisor.docsAvailable")} ${page.t("advisor.idleHint")}
-                        </p>
-                        <button type="button" class="advisor-validate" data-advisor-validate data-testid="advisor-validate">${page.t("advisor.validate")}</button>
-                    </div>
-
-                    <div class="advisor-list" data-testid="advisor-doc-list" role="list" aria-label="${page.t("advisor.docList.ariaLabel")}">
-                        @for (var advisorDoc : page.advisorDocs())
-                            <article class="advisor-item" data-testid="advisor-doc-item" role="listitem">
-                                <label class="advisor-select">
-                                    <input type="checkbox" name="advisor-docs" value="${advisorDoc.name()}" data-testid="advisor-doc-checkbox">
-                                    <span>${page.t("advisor.select")}</span>
-                                </label>
-
-                                <div class="advisor-copy">
-                                    <strong data-testid="advisor-doc-title">${advisorDoc.title()}</strong>
-                                    <p>${advisorDoc.summary()}</p>
-                                    <span class="advisor-source">${advisorDoc.source()}</span>
-                                </div>
-
-                                <div class="advisor-links">
-                                    <button
-                                        type="button"
-                                        class="advisor-link"
-                                        data-advisor-open
-                                        data-advisor-doc-url="${advisorDoc.documentUrl()}"
-                                        data-advisor-doc-title="${advisorDoc.title()}"
-                                        data-advisor-doc-name="${advisorDoc.name()}"
-                                        data-testid="advisor-doc-open"
-                                    >${page.t("advisor.openViewer")}</button>
-                                    <a class="advisor-link" href="${advisorDoc.documentUrl()}" target="_blank" rel="noopener noreferrer" data-testid="advisor-doc-open-tab">${page.t("advisor.openTab")}</a>
-                                    <a class="advisor-link advisor-link-secondary" href="${advisorDoc.documentUrl()}" download="${advisorDoc.name()}.pdf" data-testid="advisor-doc-download">${page.t("advisor.downloadPdf")}</a>
-                                </div>
-                            </article>
-                        @endfor
-                    </div>
-
-                    <section class="advisor-results-panel" data-testid="advisor-results-panel" aria-labelledby="advisor-results-title">
-                        <div class="advisor-results-head">
-                            <div>
-                                <p class="eyebrow">${page.t("advisor.results.eyebrow")}</p>
-                                <h3 id="advisor-results-title">${page.t("advisor.results.title")}</h3>
-                                <p class="panel-copy">${page.t("advisor.results.copy")}</p>
-                            </div>
-
-                            <span class="advisor-result-counter" data-advisor-result-count data-testid="advisor-result-count">0 ${page.t("advisor.results.hits")}</span>
-                        </div>
-
-                        <p class="advisor-results-empty" data-advisor-result-empty data-testid="advisor-result-empty">
-                            ${page.t("advisor.results.empty")}
-                        </p>
-
-                        <div class="advisor-results" data-advisor-result-list data-testid="advisor-result-list" role="list" aria-label="${page.t("advisor.results.ariaLabel")}"></div>
-
-                        <section class="advisor-detail" data-advisor-result-detail data-testid="advisor-result-detail" role="region" aria-live="polite" aria-atomic="true" aria-labelledby="advisor-result-detail-title" hidden>
-                            <div class="advisor-detail-head">
-                                <div>
-                                    <p class="eyebrow">${page.t("advisor.detail.eyebrow")}</p>
-                                    <h3 id="advisor-result-detail-title" data-advisor-result-detail-title data-testid="advisor-result-detail-title"></h3>
-                                </div>
-
-                                <div class="advisor-detail-actions">
-                                    <button type="button" class="advisor-link" data-advisor-result-detail-open data-testid="advisor-result-detail-open" hidden>${page.t("advisor.detail.openViewer")}</button>
-                                    <a class="advisor-link advisor-link-secondary" href="#" target="_blank" rel="noopener noreferrer" data-advisor-result-detail-link data-testid="advisor-result-detail-link" hidden>${page.t("advisor.detail.openTab")}</a>
-                                </div>
-                            </div>
-
-                            <p class="advisor-detail-reference" data-advisor-result-detail-reference data-testid="advisor-result-detail-reference"></p>
-                            <p class="advisor-detail-match" data-advisor-result-detail-match data-testid="advisor-result-detail-match"></p>
-                            <p class="advisor-detail-message" data-advisor-result-detail-message data-testid="advisor-result-detail-message"></p>
-                            <blockquote class="advisor-detail-excerpt" data-advisor-result-detail-excerpt data-testid="advisor-result-detail-excerpt"></blockquote>
-                            <p class="advisor-detail-suggestion" data-advisor-result-detail-suggestion data-testid="advisor-result-detail-suggestion"></p>
-                        </section>
-                    </section>
-
-                    <section class="advisor-pdf-viewer" data-advisor-pdf-viewer data-testid="advisor-pdf-viewer" role="region" aria-labelledby="advisor-pdf-title" hidden>
-                        <div class="advisor-pdf-head">
-                            <div>
-                                <p class="eyebrow">${page.t("viewer.eyebrow")}</p>
-                                <h3 id="advisor-pdf-title" data-advisor-pdf-title data-testid="advisor-pdf-title">${page.t("viewer.title")}</h3>
-                            </div>
-
-                            <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-close data-testid="advisor-pdf-close">${page.t("viewer.close")}</button>
-                        </div>
-
-                        <div class="advisor-pdf-controls">
-                            <div class="advisor-pdf-control-group">
-                                <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-prev data-testid="advisor-pdf-prev">${page.t("viewer.prev")}</button>
-                                <label class="advisor-pdf-page-shell" for="advisor-pdf-page-input">
-                                    <span>${page.t("viewer.page")}</span>
-                                    <input id="advisor-pdf-page-input" type="number" min="1" value="1" data-advisor-pdf-page-input data-testid="advisor-pdf-page-input">
-                                </label>
-                                <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-next data-testid="advisor-pdf-next">${page.t("viewer.next")}</button>
-                            </div>
-
-                            <div class="advisor-pdf-control-group">
-                                <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-zoom-out data-testid="advisor-pdf-zoom-out">${page.t("viewer.zoomOut")}</button>
-                                <span class="advisor-pdf-zoom-label" data-advisor-pdf-zoom-label data-testid="advisor-pdf-zoom-label">100%</span>
-                                <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-zoom-in data-testid="advisor-pdf-zoom-in">${page.t("viewer.zoomIn")}</button>
-                                <a class="advisor-link" href="#" data-advisor-pdf-download data-testid="advisor-pdf-download">${page.t("viewer.download")}</a>
-                            </div>
-                        </div>
-
-                        <iframe
-                            class="advisor-pdf-frame"
-                            data-advisor-pdf-frame
-                            data-testid="advisor-pdf-frame"
-                            title="${page.t("viewer.frameTitle")}"
-                            loading="lazy"
-                        ></iframe>
-                    </section>
-
-                    <div class="stack-list advisor-footnotes">
-                        <div class="stack-item">
-                            <strong>${page.t("advisor.note.multiSelect.title")}</strong>
-                            ${page.t("advisor.note.multiSelect.body")}
-                        </div>
-                        <div class="stack-item">
-                            <strong>${page.t("advisor.note.static.title")}</strong>
-                            ${page.t("advisor.note.static.body")}
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </aside>
+            </aside>
+        </div>
     </main>
 </div>
 `)

@@ -25,6 +25,7 @@ public class LlmProperties {
     private Duration timeout = DEFAULT_TIMEOUT;
     private double temperature = DEFAULT_TEMPERATURE;
     private int maxRetries = 1;
+    private boolean healthProbeEnabled = false;
 
     public Mode getMode() {
         return mode;
@@ -80,6 +81,14 @@ public class LlmProperties {
 
     public void setMaxRetries(int maxRetries) {
         this.maxRetries = maxRetries;
+    }
+
+    public boolean isHealthProbeEnabled() {
+        return healthProbeEnabled;
+    }
+
+    public void setHealthProbeEnabled(boolean healthProbeEnabled) {
+        this.healthProbeEnabled = healthProbeEnabled;
     }
 
     public boolean isStubMode() {

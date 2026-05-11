@@ -6,6 +6,7 @@
 ## Mapping
 | UI-Element im Mockup | Bestehende Funktion | Technischer Hook im Code |
 | --- | --- | --- |
+| Inspector-Tabs | Umschalten zwischen Korrektur, Aktionen, Advisor, Import und Statistik | `data-inspector-tab`, `data-inspector-panel`, [inspector-tabs.ts](/Users/stefan/sources/textbuddy/frontend/src/editor/inspector-tabs.ts) |
 | Action-Pills (gruppiert) | Auswahl einer Quick Action | `data-quick-action` in [home.jte](/Users/stefan/sources/textbuddy/src/main/jte/pages/home.jte), Auswahl-Logik in [quick-action-stream.ts](/Users/stefan/sources/textbuddy/frontend/src/editor/quick-action-stream.ts) |
 | Konfigurationsbereich (progressiv) | Anzeigen von `option` / `prompt` je Aktion | `data-quick-action-selected-action`, `data-quick-action-config`, `data-quick-action-option`, `data-quick-action-prompt` |
 | Zentraler `Anwenden`-Button | Startet den aktiven Rewrite-Stream | `data-quick-action-run`, `runQuickAction(selectedAction)` |
@@ -23,6 +24,7 @@
 - `success`: Rewrite abgeschlossen, Diff sichtbar
 - `error`: Fehlerstatus mit API-/SSE-Fehlermeldung
 
-## Keine Vertragsänderungen
-- Keine Änderungen an API-Endpoints oder Payload-Formaten.
+## Vertragslage
+- Keine Änderungen an API-Endpoints.
 - UI-Orchestrierung und DOM-Struktur wurden überarbeitet; bestehende Backend-Verträge bleiben intakt.
+- Ausnahme: `POST /api/sentence-rewrite` liefert gemäss Master-Spec `{ sentence, options }`. Das Frontend akzeptiert übergangsweise zusätzlich die alte `{ original, alternatives }`-Form.

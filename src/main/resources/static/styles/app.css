@@ -76,21 +76,26 @@ a {
 }
 
 .page-shell {
-    width: min(1200px, calc(100% - 2rem));
+    width: min(1360px, calc(100% - 2rem));
     margin: 0 auto;
-    padding: 2rem 0 3rem;
+    padding: 1rem 0 2rem;
 }
 
 .app-header {
     display: flex;
     justify-content: space-between;
-    gap: 1.5rem;
-    align-items: flex-start;
-    padding: 1.5rem;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.85rem 1rem;
     border: 1px solid var(--border);
-    border-radius: 18px;
+    border-radius: 12px;
     background: var(--surface);
     box-shadow: var(--shadow);
+}
+
+.app-brand {
+    display: grid;
+    gap: 0.2rem;
 }
 
 .eyebrow {
@@ -104,28 +109,31 @@ a {
 
 .app-header h1 {
     margin: 0;
-    font-size: clamp(2.2rem, 4vw, 3.3rem);
-    line-height: 0.95;
+    font-size: clamp(1.35rem, 2vw, 1.7rem);
+    line-height: 1.05;
 }
 
 .app-header p {
-    margin: 0.75rem 0 0;
+    margin: 0;
     max-width: 52rem;
     color: var(--muted);
+    font-size: 0.95rem;
 }
 
 .status-strip {
-    display: grid;
-    gap: 0.75rem;
-    min-width: min(18rem, 100%);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.45rem;
+    min-width: min(34rem, 100%);
 }
 
 .status-pill {
-    padding: 0.85rem 1rem;
-    border-radius: 16px;
+    padding: 0.55rem 0.7rem;
+    border-radius: 10px;
     border: 1px solid var(--border);
     background: var(--surface-strong);
-    font-size: 0.95rem;
+    font-size: 0.86rem;
 }
 
 .status-pill strong,
@@ -145,9 +153,9 @@ a {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 2.7rem;
-    padding: 0.7rem 1rem;
-    border-radius: 14px;
+    min-height: 2.1rem;
+    padding: 0.45rem 0.65rem;
+    border-radius: 9px;
     border: 1px solid rgba(15, 109, 104, 0.2);
     background: linear-gradient(135deg, rgba(15, 109, 104, 0.12), rgba(15, 109, 104, 0.22));
     color: var(--text);
@@ -161,11 +169,12 @@ a {
     border-color: rgba(15, 109, 104, 0.36);
 }
 
-.workspace-grid {
+.workspace-grid,
+.editor-workspace {
     display: grid;
-    grid-template-columns: minmax(0, 1.9fr) minmax(280px, 0.8fr);
-    gap: 1.25rem;
-    margin-top: 1.25rem;
+    grid-template-columns: minmax(0, 1.55fr) minmax(340px, 0.9fr);
+    gap: 1rem;
+    margin-top: 1rem;
 }
 
 .workspace-sidebar {
@@ -195,13 +204,13 @@ a {
 
 .panel {
     border: 1px solid var(--border);
-    border-radius: 18px;
+    border-radius: 12px;
     background: var(--surface);
     box-shadow: var(--shadow);
 }
 
 .panel-body {
-    padding: 1.4rem;
+    padding: 1rem;
 }
 
 .panel h2,
@@ -217,17 +226,83 @@ a {
 .editor-root {
     display: grid;
     gap: 1rem;
-    margin-top: 1.25rem;
-    padding: 1.1rem;
-    border: 1px solid rgba(15, 109, 104, 0.16);
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.74);
+}
+
+.editor-workspace {
+    align-items: start;
+}
+
+.editor-panel {
+    min-width: 0;
+}
+
+.inspector-panel {
+    min-width: 0;
+    align-self: start;
+}
+
+.inspector-body {
+    display: grid;
+    gap: 0.9rem;
+}
+
+.inspector-head {
+    display: grid;
+    gap: 0.55rem;
+}
+
+.inspector-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.inspector-tab {
+    border: 1px solid rgba(15, 109, 104, 0.18);
+    border-radius: 9px;
+    padding: 0.55rem 0.7rem;
+    background: rgba(255, 255, 255, 0.86);
+    color: var(--accent);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.inspector-tab[aria-selected="true"] {
+    background: rgba(23, 89, 92, 0.12);
+    border-color: rgba(23, 89, 92, 0.35);
+    color: var(--text);
+}
+
+.inspector-section {
+    display: grid;
+    gap: 0.9rem;
+}
+
+.inspector-section[hidden] {
+    display: none !important;
+}
+
+#editor-island-root .inspector-panel .quick-action-layout {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+#editor-island-root .inspector-panel .quick-action-button {
+    min-width: min(100%, 8.5rem);
+}
+
+#editor-island-root .inspector-panel .document-import-body {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+#editor-island-root .inspector-panel .document-import-button {
+    width: 100%;
 }
 
 .editor-canvas {
-    min-height: 320px;
-    padding: 1.4rem;
-    border-radius: 14px;
+    min-height: 430px;
+    padding: 1.15rem;
+    border-radius: 10px;
     background: var(--surface-strong);
     border: 1px solid rgba(15, 109, 104, 0.14);
 }
@@ -255,7 +330,7 @@ a {
 
 .workspace-notes {
     border: 1px solid rgba(15, 109, 104, 0.14);
-    border-radius: 14px;
+    border-radius: 10px;
     background: rgba(255, 255, 255, 0.86);
     padding: 0.55rem 0.75rem;
 }
@@ -296,7 +371,7 @@ a {
 
 .stack-item {
     padding: 1rem;
-    border-radius: 18px;
+    border-radius: 10px;
     border: 1px solid var(--border);
     background: var(--surface-strong);
 }
@@ -348,7 +423,7 @@ a {
     gap: 0.85rem;
     padding: 1rem;
     border: 1px solid var(--border);
-    border-radius: 18px;
+    border-radius: 10px;
     background: rgba(255, 255, 255, 0.64);
 }
 
@@ -432,9 +507,9 @@ a {
 .text-stats-panel {
     display: grid;
     gap: 0.9rem;
-    margin-top: 1rem;
+    margin-top: 0;
     padding: 1rem;
-    border-radius: 20px;
+    border-radius: 10px;
     border: 1px solid rgba(15, 109, 104, 0.14);
     background: rgba(255, 255, 255, 0.72);
 }
@@ -531,7 +606,7 @@ a {
     display: grid;
     gap: 0.75rem;
     padding: 1rem;
-    border-radius: 18px;
+    border-radius: 10px;
     border: 1px solid var(--border);
     background: var(--surface-strong);
     cursor: pointer;
@@ -693,7 +768,7 @@ a {
     gap: 0.8rem;
     padding: 1rem;
     border: 1px solid var(--border);
-    border-radius: 20px;
+    border-radius: 10px;
     background: var(--surface-strong);
 }
 
@@ -769,7 +844,7 @@ a {
     gap: 0.9rem;
     margin-top: 1.15rem;
     padding: 1rem;
-    border-radius: 20px;
+    border-radius: 10px;
     border: 1px solid rgba(15, 109, 104, 0.14);
     background: rgba(255, 255, 255, 0.72);
 }
@@ -897,7 +972,7 @@ a {
     gap: 0.9rem;
     margin-top: 1.15rem;
     padding: 1rem;
-    border-radius: 20px;
+    border-radius: 10px;
     border: 1px solid rgba(15, 109, 104, 0.14);
     background: rgba(255, 255, 255, 0.82);
 }
@@ -974,9 +1049,18 @@ a {
 }
 
 @media (max-width: 900px) {
-    .app-header,
-    .workspace-grid {
+    .workspace-grid,
+    .editor-workspace {
         grid-template-columns: 1fr;
+    }
+
+    .app-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .status-strip {
+        justify-content: flex-start;
     }
 
     .page-shell {

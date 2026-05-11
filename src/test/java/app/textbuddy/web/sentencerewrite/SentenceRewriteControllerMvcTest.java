@@ -32,10 +32,10 @@ class SentenceRewriteControllerMvcTest {
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.original").value("Dieser Satz ist etwas holprig."))
-                .andExpect(jsonPath("$.alternatives[0]").value("Kurz gesagt: Dieser Satz ist etwas holprig."))
-                .andExpect(jsonPath("$.alternatives[1]").value("Anders formuliert: Dieser Satz ist etwas holprig."))
-                .andExpect(jsonPath("$.alternatives[2]").value("Praeziser gesagt: Dieser Satz ist etwas holprig."));
+                .andExpect(jsonPath("$.sentence").value("Dieser Satz ist etwas holprig."))
+                .andExpect(jsonPath("$.options[0]").value("Kurz gesagt: Dieser Satz ist etwas holprig."))
+                .andExpect(jsonPath("$.options[1]").value("Anders formuliert: Dieser Satz ist etwas holprig."))
+                .andExpect(jsonPath("$.options[2]").value("Praeziser gesagt: Dieser Satz ist etwas holprig."));
     }
 
     @Test
@@ -52,6 +52,6 @@ class SentenceRewriteControllerMvcTest {
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.original").value("Dieser Satz ist etwas holprig."));
+                .andExpect(jsonPath("$.sentence").value("Dieser Satz ist etwas holprig."));
     }
 }

@@ -41,6 +41,8 @@ interface AdvisorValidationEventPayload {
   referenceUrl: string;
 }
 
+type InspectorTab = "correction" | "actions" | "advisor" | "import" | "stats";
+
 function createCorrectionResponse(text: string) {
   const blocks = [];
   const tehOffset = text.indexOf("teh");
@@ -83,6 +85,10 @@ function createSseBody(events: Array<{ event: string; payload: unknown }>): stri
 async function runQuickAction(page: Page, actionTestId: string) {
   await page.getByTestId(actionTestId).click();
   await page.getByTestId("quick-action-run").click();
+}
+
+async function openInspectorTab(page: Page, tab: InspectorTab) {
+  await page.getByTestId(`inspector-tab-${tab}`).click();
 }
 
 test("typing updates mirror and undo redo state", async ({ page }) => {
@@ -128,6 +134,7 @@ test("typing updates mirror and undo redo state", async ({ page }) => {
 
 test("text statistics panel updates counters and Flesch score", async ({ page }) => {
   await page.goto("/");
+  await openInspectorTab(page, "stats");
 
   const editor = page.getByTestId("editor-input");
 
@@ -169,6 +176,7 @@ test("document import uploads supported files and injects html into the editor",
   });
 
   await page.goto("/");
+  await openInspectorTab(page, "import");
 
   const importInput = page.getByTestId("document-import-input");
   const importStatus = page.getByTestId("document-import-status");
@@ -204,6 +212,7 @@ test("document import rejects unsupported formats before upload", async ({ page 
   });
 
   await page.goto("/");
+  await openInspectorTab(page, "import");
 
   const importInput = page.getByTestId("document-import-input");
   const importStatus = page.getByTestId("document-import-status");
@@ -233,6 +242,7 @@ test("document import sends selected OCR language", async ({ page }) => {
   });
 
   await page.goto("/");
+  await openInspectorTab(page, "import");
 
   await page.getByTestId("document-import-ocr-language").selectOption("fr");
   await page.getByTestId("document-import-input").setInputFiles({
@@ -249,6 +259,7 @@ test("document import sends selected OCR language", async ({ page }) => {
 
 test("text correction marks problems and applies a suggestion", async ({ page }) => {
   await page.goto("/");
+  await openInspectorTab(page, "correction");
 
   const editor = page.getByTestId("editor-input");
   const mirror = page.getByTestId("editor-mirror");
@@ -352,8 +363,8 @@ test("sentence rewrite is reachable from the word bubble and replaces only the s
     requestBodies.push(payload);
     await route.fulfill({
       json: {
-        original: payload.sentence,
-        alternatives: ["Alpha Alternative."],
+        sentence: payload.sentence,
+        options: ["Alpha Alternative."],
       },
     });
   });
@@ -399,6 +410,7 @@ test("advisor catalog shows multiple selectable documents and serves reachable P
   request,
 }) => {
   await page.goto("/");
+  await openInspectorTab(page, "advisor");
 
   const advisorItems = page.getByTestId("advisor-doc-item");
   const advisorCheckboxes = page.getByTestId("advisor-doc-checkbox");
@@ -425,6 +437,7 @@ test("advisor catalog shows multiple selectable documents and serves reachable P
 
 test("advisor pdf viewer supports page navigation, zoom and download", async ({ page }) => {
   await page.goto("/");
+  await openInspectorTab(page, "advisor");
 
   await page.getByTestId("advisor-doc-open").first().click();
 
@@ -523,6 +536,7 @@ test("advisor validation streams results and deduplicates them in the panel", as
   });
 
   await page.goto("/");
+  await openInspectorTab(page, "advisor");
 
   const editor = page.getByTestId("editor-input");
   const advisorCheckboxes = page.getByTestId("advisor-doc-checkbox");
@@ -695,7 +709,7 @@ test("bullet points stream into the editor, show a diff and support full undo", 
     "Projektlage klaeren. Naechste Schritte festhalten.",
   );
   await expect.poll(() => requestBodies.at(-1)?.language).toBe("auto");
-  await expect(page.getByTestId("quick-action-status")).toContainText("Bullet Points abgeschlossen");
+  await expect(page.getByTestId("quick-action-status")).toContainText("Stichpunkte abgeschlossen");
   await expect(mirror).toHaveValue("- Projektlage klaeren\n- Naechste Schritte festhalten");
   await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
   await expect(page.getByTestId("rewrite-diff-before")).toContainText(
@@ -763,7 +777,7 @@ test("proofread streams into the editor, shows a diff and supports full undo", a
 
   await expect.poll(() => requestBodies.at(-1)?.text).toBe("This is teh text.");
   await expect.poll(() => requestBodies.at(-1)?.language).toBe("auto");
-  await expect(page.getByTestId("quick-action-status")).toContainText("Proofread abgeschlossen");
+  await expect(page.getByTestId("quick-action-status")).toContainText("Korrigieren abgeschlossen");
   await expect(mirror).toHaveValue("This is the text.");
   await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
   await expect(page.getByTestId("rewrite-diff-before")).toContainText("This is teh text.");
@@ -829,7 +843,7 @@ test("summarize with the sentence option streams into the editor and sends the s
   );
   await expect.poll(() => requestBodies.at(-1)?.language).toBe("auto");
   await expect.poll(() => requestBodies.at(-1)?.option).toBe("sentence");
-  await expect(page.getByTestId("quick-action-status")).toContainText("Summarize abgeschlossen");
+  await expect(page.getByTestId("quick-action-status")).toContainText("Zusammenfassen abgeschlossen");
   await expect(mirror).toHaveValue("Kurzfassung: Der Kernpunkt steht fest.");
   await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
   await expect(page.getByTestId("rewrite-diff-after")).toContainText(
@@ -886,7 +900,7 @@ test("summarize with the management summary option streams the selected variant"
   await page.getByTestId("quick-action-run").click();
 
   await expect.poll(() => requestBodies.at(-1)?.option).toBe("management_summary");
-  await expect(page.getByTestId("quick-action-status")).toContainText("Summarize abgeschlossen");
+  await expect(page.getByTestId("quick-action-status")).toContainText("Zusammenfassen abgeschlossen");
   await expect(mirror).toHaveValue(
     "Management Summary\n- Kernpunkt: Projekt ist freigegeben.\n- Empfehlung: Umsetzung starten.",
   );
@@ -953,7 +967,7 @@ test("formality streams both formal and informal variants with the selected opti
   await page.getByTestId("quick-action-run").click();
 
   await expect.poll(() => requestBodies.at(-1)?.option).toBe("formal");
-  await expect(page.getByTestId("quick-action-status")).toContainText("Formality abgeschlossen");
+  await expect(page.getByTestId("quick-action-status")).toContainText("Ton ändern abgeschlossen");
   await expect(mirror).toHaveValue(
     "Formell ueberarbeitet: Guten Tag, wir benoetigen zeitnah Ihre Rueckmeldung.",
   );
@@ -967,7 +981,7 @@ test("formality streams both formal and informal variants with the selected opti
   await page.getByTestId("quick-action-run").click();
 
   await expect.poll(() => requestBodies.at(-1)?.option).toBe("informal");
-  await expect(page.getByTestId("quick-action-status")).toContainText("Formality abgeschlossen");
+  await expect(page.getByTestId("quick-action-status")).toContainText("Ton ändern abgeschlossen");
   await expect(mirror).toHaveValue(
     "Lockerer formuliert: Hallo, wir brauchen schnell deine Rueckmeldung.",
   );
@@ -1104,7 +1118,7 @@ test("medium streams multiple medium variants with the selected option", async (
   await page.getByTestId("quick-action-run").click();
 
   await expect.poll(() => requestBodies.at(-1)?.option).toBe("email");
-  await expect(page.getByTestId("quick-action-status")).toContainText("Medium abgeschlossen");
+  await expect(page.getByTestId("quick-action-status")).toContainText("Format anpassen abgeschlossen");
   await expect(mirror).toHaveValue(
     "Betreff: Projektupdate\n\nHallo Team,\n\nProjekt ist freigegeben. Team startet am Montag.\n\nViele Gruesse",
   );
@@ -1118,7 +1132,7 @@ test("medium streams multiple medium variants with the selected option", async (
   await page.getByTestId("quick-action-run").click();
 
   await expect.poll(() => requestBodies.at(-1)?.option).toBe("report");
-  await expect(page.getByTestId("quick-action-status")).toContainText("Medium abgeschlossen");
+  await expect(page.getByTestId("quick-action-status")).toContainText("Format anpassen abgeschlossen");
   await expect(mirror).toHaveValue(
     "Bericht\n\nZusammenfassung: Projekt ist freigegeben.\nDetails: Team startet am Montag.\nAbschluss: Umsetzung beginnt sofort.",
   );
@@ -1183,7 +1197,7 @@ test("character speech streams both direct and indirect variants with the select
 
   await expect.poll(() => requestBodies.at(-1)?.option).toBe("direct_speech");
   await expect(page.getByTestId("quick-action-status")).toContainText(
-    "Character Speech abgeschlossen",
+    "Rede umformen abgeschlossen",
   );
   await expect(mirror).toHaveValue(
     'Direkte Rede\n\n"Projekt ist freigegeben.", sagte die Figur.\n"Team startet am Montag.", antwortete die andere Figur.',
@@ -1199,7 +1213,7 @@ test("character speech streams both direct and indirect variants with the select
 
   await expect.poll(() => requestBodies.at(-1)?.option).toBe("indirect_speech");
   await expect(page.getByTestId("quick-action-status")).toContainText(
-    "Character Speech abgeschlossen",
+    "Rede umformen abgeschlossen",
   );
   await expect(mirror).toHaveValue(
     "Indirekte Rede\n\nDie Figur sagte, dass Projekt ist freigegeben.\nDanach erklaerte die andere Figur, dass Team startet am Montag.",
@@ -1270,7 +1284,7 @@ test("custom quick action sends the custom prompt and streams the result", async
   await expect.poll(() => requestBodies.at(-1)?.prompt).toBe(
     "Formuliere den Text als interne Ankuendigung.",
   );
-  await expect(page.getByTestId("quick-action-status")).toContainText("Custom abgeschlossen");
+  await expect(page.getByTestId("quick-action-status")).toContainText("Eigener Auftrag abgeschlossen");
   await expect(mirror).toHaveValue(
     "Custom Rewrite\n\nAuftrag: Formuliere den Text als interne Ankuendigung.\n\nErgebnis:\nProjektstart ist morgen.",
   );
@@ -1308,6 +1322,7 @@ test("language selection is sent with correction requests", async ({ page }) => 
   });
 
   await page.goto("/");
+  await openInspectorTab(page, "correction");
 
   await page.getByTestId("correction-language").selectOption("de-CH");
   await page.getByTestId("editor-input").click();
@@ -1319,6 +1334,7 @@ test("language selection is sent with correction requests", async ({ page }) => 
 
 test("language selector offers the planned locale set with umlaut labels", async ({ page }) => {
   await page.goto("/");
+  await openInspectorTab(page, "correction");
 
   const options = await page.getByTestId("correction-language").locator("option").allTextContents();
 
@@ -1363,7 +1379,9 @@ test("language selection is sent with quick action requests", async ({ page }) =
 
   await page.goto("/");
 
+  await openInspectorTab(page, "correction");
   await page.getByTestId("correction-language").selectOption("en-GB");
+  await openInspectorTab(page, "actions");
   await page.getByTestId("editor-input").click();
   await page.keyboard.type("This is a test.");
   await runQuickAction(page, "quick-action-plain-language");
@@ -1374,6 +1392,7 @@ test("language selection is sent with quick action requests", async ({ page }) =
 
 test("local dictionary hides and restores known word matches", async ({ page }) => {
   await page.goto("/");
+  await openInspectorTab(page, "correction");
 
   const editor = page.getByTestId("editor-input");
   const problemItems = page.getByTestId("correction-problem-item");
@@ -1412,6 +1431,7 @@ test("only changed segments are rechecked after the initial correction run", asy
   });
 
   await page.goto("/");
+  await openInspectorTab(page, "correction");
 
   const editor = page.getByTestId("editor-input");
   const problemItems = page.getByTestId("correction-problem-item");

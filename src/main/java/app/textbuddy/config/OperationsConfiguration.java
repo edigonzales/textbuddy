@@ -2,6 +2,8 @@ package app.textbuddy.config;
 
 import app.textbuddy.document.DocumentImportFormatCatalog;
 import app.textbuddy.integration.advisor.AdvisorDocumentRepository;
+import app.textbuddy.integration.llm.OpenAiCompatibleChatClient;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.actuate.info.InfoContributor;
 import org.springframework.boot.health.contributor.Health;
@@ -66,10 +68,14 @@ public class OperationsConfiguration {
     }
 
     @Bean
-    HealthIndicator llmHealthIndicator(LlmProperties properties) {
+    HealthIndicator llmHealthIndicator(
+            LlmProperties properties,
+            ObjectProvider<OpenAiCompatibleChatClient> chatClientProvider
+    ) {
         return () -> {
             Map<String, Object> details = new LinkedHashMap<>();
             details.put("mode", properties.getMode().name().toLowerCase());
+            details.put("providerProbeEnabled", properties.isHealthProbeEnabled());
 
             if (!properties.isStubMode()) {
                 details.put("baseUrl", properties.normalizedBaseUrl());
@@ -80,6 +86,24 @@ public class OperationsConfiguration {
 
             try {
                 properties.validateForProvider();
+
+                if (properties.isHealthProbeEnabled() && !properties.isStubMode()) {
+                    OpenAiCompatibleChatClient chatClient = chatClientProvider.getIfAvailable();
+
+                    if (chatClient == null) {
+                        return Health.down()
+                                .withDetails(details)
+                                .withDetail("error", "LLM-Provider-Client ist nicht verfügbar.")
+                                .build();
+                    }
+
+                    String response = chatClient.completeText(
+                            "Antworte nur mit OK.",
+                            "Prüfe die LLM-Verbindung und antworte mit OK."
+                    );
+                    details.put("providerProbe", response.isBlank() ? "empty-response" : "ok");
+                }
+
                 return Health.up().withDetails(details).build();
             } catch (RuntimeException exception) {
                 return Health.down(exception).withDetails(details).build();

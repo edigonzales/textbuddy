@@ -503,7 +503,7 @@ export function mountRewriteBubble(
         return;
       }
 
-      const alternatives = (payload.alternatives ?? [])
+      const alternatives = (payload.options ?? payload.alternatives ?? [])
         .map((candidate) => candidate.trim())
         .filter((candidate) => candidate.length > 0)
         .filter((candidate) => candidate !== sentence.text)

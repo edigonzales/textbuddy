@@ -37,11 +37,26 @@ Für den produktiven Start sind mindestens diese Werte erforderlich:
 - `textbuddy.llm.base-url`
 - `textbuddy.llm.api-key`
 - `textbuddy.llm.model`
+- `textbuddy.llm.health-probe-enabled=false` (Standard; echte Provider-Probe nur bewusst aktivieren)
 
 Standardbetrieb ohne Sidecars:
 
 - `textbuddy.languagetool.mode=embedded`
 - `textbuddy.document.mode=kreuzberg`
+
+Infomaniak kann als OpenAI-kompatibler Provider konfiguriert werden:
+
+```properties
+textbuddy.llm.base-url=https://api.infomaniak.com/2/ai/<project-id>/openai/v1
+textbuddy.llm.model=qwen3
+textbuddy.llm.api-key=<nicht-einchecken>
+```
+
+Der Health-Check validiert im Standard nur die Konfiguration. Eine echte Provider-Probe lässt sich für Smoke-Umgebungen aktivieren:
+
+```properties
+textbuddy.llm.health-probe-enabled=true
+```
 
 ## Startvarianten
 
@@ -88,6 +103,23 @@ Erwartung:
 
 - Health-Status `UP`
 - Info enthält aktive Modi (`llmMode`, `languageToolMode`, `documentImportMode`)
+- Bei aktivierter LLM-Provider-Probe enthält die LLM-Komponente `providerProbe=ok`
+
+## OCR/Tesseract und Java 25
+
+Der eingebettete Dokumentimport nutzt lokale OCR für bildbasierte Eingaben. Auf Systemen ohne passende Tesseract-Sprachdaten (`de`, `en`, `fr`, `it`) kann OCR übersprungen werden oder Warnungen ausgeben; das ist kein Startblocker, reduziert aber die Importqualität für Scans.
+
+Für Java 25 können native OCR-/Dokumentbibliotheken Warnungen zu Native Access ausgeben. Wenn der Import in der Zielumgebung Native-Access-Warnungen oder blockierte native Aufrufe meldet, den Start mit expliziter Freigabe wiederholen:
+
+```bash
+TEXTBUDDY_JAVA_OPTS="--enable-native-access=ALL-UNNAMED" ./bin/start-textbuddy.sh
+```
+
+Zusätzlich prüfen:
+
+- Tesseract ist installiert und im Prozesspfad verfügbar.
+- Sprachdaten für die erwarteten OCR-Sprachen sind installiert.
+- `TEXTBUDDY_DOCUMENT_MODE=kreuzberg` ist gesetzt.
 
 ## Signatur- und Checksum-Verifikation
 

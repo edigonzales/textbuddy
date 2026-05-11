@@ -24,6 +24,7 @@ class ActuatorObservabilityMvcTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"))
                 .andExpect(jsonPath("$.components.llm.status").value("UP"))
+                .andExpect(jsonPath("$.components.llm.details.providerProbeEnabled").value(false))
                 .andExpect(jsonPath("$.components.languagetool.status").value("UP"))
                 .andExpect(jsonPath("$.components.documentImport.status").value("UP"));
     }
