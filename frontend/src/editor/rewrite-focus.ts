@@ -17,6 +17,15 @@ export function resolveRewriteBubbleState(
   selectionStart: number,
   selectionEnd: number,
 ): RewriteBubbleState {
+  const start = Math.max(0, Math.min(selectionStart, text.length));
+  const end = Math.max(0, Math.min(selectionEnd, text.length));
+
+  if (start === end || text.slice(Math.min(start, end), Math.max(start, end)).trim().length === 0) {
+    return {
+      mode: "hidden",
+    };
+  }
+
   const word = findFocusedWord(text, selectionStart, selectionEnd);
 
   if (word) {

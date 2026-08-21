@@ -14,7 +14,7 @@ import type {
 } from "./types";
 import { t } from "./ui-i18n";
 
-const IDLE_MESSAGE = t("quickAction.status.idle");
+const IDLE_MESSAGE = "";
 const UNDONE_MESSAGE = t("quickAction.status.undone");
 const AUTH_REQUIRED_MESSAGE = t("quickAction.status.authRequired");
 const CUSTOM_PROMPT_MAX_LENGTH = 2_000;

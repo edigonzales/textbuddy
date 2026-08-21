@@ -9,6 +9,7 @@ Textbuddy strebt WCAG 2.2 AA an, erhebt aber ohne vollständige manuelle Prüfun
 - Werkzeug-Tabs und modale beziehungsweise eingeblendete Bereiche besitzen ARIA-Beziehungen.
 - Statusänderungen werden über zurückhaltende Live-Regionen ausgegeben.
 - Editor- und Werkzeugaktionen sind per Tastatur erreichbar; sichtbare Fokusdarstellung bleibt erhalten.
+- Das nichtmodale Vorschlags-Popup erhält seinen zugänglichen Namen aus der aktuellen Textauswahl, lässt sich mit Escape schliessen und fokussiert nach tastaturbedientem Laden den ersten Vorschlag.
 - Die Browser-Suite prüft Kernabläufe mit Playwright und `axe-core`.
 
 Automatische Tests finden nicht alle Barrieren. Insbesondere Screenreader-Verständlichkeit, sinnvolle Fokusreihenfolge, Zoom/Reflow und die Bedienung komplexer Tiptap-Auswahlzustände brauchen manuelle Abnahme.

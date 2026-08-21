@@ -46,6 +46,16 @@ async function openInspectorTab(page: Page, tab: InspectorTab): Promise<void> {
   await page.getByTestId(`inspector-tab-${tab}`).click();
 }
 
+async function selectPreviousCharacters(page: Page, count: number): Promise<void> {
+  await page.keyboard.down("Shift");
+
+  for (let index = 0; index < count; index += 1) {
+    await page.keyboard.press("ArrowLeft");
+  }
+
+  await page.keyboard.up("Shift");
+}
+
 test("axe: idle state has no critical or serious violations", async ({ page }) => {
   await page.goto("/");
   await expectNoCriticalOrSeriousViolations(page);
@@ -87,6 +97,27 @@ test("axe: completed quick action plus diff state has no critical or serious vio
   await page.getByTestId("quick-action-summarize").click();
   await page.getByTestId("quick-action-run").click();
   await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+
+  await expectNoCriticalOrSeriousViolations(page);
+});
+
+test("axe: loaded selection suggestions have no critical or serious violations", async ({ page }) => {
+  await page.route("**/api/word-synonym", async (route) => {
+    await route.fulfill({ json: { synonyms: ["rasch", "flink"] } });
+  });
+
+  await page.goto("/");
+  const editor = page.getByTestId("editor-input");
+
+  await editor.click();
+  await page.keyboard.type("Alpha schnell.");
+  await page.keyboard.press("ArrowLeft");
+  await selectPreviousCharacters(page, 7);
+  await expect(page.getByTestId("rewrite-bubble")).toBeVisible();
+
+  await page.getByTestId("rewrite-primary-action").focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("rewrite-option").first()).toBeFocused();
 
   await expectNoCriticalOrSeriousViolations(page);
 });
@@ -188,6 +219,7 @@ test("keyboard: rewrite bubble closes with Escape", async ({
   await editor.click();
   await page.keyboard.type("Alpha schnell.");
   await page.keyboard.press("ArrowLeft");
+  await selectPreviousCharacters(page, 7);
   await expect(page.getByTestId("rewrite-bubble")).toBeVisible();
 
   await page.keyboard.press("Escape");

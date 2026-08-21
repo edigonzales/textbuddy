@@ -21,11 +21,11 @@ Die Adapter können zu Demonstrations- und Testzwecken auch im Stub-Modus laufen
 Der zentrale Editor nimmt den Text auf, der mit den übrigen Werkzeugen bearbeitet wird.
 
 - **Undo und Redo** machen Änderungen im Editor rückgängig oder stellen sie wieder her.
-- **Wort umschreiben** schlägt Synonyme vor, die zum umgebenden Satz passen. Ein ausgewählter Vorschlag ersetzt das fokussierte Wort.
-- **Satz umschreiben** erzeugt mehrere Alternativen unter Berücksichtigung des umgebenden Absatzes. Ein ausgewählter Vorschlag ersetzt den fokussierten Satz.
+- **Synonyme** erscheinen nach einer bewussten Auswahl innerhalb genau eines Wortes und berücksichtigen dessen Satzkontext. Ein ausgewählter Vorschlag ersetzt nur dieses Wort.
+- **Satz umformulieren** erscheint bei einer Auswahl innerhalb genau eines abgeschlossenen Satzes und berücksichtigt den umgebenden Absatz. Ein ausgewählter Vorschlag ersetzt nur diesen Satz.
 - Zeichen- und Wortzahl werden während des Schreibens laufend aktualisiert.
 
-Synonyme und Satzalternativen benötigen einen LLM-Provider. Die Aktionen erscheinen nur, wenn Textbuddy ein passendes Wort beziehungsweise einen abgeschlossenen Satz erkennt.
+Synonyme und Satzalternativen benötigen einen LLM-Provider. Tippen, eine reine Cursorbewegung, Leerraum oder eine satzübergreifende Auswahl öffnen keine Vorschläge. Escape oder ein Klick ausserhalb schliesst die Vorschläge für die aktuelle Auswahl.
 
 ## Textkorrektur und lokales Wörterbuch
 

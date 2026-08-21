@@ -191,7 +191,6 @@ public class GlobalErrorHandler {
                         traceId,
                         locale == null ? "de" : locale.toLanguageTag(),
                         message("layout.skipLink", locale),
-                        message("error.page.eyebrow", locale),
                         message("error.page.pathLabel", locale),
                         message("error.page.traceLabel", locale),
                         message("error.page.backHome", locale)

@@ -5,7 +5,6 @@
 <main id="main-content" class="page-shell error-shell" tabindex="-1">
     <section class="panel error-card" data-testid="error-page">
         <div class="panel-body">
-            <p class="eyebrow">${page.eyebrow()}</p>
             <h1>${page.statusCode()} ${page.errorTitle()}</h1>
             <p class="panel-copy">${page.message()}</p>
 

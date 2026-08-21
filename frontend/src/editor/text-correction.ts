@@ -30,7 +30,7 @@ import type {
 import { t } from "./ui-i18n";
 
 const CORRECTION_DEBOUNCE_MS = 350;
-const IDLE_MESSAGE = t("correction.status.idle");
+const IDLE_MESSAGE = "";
 const DEBOUNCE_MESSAGE = t("correction.status.debounce");
 const LOADING_MESSAGE = t("correction.status.loading");
 const ERROR_MESSAGE = t("correction.status.error");

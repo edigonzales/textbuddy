@@ -8,7 +8,7 @@ import { extractErrorMessage } from "./http-error";
 import type { DocumentImportElements } from "./types";
 import { t } from "./ui-i18n";
 
-const IDLE_MESSAGE = t("import.status.idle");
+const IDLE_MESSAGE = "";
 const DEFAULT_ERROR_MESSAGE = t("import.status.defaultError");
 const AUTH_REQUIRED_MESSAGE = t("import.status.authRequired");
 const DEFAULT_OCR_LANGUAGE = "de";

@@ -9,7 +9,6 @@ public record ErrorPageModel(
         String traceId,
         String lang,
         String skipLinkLabel,
-        String eyebrow,
         String pathLabel,
         String traceLabel,
         String backHomeLabel

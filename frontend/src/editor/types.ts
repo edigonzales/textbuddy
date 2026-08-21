@@ -60,7 +60,6 @@ export interface QuickActionElements {
 
 export interface RewriteBubbleElements {
   bubble: HTMLElement;
-  focus: HTMLElement;
   primaryAction: HTMLButtonElement;
   secondaryAction: HTMLButtonElement;
   overlay: HTMLElement;

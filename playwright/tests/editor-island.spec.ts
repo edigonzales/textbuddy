@@ -95,6 +95,16 @@ async function openInspectorTab(page: Page, tab: InspectorTab) {
   await page.getByTestId(`inspector-tab-${tab}`).click();
 }
 
+async function selectPreviousCharacters(page: Page, count: number): Promise<void> {
+  await page.keyboard.down("Shift");
+
+  for (let index = 0; index < count; index += 1) {
+    await page.keyboard.press("ArrowLeft");
+  }
+
+  await page.keyboard.up("Shift");
+}
+
 test("typing updates mirror and undo redo state", async ({ page }) => {
   await page.goto("/");
 
@@ -288,7 +298,7 @@ test("text correction marks problems and applies a suggestion", async ({ page })
   await expect(correctionMarks).toHaveCount(0);
 });
 
-test("rewrite bubble switches between word and sentence mode based on focus", async ({ page }) => {
+test("rewrite bubble opens only for explicit word and sentence selections", async ({ page }) => {
   await page.goto("/");
 
   const editor = page.getByTestId("editor-input");
@@ -299,21 +309,24 @@ test("rewrite bubble switches between word and sentence mode based on focus", as
   await editor.click();
   await page.keyboard.type("Alpha schnell.");
 
-  await expect(bubble).toBeVisible();
-  await expect(primaryAction).toHaveText("Satz umschreiben");
-  await expect(secondaryAction).toBeHidden();
+  await expect(bubble).toBeHidden();
 
   await page.keyboard.press("ArrowLeft");
+  await expect(bubble).toBeHidden();
+
+  await selectPreviousCharacters(page, 7);
 
   await expect(bubble).toBeVisible();
-  await expect(primaryAction).toHaveText("Wort umschreiben");
-  await expect(secondaryAction).toHaveText("Satz umschreiben");
+  await expect(bubble).toHaveAttribute("aria-label", "Vorschläge für „schnell“");
+  await expect(primaryAction).toHaveText("Synonyme");
+  await expect(secondaryAction).toHaveText("Satz umformulieren");
   await expect(secondaryAction).toBeVisible();
 
-  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("End");
+  await selectPreviousCharacters(page, 14);
 
   await expect(bubble).toBeVisible();
-  await expect(primaryAction).toHaveText("Satz umschreiben");
+  await expect(primaryAction).toHaveText("Satz umformulieren");
   await expect(secondaryAction).toBeHidden();
 });
 
@@ -340,10 +353,10 @@ test("word synonym uses the focused word context and replaces only that range", 
   await editor.click();
   await page.keyboard.type("Alpha schnell.");
 
-  await expect(bubble).toBeVisible();
-  await expect(page.getByTestId("rewrite-primary-action")).toHaveText("Satz umschreiben");
+  await expect(bubble).toBeHidden();
 
   await page.keyboard.press("ArrowLeft");
+  await selectPreviousCharacters(page, 7);
 
   await expect(bubble).toBeVisible();
 
@@ -380,8 +393,10 @@ test("sentence rewrite is reachable from the word bubble and replaces only the s
 
   await editor.click();
   await page.keyboard.type("Alpha schnell. Beta Satz.");
-  await page.keyboard.press("ArrowUp");
-  await page.keyboard.press("ArrowLeft");
+  for (let index = 0; index < 12; index += 1) {
+    await page.keyboard.press("ArrowLeft");
+  }
+  await selectPreviousCharacters(page, 7);
 
   await expect(page.getByTestId("rewrite-bubble")).toBeVisible();
   await expect(page.getByTestId("rewrite-secondary-action")).toBeVisible();
@@ -403,10 +418,164 @@ test("sentence mode is reachable without word focus", async ({ page }) => {
 
   await editor.click();
   await page.keyboard.type("Alpha Satz.");
+  await selectPreviousCharacters(page, 11);
 
   await expect(page.getByTestId("rewrite-bubble")).toBeVisible();
-  await expect(page.getByTestId("rewrite-primary-action")).toHaveText("Satz umschreiben");
+  await expect(page.getByTestId("rewrite-primary-action")).toHaveText("Satz umformulieren");
   await expect(page.getByTestId("rewrite-secondary-action")).toBeHidden();
+});
+
+test("rewrite bubble exposes compact loading, empty, error and keyboard result states", async ({
+  page,
+}) => {
+  let requestCount = 0;
+  let releaseEmptyResponse: (() => void) | undefined;
+
+  await page.route("**/api/word-synonym", async (route) => {
+    requestCount += 1;
+
+    if (requestCount === 1) {
+      await new Promise<void>((resolve) => {
+        releaseEmptyResponse = resolve;
+      });
+      await route.fulfill({ json: { synonyms: [] } });
+      return;
+    }
+
+    if (requestCount === 2) {
+      await route.fulfill({
+        status: 503,
+        json: { message: "Vorschlagsdienst nicht verfügbar." },
+      });
+      return;
+    }
+
+    await route.fulfill({ json: { synonyms: ["rasch", "flink"] } });
+  });
+
+  await page.goto("/");
+  const editor = page.getByTestId("editor-input");
+  const action = page.getByTestId("rewrite-primary-action");
+  const status = page.getByTestId("rewrite-status");
+
+  await editor.click();
+  await page.keyboard.type("Alpha schnell.");
+  await page.keyboard.press("ArrowLeft");
+  await selectPreviousCharacters(page, 7);
+  await action.click();
+
+  await expect(status).toHaveText("Synonyme werden geladen...");
+  await expect.poll(() => Boolean(releaseEmptyResponse)).toBe(true);
+  releaseEmptyResponse?.();
+  await expect(status).toHaveText("Keine Synonyme gefunden.");
+
+  await action.click();
+  await expect(status).toHaveText("Vorschlagsdienst nicht verfügbar.");
+
+  await action.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("rewrite-option")).toHaveCount(2);
+  await expect(page.getByTestId("rewrite-option").first()).toBeFocused();
+});
+
+test("Escape and outside clicks dismiss the current selection and abort pending requests", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const trackedWindow = window as Window & { textbuddyAbortCount?: number };
+    const originalAbort = AbortController.prototype.abort;
+
+    trackedWindow.textbuddyAbortCount = 0;
+    AbortController.prototype.abort = function (...args: Parameters<AbortController["abort"]>) {
+      trackedWindow.textbuddyAbortCount = (trackedWindow.textbuddyAbortCount ?? 0) + 1;
+      return originalAbort.apply(this, args);
+    };
+  });
+
+  let releaseRequest: (() => void) | undefined;
+  await page.route("**/api/word-synonym", async (route) => {
+    await new Promise<void>((resolve) => {
+      releaseRequest = resolve;
+    });
+
+    await route.fulfill({ json: { synonyms: ["rasch"] } }).catch(() => undefined);
+  });
+
+  await page.goto("/");
+  const editor = page.getByTestId("editor-input");
+  const bubble = page.getByTestId("rewrite-bubble");
+
+  await editor.click();
+  await page.keyboard.type("Alpha schnell.");
+  await page.keyboard.press("ArrowLeft");
+  await selectPreviousCharacters(page, 7);
+  await page.getByTestId("rewrite-primary-action").click();
+  await expect(page.getByTestId("rewrite-status")).toHaveText("Synonyme werden geladen...");
+  await expect.poll(() => Boolean(releaseRequest)).toBe(true);
+  const abortCountBeforeEscape = await page.evaluate(() => (
+    window as Window & { textbuddyAbortCount?: number }
+  ).textbuddyAbortCount ?? 0);
+
+  await page.keyboard.press("Escape");
+  await expect(bubble).toBeHidden();
+  await expect.poll(() => page.evaluate(() => (
+    window as Window & { textbuddyAbortCount?: number }
+  ).textbuddyAbortCount ?? 0)).toBeGreaterThan(abortCountBeforeEscape);
+  releaseRequest?.();
+
+  await page.locator("#editor-island-root").dispatchEvent("editor:selection-changed");
+  await expect(bubble).toBeHidden();
+
+  await editor.focus();
+  await page.keyboard.press("Home");
+  await page.keyboard.press("End");
+  await page.keyboard.press("ArrowLeft");
+  await selectPreviousCharacters(page, 7);
+  await expect(bubble).toBeVisible();
+
+  await page.locator(".app-brand").click();
+  await expect(bubble).toBeHidden();
+  await page.locator("#editor-island-root").dispatchEvent("editor:selection-changed");
+  await expect(bubble).toBeHidden();
+});
+
+test("workspace and selection popup do not overflow desktop or mobile viewports", async ({ page }) => {
+  for (const viewport of [
+    { width: 1440, height: 1000 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/");
+
+    const editor = page.getByTestId("editor-input");
+    await editor.click();
+    await page.keyboard.type("Ein kompakter Beispielsatz endet mit Auswahl.");
+    await page.keyboard.press("ArrowLeft");
+    await selectPreviousCharacters(page, 7);
+    await expect(page.getByTestId("rewrite-bubble")).toBeVisible();
+
+    const geometry = await page.evaluate(() => {
+      const bubble = document.querySelector<HTMLElement>("[data-rewrite-bubble]");
+      const canvas = document.querySelector<HTMLElement>("[data-editor-canvas]");
+      const bubbleRect = bubble?.getBoundingClientRect();
+      const canvasRect = canvas?.getBoundingClientRect();
+
+      return {
+        documentWidth: document.documentElement.scrollWidth,
+        viewportWidth: document.documentElement.clientWidth,
+        bubbleLeft: bubbleRect?.left ?? -1,
+        bubbleRight: bubbleRect?.right ?? Number.POSITIVE_INFINITY,
+        canvasLeft: canvasRect?.left ?? -1,
+        canvasRight: canvasRect?.right ?? Number.POSITIVE_INFINITY,
+      };
+    });
+
+    expect(geometry.documentWidth).toBeLessThanOrEqual(geometry.viewportWidth);
+    expect(geometry.bubbleLeft).toBeGreaterThanOrEqual(geometry.canvasLeft + 7);
+    expect(geometry.bubbleRight).toBeLessThanOrEqual(geometry.canvasRight - 7);
+    expect(geometry.bubbleLeft).toBeGreaterThanOrEqual(7);
+    expect(geometry.bubbleRight).toBeLessThanOrEqual(viewport.width - 7);
+  }
 });
 
 test("advisor catalog shows multiple selectable documents and serves reachable PDFs", async ({
@@ -1074,10 +1243,10 @@ test("incomplete sentences keep word mode without sentence action", async ({ pag
 
   await editor.click();
   await page.keyboard.type("Alpha schnell");
-  await page.keyboard.press("ArrowLeft");
+  await selectPreviousCharacters(page, 7);
 
   await expect(page.getByTestId("rewrite-bubble")).toBeVisible();
-  await expect(page.getByTestId("rewrite-primary-action")).toHaveText("Wort umschreiben");
+  await expect(page.getByTestId("rewrite-primary-action")).toHaveText("Synonyme");
   await expect(page.getByTestId("rewrite-secondary-action")).toBeHidden();
 });
 

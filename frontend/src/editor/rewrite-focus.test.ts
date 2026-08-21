@@ -3,8 +3,8 @@ import test from "node:test";
 
 import { resolveRewriteBubbleState } from "./rewrite-focus";
 
-test("resolveRewriteBubbleState prefers word mode inside a completed sentence", () => {
-  assert.deepEqual(resolveRewriteBubbleState("Alpha schnell.", 9, 9), {
+test("resolveRewriteBubbleState uses word mode for an explicit word selection", () => {
+  assert.deepEqual(resolveRewriteBubbleState("Alpha schnell.", 6, 13), {
     mode: "word",
     word: {
       start: 6,
@@ -20,8 +20,8 @@ test("resolveRewriteBubbleState prefers word mode inside a completed sentence", 
   });
 });
 
-test("resolveRewriteBubbleState keeps word mode for incomplete sentence fragments", () => {
-  assert.deepEqual(resolveRewriteBubbleState("Alpha schnell", 9, 9), {
+test("resolveRewriteBubbleState keeps word mode for selected incomplete sentence fragments", () => {
+  assert.deepEqual(resolveRewriteBubbleState("Alpha schnell", 6, 13), {
     mode: "word",
     word: {
       start: 6,
@@ -33,8 +33,8 @@ test("resolveRewriteBubbleState keeps word mode for incomplete sentence fragment
   });
 });
 
-test("resolveRewriteBubbleState falls back to sentence mode without word focus", () => {
-  assert.deepEqual(resolveRewriteBubbleState("Alpha Satz.", 11, 11), {
+test("resolveRewriteBubbleState uses sentence mode for a selection inside one sentence", () => {
+  assert.deepEqual(resolveRewriteBubbleState("Alpha Satz.", 0, 11), {
     mode: "sentence",
     sentence: {
       start: 0,
@@ -44,8 +44,20 @@ test("resolveRewriteBubbleState falls back to sentence mode without word focus",
   });
 });
 
-test("resolveRewriteBubbleState hides the bubble outside any valid context", () => {
-  assert.deepEqual(resolveRewriteBubbleState("   ", 1, 1), {
+test("resolveRewriteBubbleState hides the bubble for a collapsed caret", () => {
+  assert.deepEqual(resolveRewriteBubbleState("Alpha schnell.", 9, 9), {
+    mode: "hidden",
+  });
+});
+
+test("resolveRewriteBubbleState hides the bubble for whitespace selections", () => {
+  assert.deepEqual(resolveRewriteBubbleState("Alpha  schnell.", 5, 7), {
+    mode: "hidden",
+  });
+});
+
+test("resolveRewriteBubbleState hides the bubble for selections spanning sentences", () => {
+  assert.deepEqual(resolveRewriteBubbleState("Alpha Satz. Beta Satz.", 6, 18), {
     mode: "hidden",
   });
 });

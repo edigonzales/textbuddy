@@ -49,7 +49,6 @@ class HomePageMvcTest {
                 .andExpect(content().string(containsString("data-testid=\"document-import-ocr-language\"")))
                 .andExpect(content().string(containsString("data-testid=\"document-import-button\"")))
                 .andExpect(content().string(containsString("accept=\".pdf,.docx,.pptx,.xlsx,.html,.md,.adoc,.txt,.png,.jpg,.jpeg,.tif,.tiff\"")))
-                .andExpect(content().string(containsString("Importiere Dokumente als editorfreundliches HTML direkt in den aktuellen Textfluss.")))
                 .andExpect(content().string(containsString("Upload oder Drag-and-Drop")))
                 .andExpect(content().string(containsString("Dokument hier ablegen")))
                 .andExpect(content().string(containsString("/editor/editor-island.css")))
@@ -102,8 +101,6 @@ class HomePageMvcTest {
                 .andExpect(content().string(containsString("data-testid=\"advisor-results-panel\"")))
                 .andExpect(content().string(containsString("data-testid=\"advisor-result-list\"")))
                 .andExpect(content().string(containsString("data-testid=\"advisor-result-detail\"")))
-                .andExpect(content().string(containsString("Wähle Referenzdokumente")))
-                .andExpect(content().string(containsString("Laufende Prüfung")))
                 .andExpect(content().string(containsString("Referenzdokumente")))
                 .andExpect(content().string(containsString("Trefferliste")))
                 .andExpect(content().string(containsString("Schreibweisungen")))
@@ -123,7 +120,8 @@ class HomePageMvcTest {
                 .andExpect(content().string(containsString("data-testid=\"dictionary-form\"")))
                 .andExpect(content().string(containsString("id=\"dictionary-input\"")))
                 .andExpect(content().string(containsString("data-testid=\"dictionary-list\"")))
-                .andExpect(content().string(containsString("Wort umschreiben")))
+                .andExpect(content().string(containsString("Synonyme")))
+                .andExpect(content().string(containsString("Satz umformulieren")))
                 .andExpect(content().string(containsString("Schreibe, korrigiere und überarbeite deinen Text")));
     }
 

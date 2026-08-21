@@ -3,19 +3,13 @@
 @param HomePageModel page
 
 @template.layout.main(title = page.title(), lang = page.uiLocaleTag(), skipLinkLabel = page.t("layout.skipLink"), content = @`
-<div class="page-shell">
-    <header class="app-header panel" data-testid="shell-header">
-        <div class="app-brand">
-            <h1>${page.t("home.header.brand")}</h1>
-            <p>${page.subtitle()}</p>
-        </div>
-        <div class="status-strip">
-            <div class="status-pill" data-testid="auth-status-pill">
-                <strong>${page.auth().statusTitle()}</strong>
-                <span>${page.auth().statusMessage()}</span>
-            </div>
+<div class="app-shell">
+    <header class="app-header" data-testid="shell-header">
+        <div class="app-header-inner">
+            <span class="app-brand">${page.t("home.header.brand")}</span>
+            <div class="header-actions">
             @if (page.auth().enabled() && page.auth().authenticated())
-                <div class="status-pill status-pill-account" data-testid="auth-account-pill">
+                <div class="account-actions" data-testid="auth-account-pill">
                     <strong data-testid="auth-user">${page.auth().userDisplayName()}</strong>
                     <form method="post" action="/logout" class="auth-form" data-testid="auth-logout-form">
                         <input type="hidden" name="${page.csrfParameterName()}" value="${page.csrfToken()}">
@@ -23,24 +17,33 @@
                     </form>
                 </div>
             @elseif (page.auth().enabled())
-                <div class="status-pill status-pill-account" data-testid="auth-login-pill">
-                    <strong>${page.t("auth.login.title")}</strong>
+                <div class="account-actions" data-testid="auth-login-pill">
                     <a class="inline-action" href="${page.auth().loginUrl()}" data-testid="auth-login-link">${page.t("auth.login.link")}</a>
                 </div>
             @endif
-            <nav class="status-pill status-pill-account locale-switcher" aria-label="${page.t("locale.switcher.ariaLabel")}" data-testid="locale-switcher">
+            <nav class="locale-switcher" aria-label="${page.t("locale.switcher.ariaLabel")}" data-testid="locale-switcher">
                 @for (var language : page.supportedUiLanguages())
                     @if (language.equals(page.uiLocaleLanguage()))
-                        <strong>${language.toUpperCase()}</strong>
+                        <strong aria-current="true">${language.toUpperCase()}</strong>
                     @else
                         <a class="inline-action" href="/?lang=${language}" hreflang="${language}">${language.toUpperCase()}</a>
                     @endif
                 @endfor
             </nav>
+            </div>
         </div>
     </header>
 
-    <main id="main-content" tabindex="-1">
+    @if (!page.auth().enabled())
+        <div class="local-mode-wrap">
+            <p class="local-mode-notice" data-testid="auth-status-pill">
+                <strong>${page.auth().statusTitle()}</strong>
+                <span>${page.auth().statusMessage()}</span>
+            </p>
+        </div>
+    @endif
+
+    <main id="main-content" class="page-shell" tabindex="-1">
         <div
             id="editor-island-root"
             class="editor-root editor-workspace"
@@ -56,8 +59,7 @@
         >
             <section class="panel editor-panel" data-testid="editor-shell" aria-labelledby="editor-shell-title">
                 <div class="panel-body">
-                    <p class="eyebrow">${page.t("editor.shell.eyebrow")}</p>
-                    <h2 id="editor-shell-title">${page.t("editor.shell.title")}</h2>
+                    <h1 id="editor-shell-title">${page.t("editor.shell.title")}</h1>
                     <p class="panel-copy">${page.t("editor.shell.copy")}</p>
 
                     <div class="editor-toolbar" data-testid="editor-toolbar">
@@ -76,11 +78,7 @@
                         <div class="editor-surface" data-editor-surface data-editor-placeholder="${page.t("editor.placeholder")}"></div>
                         <textarea hidden name="text" data-editor-mirror data-testid="editor-mirror"></textarea>
 
-                        <div class="rewrite-bubble" data-rewrite-bubble data-testid="rewrite-bubble" hidden>
-                            <p class="rewrite-focus">
-                                <strong data-rewrite-focus data-testid="rewrite-focus"></strong>
-                            </p>
-
+                        <div class="rewrite-bubble" data-rewrite-bubble data-testid="rewrite-bubble" role="dialog" aria-modal="false" hidden>
                             <div class="rewrite-action-row">
                                 <button type="button" class="rewrite-primary-action" data-rewrite-primary-action data-testid="rewrite-primary-action">${page.t("rewrite.wordAction")}</button>
                                 <button type="button" class="rewrite-secondary-action" data-rewrite-secondary-action data-testid="rewrite-secondary-action" hidden>${page.t("rewrite.sentenceAction")}</button>
@@ -95,10 +93,7 @@
 
                     <section class="rewrite-diff-panel" data-rewrite-diff-panel data-testid="rewrite-diff-panel" hidden>
                         <div class="rewrite-diff-head">
-                            <div>
-                                <p class="eyebrow">${page.t("rewrite.diff.eyebrow")}</p>
-                                <h3>${page.t("rewrite.diff.title")}</h3>
-                            </div>
+                            <h2>${page.t("rewrite.diff.title")}</h2>
 
                             <button type="button" class="rewrite-diff-undo" data-rewrite-diff-undo data-testid="rewrite-diff-undo">${page.t("rewrite.diff.undo")}</button>
                         </div>
@@ -119,10 +114,9 @@
                 </div>
             </section>
 
-            <aside class="panel inspector-panel" data-testid="inspector-panel" aria-labelledby="inspector-title">
+            <aside class="panel inspector-panel" data-testid="inspector-panel" aria-label="${page.t("inspector.title")}">
                 <div class="panel-body inspector-body">
                     <div class="inspector-head">
-                        <p class="eyebrow">${page.t("inspector.title")}</p>
                         <div class="inspector-tabs" role="tablist" aria-label="${page.t("inspector.tabs.ariaLabel")}">
                             <button type="button" id="inspector-tab-correction" class="inspector-tab" role="tab" aria-controls="inspector-panel-correction" aria-selected="false" data-inspector-tab="correction" data-testid="inspector-tab-correction">${page.t("inspector.tab.correction")}</button>
                             <button type="button" id="inspector-tab-actions" class="inspector-tab" role="tab" aria-controls="inspector-panel-actions" aria-selected="true" data-inspector-tab="actions" data-testid="inspector-tab-actions">${page.t("inspector.tab.actions")}</button>
@@ -134,12 +128,7 @@
 
                     <section id="inspector-panel-actions" class="inspector-section quick-action-panel" data-inspector-panel="actions" data-quick-action-panel data-testid="quick-action-panel" data-quick-action-state="idle" data-quick-action-selected-action="plain-language" role="tabpanel" aria-labelledby="inspector-tab-actions">
                         <div class="quick-action-panel-head">
-                            <div>
-                                <h3 id="quick-action-title">${page.t("quickAction.title")}</h3>
-                                <p class="panel-copy">${page.t("quickAction.copy")}</p>
-                            </div>
-
-                            <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" role="status" aria-live="polite" aria-atomic="true">${page.t("quickAction.status.idle")}</p>
+                            <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" role="status" aria-live="polite" aria-atomic="true"></p>
                         </div>
 
                         <div class="quick-action-layout">
@@ -180,20 +169,15 @@
 
                             <section class="quick-action-config-shell" data-testid="quick-action-config-shell">
                                 <div class="quick-action-config-head">
-                                    <p class="eyebrow">${page.t("quickAction.config.eyebrow")}</p>
                                     <h4 data-quick-action-active-label data-testid="quick-action-active-label">${page.t("quickAction.action.plainLanguage")}</h4>
                                 </div>
-                                <p class="quick-action-config-copy">${page.t("quickAction.config.copy")}</p>
 
                                 <div class="quick-action-configs">
                                     <div class="quick-action-config" data-quick-action-config="plain-language" data-testid="quick-action-config-plain-language">
-                                        <p>${page.t("quickAction.config.plainLanguage")}</p>
                                     </div>
                                     <div class="quick-action-config" data-quick-action-config="proofread" data-testid="quick-action-config-proofread" hidden>
-                                        <p>${page.t("quickAction.config.proofread")}</p>
                                     </div>
                                     <div class="quick-action-config" data-quick-action-config="bullet-points" data-testid="quick-action-config-bullet-points" hidden>
-                                        <p>${page.t("quickAction.config.bulletPoints")}</p>
                                     </div>
                                     <div class="quick-action-config" data-quick-action-config="summarize" data-testid="quick-action-config-summarize" hidden>
                                         <label class="quick-action-select-shell" for="quick-action-summarize-option">
@@ -261,7 +245,6 @@
 
                     <section id="inspector-panel-correction" class="inspector-section correction-panel" data-inspector-panel="correction" data-testid="correction-panel" data-correction-panel data-correction-state="idle" role="tabpanel" aria-labelledby="inspector-tab-correction" hidden>
                         <h3 id="correction-panel-title">${page.t("correction.title")}</h3>
-                        <p class="panel-copy">${page.t("correction.copy")}</p>
 
                         <div class="correction-controls" data-testid="correction-controls">
                             <label class="control-stack" for="correction-language">
@@ -293,18 +276,17 @@
                             </div>
                         </div>
 
-                        <p class="problem-status" data-correction-status data-testid="correction-status" role="status" aria-live="polite" aria-atomic="true">${page.t("correction.status.idle")}</p>
+                        <p class="problem-status" data-correction-status data-testid="correction-status" role="status" aria-live="polite" aria-atomic="true"></p>
                         <div class="problem-list" data-correction-list data-testid="correction-problem-list" role="list" aria-label="${page.t("correction.problemList.ariaLabel")}"></div>
 
                     </section>
 
                     <section id="inspector-panel-advisor" class="inspector-section advisor-panel" data-inspector-panel="advisor" data-testid="advisor-panel" data-advisor-panel data-advisor-state="idle" role="tabpanel" aria-labelledby="inspector-tab-advisor" hidden>
                         <h3 id="advisor-panel-title">${page.t("advisor.title")}</h3>
-                        <p class="panel-copy">${page.t("advisor.copy")}</p>
 
                         <div class="advisor-toolbar">
                             <p class="advisor-status" data-advisor-status data-testid="advisor-status" role="status" aria-live="polite" aria-atomic="true">
-                                ${page.advisorDocs().size()} ${page.t("advisor.docsAvailable")} ${page.t("advisor.idleHint")}
+                                ${page.advisorDocs().size()} ${page.t("advisor.docsAvailable")}
                             </p>
                             <button type="button" class="advisor-validate" data-advisor-validate data-testid="advisor-validate">${page.t("advisor.validate")}</button>
                         </div>
@@ -335,7 +317,6 @@
                         <section class="advisor-results-panel" data-testid="advisor-results-panel" aria-labelledby="advisor-results-title">
                             <div class="advisor-results-head">
                                 <div>
-                                    <p class="eyebrow">${page.t("advisor.results.eyebrow")}</p>
                                     <h3 id="advisor-results-title">${page.t("advisor.results.title")}</h3>
                                     <p class="panel-copy">${page.t("advisor.results.copy")}</p>
                                 </div>
@@ -348,10 +329,7 @@
 
                             <section class="advisor-detail" data-advisor-result-detail data-testid="advisor-result-detail" role="region" aria-live="polite" aria-atomic="true" aria-labelledby="advisor-result-detail-title" hidden>
                                 <div class="advisor-detail-head">
-                                    <div>
-                                        <p class="eyebrow">${page.t("advisor.detail.eyebrow")}</p>
-                                        <h3 id="advisor-result-detail-title" data-advisor-result-detail-title data-testid="advisor-result-detail-title"></h3>
-                                    </div>
+                                    <h3 id="advisor-result-detail-title" data-advisor-result-detail-title data-testid="advisor-result-detail-title"></h3>
 
                                     <div class="advisor-detail-actions">
                                         <button type="button" class="advisor-link" data-advisor-result-detail-open data-testid="advisor-result-detail-open" hidden>${page.t("advisor.detail.openViewer")}</button>
@@ -369,10 +347,7 @@
 
                         <section class="advisor-pdf-viewer" data-advisor-pdf-viewer data-testid="advisor-pdf-viewer" role="region" aria-labelledby="advisor-pdf-title" hidden>
                             <div class="advisor-pdf-head">
-                                <div>
-                                    <p class="eyebrow">${page.t("viewer.eyebrow")}</p>
-                                    <h3 id="advisor-pdf-title" data-advisor-pdf-title data-testid="advisor-pdf-title">${page.t("viewer.title")}</h3>
-                                </div>
+                                <h3 id="advisor-pdf-title" data-advisor-pdf-title data-testid="advisor-pdf-title">${page.t("viewer.title")}</h3>
 
                                 <div class="advisor-detail-actions">
                                     <a class="advisor-link" href="#" data-advisor-pdf-download data-testid="advisor-pdf-download">${page.t("viewer.download")}</a>
@@ -386,14 +361,8 @@
                     </section>
 
                     <section id="inspector-panel-import" class="inspector-section document-import-panel" data-inspector-panel="import" data-document-import-panel data-document-import-state="idle" data-document-import-labels="${String.join(", ", page.documentImportFormats())}" data-testid="document-import-panel" role="tabpanel" aria-labelledby="inspector-tab-import" hidden>
-                        <div class="document-import-head">
-                            <div>
-                                <h3 id="document-import-title">${page.t("import.title")}</h3>
-                                <p class="panel-copy">${page.t("import.copy")}</p>
-                            </div>
-
-                            <p class="document-import-status" data-document-import-status data-testid="document-import-status" role="status" aria-live="polite" aria-atomic="true">${page.t("import.status.idle")}</p>
-                        </div>
+                        <h3 id="document-import-title">${page.t("import.title")}</h3>
+                        <p class="document-import-status" data-document-import-status data-testid="document-import-status" role="status" aria-live="polite" aria-atomic="true"></p>
 
                         <div class="document-import-body">
                             <div class="document-import-dropzone" data-document-import-dropzone data-dragging="false" data-busy="false" data-testid="document-import-dropzone" aria-label="${page.t("import.dropzone.ariaLabel")}" aria-describedby="document-import-dropzone-hint" aria-disabled="false" aria-busy="false">
@@ -430,32 +399,32 @@
                             </div>
                         </div>
 
-                        <div class="text-stats-grid">
-                            <article class="text-stats-item">
-                                <span>${page.t("stats.characters")}</span>
-                                <strong data-text-stats="characters" data-testid="text-stats-characters">0</strong>
-                            </article>
-                            <article class="text-stats-item">
-                                <span>${page.t("stats.words")}</span>
-                                <strong data-text-stats="words" data-testid="text-stats-words">0</strong>
-                            </article>
-                            <article class="text-stats-item">
-                                <span>${page.t("stats.syllables")}</span>
-                                <strong data-text-stats="syllables" data-testid="text-stats-syllables">0</strong>
-                            </article>
-                            <article class="text-stats-item">
-                                <span>${page.t("stats.sentences")}</span>
-                                <strong data-text-stats="sentences" data-testid="text-stats-sentences">0</strong>
-                            </article>
-                            <article class="text-stats-item">
-                                <span>${page.t("stats.avgSentenceLength")}</span>
-                                <strong data-text-stats="avg-sentence-length" data-testid="text-stats-avg-sentence-length">0.0</strong>
-                            </article>
-                            <article class="text-stats-item">
-                                <span>${page.t("stats.avgSyllablesPerWord")}</span>
-                                <strong data-text-stats="avg-syllables-per-word" data-testid="text-stats-avg-syllables-per-word">0.0</strong>
-                            </article>
-                        </div>
+                        <dl class="text-stats-grid">
+                            <div class="text-stats-item">
+                                <dt>${page.t("stats.characters")}</dt>
+                                <dd data-text-stats="characters" data-testid="text-stats-characters">0</dd>
+                            </div>
+                            <div class="text-stats-item">
+                                <dt>${page.t("stats.words")}</dt>
+                                <dd data-text-stats="words" data-testid="text-stats-words">0</dd>
+                            </div>
+                            <div class="text-stats-item">
+                                <dt>${page.t("stats.syllables")}</dt>
+                                <dd data-text-stats="syllables" data-testid="text-stats-syllables">0</dd>
+                            </div>
+                            <div class="text-stats-item">
+                                <dt>${page.t("stats.sentences")}</dt>
+                                <dd data-text-stats="sentences" data-testid="text-stats-sentences">0</dd>
+                            </div>
+                            <div class="text-stats-item">
+                                <dt>${page.t("stats.avgSentenceLength")}</dt>
+                                <dd data-text-stats="avg-sentence-length" data-testid="text-stats-avg-sentence-length">0.0</dd>
+                            </div>
+                            <div class="text-stats-item">
+                                <dt>${page.t("stats.avgSyllablesPerWord")}</dt>
+                                <dd data-text-stats="avg-syllables-per-word" data-testid="text-stats-avg-syllables-per-word">0.0</dd>
+                            </div>
+                        </dl>
 
                         <div class="text-stats-flesch">
                             <div class="text-stats-flesch-head">

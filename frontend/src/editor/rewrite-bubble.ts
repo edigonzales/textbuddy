@@ -213,7 +213,7 @@ export function mountRewriteBubble(
     activeContext = null;
     resetOverlay();
     applyModeAppearance("hidden");
-    elements.focus.textContent = "";
+    elements.bubble.removeAttribute("aria-label");
     elements.primaryAction.hidden = false;
     elements.secondaryAction.hidden = true;
     elements.bubble.hidden = true;
@@ -238,22 +238,24 @@ export function mountRewriteBubble(
     }
 
     const canvasRect = editorElements.canvas.getBoundingClientRect();
-    const anchor = editor.view.coordsAtPos(editor.state.selection.from);
-    const bubbleWidth = elements.bubble.offsetWidth || 320;
-    const bubbleHeight = elements.bubble.offsetHeight || 56;
-    const minLeft = Math.min(bubbleWidth / 2 + 12, canvasRect.width / 2);
-    const maxLeft = Math.max(minLeft, canvasRect.width - bubbleWidth / 2 - 12);
-    let left = clamp(anchor.left - canvasRect.left, minLeft, maxLeft);
-    let top = anchor.bottom - canvasRect.top + 12;
+    const selectionStart = editor.view.coordsAtPos(editor.state.selection.from);
+    const selectionEnd = editor.view.coordsAtPos(editor.state.selection.to);
+    const bubbleWidth = Math.min(elements.bubble.offsetWidth || 384, canvasRect.width - 16);
+    const bubbleHeight = elements.bubble.offsetHeight || 48;
+    const selectionTop = Math.min(selectionStart.top, selectionEnd.top);
+    const selectionBottom = Math.max(selectionStart.bottom, selectionEnd.bottom);
+    const sameLine = Math.abs(selectionStart.top - selectionEnd.top) < 4;
+    const selectionCenter = sameLine
+      ? (selectionStart.left + selectionEnd.right) / 2
+      : selectionEnd.left;
+    const maxLeft = Math.max(8, canvasRect.width - bubbleWidth - 8);
+    const left = clamp(selectionCenter - canvasRect.left - bubbleWidth / 2, 8, maxLeft);
+    let top = selectionBottom - canvasRect.top + 8;
     let placement: "bottom" | "top" = "bottom";
 
     if (top + bubbleHeight > canvasRect.height - 8) {
-      top = Math.max(12, anchor.top - canvasRect.top - bubbleHeight - 12);
+      top = Math.max(8, selectionTop - canvasRect.top - bubbleHeight - 8);
       placement = "top";
-    }
-
-    if (canvasRect.width <= bubbleWidth + 24) {
-      left = canvasRect.width / 2;
     }
 
     elements.bubble.dataset.placement = placement;
@@ -264,9 +266,9 @@ export function mountRewriteBubble(
   function syncBubbleChrome(context: ActiveRewriteContext): void {
     if (context.mode === "word") {
       applyModeAppearance("word");
-      elements.focus.textContent = t("rewrite.focus.word", {
+      elements.bubble.setAttribute("aria-label", t("rewrite.aria.word", {
         text: context.word.text,
-      });
+      }));
       elements.primaryAction.textContent = t("rewrite.wordAction");
       elements.primaryAction.dataset.actionKind = "word";
       elements.secondaryAction.textContent = t("rewrite.sentenceAction");
@@ -276,9 +278,9 @@ export function mountRewriteBubble(
     }
 
     applyModeAppearance("sentence");
-    elements.focus.textContent = t("rewrite.focus.sentence", {
+    elements.bubble.setAttribute("aria-label", t("rewrite.aria.sentence", {
       text: shorten(context.sentence.text, 48),
-    });
+    }));
     elements.primaryAction.textContent = t("rewrite.sentenceAction");
     elements.primaryAction.dataset.actionKind = "sentence";
     elements.secondaryAction.hidden = true;
@@ -330,7 +332,7 @@ export function mountRewriteBubble(
   }
 
   function applyWordSynonym(word: ActiveWord, synonym: string): void {
-    resetOverlay();
+    hideBubble();
     editor
       .chain()
       .focus()
@@ -339,7 +341,7 @@ export function mountRewriteBubble(
   }
 
   function applySentenceAlternative(sentence: ActiveSentence, alternative: string): void {
-    resetOverlay();
+    hideBubble();
     editor
       .chain()
       .focus()
@@ -359,7 +361,10 @@ export function mountRewriteBubble(
     return button;
   }
 
-  async function requestWordSynonyms(context: ActiveRewriteContext & { mode: "word" }): Promise<void> {
+  async function requestWordSynonyms(
+    context: ActiveRewriteContext & { mode: "word" },
+    focusFirstResult: boolean,
+  ): Promise<void> {
     const contextKey = createContextKey(context);
     const requestId = latestRequestId + 1;
     const controller = new AbortController();
@@ -430,10 +435,7 @@ export function mountRewriteBubble(
       }
 
       setOverlayState("loaded", WORD_READY_MESSAGE);
-      if (
-        document.activeElement === elements.primaryAction ||
-        document.activeElement === elements.secondaryAction
-      ) {
+      if (focusFirstResult) {
         elements.options.querySelector<HTMLButtonElement>("button")?.focus();
       }
       positionBubble();
@@ -463,7 +465,11 @@ export function mountRewriteBubble(
     }
   }
 
-  async function requestSentenceAlternatives(sentence: ActiveSentence, contextKey: string): Promise<void> {
+  async function requestSentenceAlternatives(
+    sentence: ActiveSentence,
+    contextKey: string,
+    focusFirstResult: boolean,
+  ): Promise<void> {
     const requestId = latestRequestId + 1;
     const controller = new AbortController();
 
@@ -527,10 +533,7 @@ export function mountRewriteBubble(
       }
 
       setOverlayState("loaded", SENTENCE_READY_MESSAGE);
-      if (
-        document.activeElement === elements.primaryAction ||
-        document.activeElement === elements.secondaryAction
-      ) {
+      if (focusFirstResult) {
         elements.options.querySelector<HTMLButtonElement>("button")?.focus();
       }
       positionBubble();
@@ -560,25 +563,35 @@ export function mountRewriteBubble(
     }
   }
 
-  elements.primaryAction.addEventListener("click", () => {
+  elements.primaryAction.addEventListener("click", (event) => {
     if (!activeContext) {
       return;
     }
 
+    const focusFirstResult = event.detail === 0;
+
     if (activeContext.mode === "word") {
-      void requestWordSynonyms(activeContext);
+      void requestWordSynonyms(activeContext, focusFirstResult);
       return;
     }
 
-    void requestSentenceAlternatives(activeContext.sentence, createContextKey(activeContext));
+    void requestSentenceAlternatives(
+      activeContext.sentence,
+      createContextKey(activeContext),
+      focusFirstResult,
+    );
   });
 
-  elements.secondaryAction.addEventListener("click", () => {
+  elements.secondaryAction.addEventListener("click", (event) => {
     if (!activeContext || activeContext.mode !== "word" || !activeContext.sentence) {
       return;
     }
 
-    void requestSentenceAlternatives(activeContext.sentence, createContextKey(activeContext));
+    void requestSentenceAlternatives(
+      activeContext.sentence,
+      createContextKey(activeContext),
+      event.detail === 0,
+    );
   });
 
   root.addEventListener("editor:selection-changed", () => {
@@ -590,10 +603,14 @@ export function mountRewriteBubble(
   });
 
   document.addEventListener("pointerdown", (event) => {
-    if (root.contains(event.target as Node)) {
+    if (elements.bubble.hidden || elements.bubble.contains(event.target as Node)) {
       return;
     }
 
+    dismissedSelection = {
+      from: editor.state.selection.from,
+      to: editor.state.selection.to,
+    };
     hideBubble();
   });
 

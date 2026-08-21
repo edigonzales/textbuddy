@@ -179,20 +179,18 @@ export function findAdvisorValidationElements(): AdvisorValidationElements | nul
 
 export function findRewriteBubbleElements(root: HTMLElement): RewriteBubbleElements | null {
   const bubble = queryRequired<HTMLElement>(root, "[data-rewrite-bubble]");
-  const focus = queryRequired<HTMLElement>(root, "[data-rewrite-focus]");
   const primaryAction = queryRequired<HTMLButtonElement>(root, "[data-rewrite-primary-action]");
   const secondaryAction = queryRequired<HTMLButtonElement>(root, "[data-rewrite-secondary-action]");
   const overlay = queryRequired<HTMLElement>(root, "[data-rewrite-overlay]");
   const status = queryRequired<HTMLElement>(root, "[data-rewrite-status]");
   const options = queryRequired<HTMLElement>(root, "[data-rewrite-options]");
 
-  if (!bubble || !focus || !primaryAction || !secondaryAction || !overlay || !status || !options) {
+  if (!bubble || !primaryAction || !secondaryAction || !overlay || !status || !options) {
     return null;
   }
 
   return {
     bubble,
-    focus,
     primaryAction,
     secondaryAction,
     overlay,
