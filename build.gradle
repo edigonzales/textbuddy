@@ -146,6 +146,7 @@ tasks.register('verifyReleaseBundle') {
         List<String> requiredPaths = [
                 'textbuddy.jar',
                 'README.md',
+                'docs/features.md',
                 'docs/getting-started.md',
                 'docs/architecture.md',
                 'docs/operations.md',

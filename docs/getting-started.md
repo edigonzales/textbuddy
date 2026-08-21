@@ -216,6 +216,7 @@ Für einen Release-Build:
 
 ## Weiterführende Dokumentation
 
+- [Funktionsübersicht](features.md)
 - [Architektur](architecture.md)
 - [Betrieb und Konfiguration](operations.md)
 - [Accessibility](accessibility.md)

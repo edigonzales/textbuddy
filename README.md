@@ -46,6 +46,7 @@ java --enable-native-access=ALL-UNNAMED -jar build/libs/textbuddy.jar \
 
 Weitere Dokumentation:
 
+- [Funktionsübersicht](docs/features.md)
 - [Getting Started](docs/getting-started.md)
 - [Architektur](docs/architecture.md)
 - [Betrieb und Konfiguration](docs/operations.md)
