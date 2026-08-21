@@ -103,7 +103,7 @@ class HomePageMvcTest {
                 .andExpect(content().string(containsString("data-testid=\"advisor-result-list\"")))
                 .andExpect(content().string(containsString("data-testid=\"advisor-result-detail\"")))
                 .andExpect(content().string(containsString("Wähle Referenzdokumente")))
-                .andExpect(content().string(containsString("Validierungsstream")))
+                .andExpect(content().string(containsString("Laufende Prüfung")))
                 .andExpect(content().string(containsString("Referenzdokumente")))
                 .andExpect(content().string(containsString("Trefferliste")))
                 .andExpect(content().string(containsString("Schreibweisungen")))

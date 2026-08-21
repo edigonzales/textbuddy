@@ -1,20 +1,22 @@
 package app.textbuddy.advisor;
 
-import app.textbuddy.integration.advisor.AdvisorDocumentRepository;
-import app.textbuddy.integration.llm.AdvisorValidationLlmClient;
+import app.textbuddy.integration.llm.TextbuddyLlmClient;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class DefaultAdvisorValidationServiceTest {
 
     @Test
     void validateSplitsSelectedRulesIntoSmallBatchesAndStreamsMatches() {
-        AdvisorDocumentRepository repository = repository(
+        AdvisorCatalog catalog = catalog(
                 document("doc-a", "Dokument A", 1, List.of(
                         rule("rule-1", 3, List.of("downloaden")),
                         rule("rule-2", 4, List.of("meeting"))
@@ -29,7 +31,9 @@ class DefaultAdvisorValidationServiceTest {
                 ))
         );
         List<List<String>> requestedBatches = new ArrayList<>();
-        AdvisorValidationLlmClient llmClient = (text, ruleChecks) -> {
+        TextbuddyLlmClient llmClient = mock(TextbuddyLlmClient.class);
+        when(llmClient.validate(anyString(), anyList())).thenAnswer(invocation -> {
+            List<AdvisorRuleCheck> ruleChecks = invocation.getArgument(1);
             requestedBatches.add(ruleChecks.stream()
                     .map(ruleCheck -> ruleCheck.documentName() + "::" + ruleCheck.ruleId())
                     .toList());
@@ -45,8 +49,8 @@ class DefaultAdvisorValidationServiceTest {
                             null
                     ))
                     .toList();
-        };
-        DefaultAdvisorValidationService service = new DefaultAdvisorValidationService(repository, llmClient, 2);
+        });
+        DefaultAdvisorValidationService service = new DefaultAdvisorValidationService(catalog, llmClient, 2);
         RecordingHandler handler = new RecordingHandler();
 
         service.validate(
@@ -78,12 +82,14 @@ class DefaultAdvisorValidationServiceTest {
     @Test
     void validateCompletesWithoutCallingLlmWhenNoTextOrDocumentsArePresent() {
         List<List<String>> requestedBatches = new ArrayList<>();
-        AdvisorValidationLlmClient llmClient = (text, ruleChecks) -> {
+        TextbuddyLlmClient llmClient = mock(TextbuddyLlmClient.class);
+        when(llmClient.validate(anyString(), anyList())).thenAnswer(invocation -> {
+            List<AdvisorRuleCheck> ruleChecks = invocation.getArgument(1);
             requestedBatches.add(ruleChecks.stream().map(AdvisorRuleCheck::ruleId).toList());
             return List.of();
-        };
+        });
         DefaultAdvisorValidationService service = new DefaultAdvisorValidationService(
-                repository(document("doc-a", "Dokument A", 1, List.of(rule("rule-1", 3, List.of("downloaden"))))),
+                catalog(document("doc-a", "Dokument A", 1, List.of(rule("rule-1", 3, List.of("downloaden"))))),
                 llmClient,
                 2
         );
@@ -105,13 +111,15 @@ class DefaultAdvisorValidationServiceTest {
             rules.add(rule("rule-" + index, index, List.of("term-" + index)));
         }
 
-        AdvisorDocumentRepository repository = repository(document("doc-a", "Dokument A", 1, rules));
+        AdvisorCatalog catalog = catalog(document("doc-a", "Dokument A", 1, rules));
         List<Integer> requestedBatchSizes = new ArrayList<>();
-        AdvisorValidationLlmClient llmClient = (text, ruleChecks) -> {
+        TextbuddyLlmClient llmClient = mock(TextbuddyLlmClient.class);
+        when(llmClient.validate(anyString(), anyList())).thenAnswer(invocation -> {
+            List<AdvisorRuleCheck> ruleChecks = invocation.getArgument(1);
             requestedBatchSizes.add(ruleChecks.size());
             return List.of();
-        };
-        DefaultAdvisorValidationService service = new DefaultAdvisorValidationService(repository, llmClient, 3);
+        });
+        DefaultAdvisorValidationService service = new DefaultAdvisorValidationService(catalog, llmClient, 3);
         RecordingHandler handler = new RecordingHandler();
 
         service.validate(new AdvisorValidateRequest("Text", List.of("doc-a")), handler);
@@ -120,20 +128,11 @@ class DefaultAdvisorValidationServiceTest {
         assertThat(handler.completeCount).isEqualTo(1);
     }
 
-    private static AdvisorDocumentRepository repository(AdvisorDocument... documents) {
+    private static AdvisorCatalog catalog(AdvisorDocument... documents) {
         List<AdvisorDocument> values = List.of(documents);
-
-        return new AdvisorDocumentRepository() {
-            @Override
-            public List<AdvisorDocument> findAll() {
-                return values;
-            }
-
-            @Override
-            public Optional<AdvisorDocumentFile> findDocument(String name) {
-                return Optional.empty();
-            }
-        };
+        AdvisorCatalog catalog = mock(AdvisorCatalog.class);
+        when(catalog.documents()).thenReturn(values);
+        return catalog;
     }
 
     private static AdvisorDocument document(String name, String title, int order, List<AdvisorRule> rules) {
@@ -143,7 +142,6 @@ class DefaultAdvisorValidationServiceTest {
                 title,
                 "Zusammenfassung",
                 "Quelle",
-                List.of(),
                 name + ".pdf",
                 rules
         );

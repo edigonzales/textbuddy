@@ -16,6 +16,9 @@ public record HomePageModel(
         String uiLocaleTag,
         List<String> supportedUiLanguages,
         String uiMessagesJson,
+        String csrfParameterName,
+        String csrfHeaderName,
+        String csrfToken,
         Map<String, String> messages
 ) {
     public String t(String key) {

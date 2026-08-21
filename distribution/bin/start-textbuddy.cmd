@@ -39,4 +39,4 @@ if not exist "%JAR_PATH%" (
   exit /b 1
 )
 
-java %TEXTBUDDY_JAVA_OPTS% -jar "%JAR_PATH%" %*
+java --enable-native-access=ALL-UNNAMED %TEXTBUDDY_JAVA_OPTS% -jar "%JAR_PATH%" %*

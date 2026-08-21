@@ -41,14 +41,14 @@ class JarEndToEndSmokeTest {
             assertThat(rewrite.statusCode()).isEqualTo(200);
             assertThat(rewrite.body()).contains("Kurz gesagt");
 
-            HttpResponse<String> stream = harness.postJson("/api/quick-actions/plain-language/stream", """
+            HttpResponse<String> quickAction = harness.postJson("/api/quick-actions/plain-language", """
                     {
                       "text": "Der komplizierte Sachverhalt ist relevant.",
                       "language": "de-DE"
                     }
                     """);
-            assertThat(stream.statusCode()).isEqualTo(200);
-            assertThat(stream.body()).contains("event:complete");
+            assertThat(quickAction.statusCode()).isEqualTo(200);
+            assertThat(quickAction.body()).contains("Kurz und einfach");
 
             HttpResponse<String> advisorDocs = harness.get("/api/advisor/docs");
             assertThat(advisorDocs.statusCode()).isEqualTo(200);

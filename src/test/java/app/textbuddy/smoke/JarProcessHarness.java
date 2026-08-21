@@ -61,9 +61,11 @@ final class JarProcessHarness implements AutoCloseable {
         Path javaBinary = Path.of(System.getProperty("java.home"), "bin", "java");
         List<String> command = new ArrayList<>();
         command.add(javaBinary.toString());
+        command.add("--enable-native-access=ALL-UNNAMED");
         command.add("-jar");
         command.add(bootJarPath);
         command.add("--server.port=" + port);
+        command.add("--server.address=127.0.0.1");
         command.add("--textbuddy.auth.enabled=false");
         command.add("--textbuddy.llm.mode=stub");
         command.add("--textbuddy.languagetool.mode=embedded");

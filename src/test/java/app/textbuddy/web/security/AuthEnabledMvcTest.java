@@ -5,12 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.not;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -52,6 +51,7 @@ class AuthEnabledMvcTest {
     @Test
     void protectedApiReturnsProblemJsonWhenAnonymous() throws Exception {
         mockMvc.perform(post("/api/text-correction")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -77,10 +77,13 @@ class AuthEnabledMvcTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("data-authenticated=\"true\"")))
                 .andExpect(content().string(containsString("data-testid=\"auth-user\">demo@example.org</strong>")))
-                .andExpect(content().string(containsString("data-testid=\"auth-logout\"")));
+                .andExpect(content().string(containsString("data-testid=\"auth-logout\"")))
+                .andExpect(content().string(containsString("name=\"_csrf\"")))
+                .andExpect(content().string(containsString("data-csrf-header=\"X-CSRF-TOKEN\"")));
 
         mockMvc.perform(post("/api/text-correction")
                         .with(oauth2Login())
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -93,44 +96,31 @@ class AuthEnabledMvcTest {
     }
 
     @Test
-    void authenticatedUsersWithoutAdvisorRoleGetForbiddenOnRestrictedDocument() throws Exception {
+    void allAuthenticatedUsersCanReadEveryAdvisorDocument() throws Exception {
         mockMvc.perform(get("/api/advisor/docs").with(oauth2Login()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].name", not(hasItem("schreibweisungen"))));
-
-        mockMvc.perform(get("/api/advisor/doc/schreibweisungen").with(oauth2Login()))
-                .andExpect(status().isForbidden())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
-                .andExpect(jsonPath("$.detail").value("Zugriff auf dieses Advisor-Dokument ist nicht erlaubt."));
-    }
-
-    @Test
-    void authenticatedUsersWithAdvisorRoleCanOpenRestrictedDocument() throws Exception {
-        mockMvc.perform(get("/api/advisor/docs")
-                        .with(oauth2Login().authorities(new SimpleGrantedAuthority("ROLE_ADVISOR_INTERNAL"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].name", hasItem("schreibweisungen")));
 
-        mockMvc.perform(get("/api/advisor/doc/schreibweisungen")
-                        .with(oauth2Login().authorities(new SimpleGrantedAuthority("ROLE_ADVISOR_INTERNAL"))))
+        mockMvc.perform(get("/api/advisor/doc/schreibweisungen").with(oauth2Login()))
                 .andExpect(status().isOk())
+                .andExpect(header().string("X-Frame-Options", "SAMEORIGIN"))
+                .andExpect(header().string("Content-Security-Policy", containsString("frame-src 'self'")))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PDF));
     }
 
     @Test
-    void advisorValidationRejectsRestrictedSelectionWithoutRole() throws Exception {
-        mockMvc.perform(post("/api/advisor/validate")
+    void authenticatedWriteWithoutCsrfIsRejected() throws Exception {
+        mockMvc.perform(post("/api/text-correction")
                         .with(oauth2Login())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "text": "Bitte per sofort antworten.",
-                                  "docs": ["schreibweisungen"]
+                                  "text": "This is teh text.",
+                                  "language": "en-US"
                                 }
                                 """))
                 .andExpect(status().isForbidden())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
-                .andExpect(jsonPath("$.detail")
-                        .value("Zugriff auf mindestens ein ausgewähltes Advisor-Dokument ist nicht erlaubt."));
+                .andExpect(jsonPath("$.detail").value("Zugriff verweigert."));
     }
 }

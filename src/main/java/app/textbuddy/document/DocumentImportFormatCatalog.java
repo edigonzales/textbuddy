@@ -1,6 +1,6 @@
 package app.textbuddy.document;
 
-import app.textbuddy.config.DocumentImportProperties;
+import app.textbuddy.config.TextbuddyProperties;
 import dev.kreuzberg.Kreuzberg;
 import dev.kreuzberg.KreuzbergException;
 import org.slf4j.Logger;
@@ -19,8 +19,8 @@ public class DocumentImportFormatCatalog {
 
     private final List<DocumentImportFormat> formats;
 
-    public DocumentImportFormatCatalog(DocumentImportProperties properties) {
-        this.formats = resolveFormats(properties);
+    public DocumentImportFormatCatalog(TextbuddyProperties properties) {
+        this.formats = resolveFormats(properties.getDocument());
     }
 
     public List<DocumentImportFormat> listFormats() {
@@ -50,7 +50,7 @@ public class DocumentImportFormatCatalog {
         );
     }
 
-    private List<DocumentImportFormat> resolveFormats(DocumentImportProperties properties) {
+    private List<DocumentImportFormat> resolveFormats(TextbuddyProperties.Document properties) {
         List<DocumentImportFormat> defaultFormats = defaultFormats();
 
         if (properties == null || !properties.isKreuzbergMode()) {
@@ -110,7 +110,7 @@ public class DocumentImportFormatCatalog {
                 new DocumentImportFormat(".png", "PNG", List.of("image/png")),
                 new DocumentImportFormat(".jpg", "JPG", List.of("image/jpeg")),
                 new DocumentImportFormat(".jpeg", "JPEG", List.of("image/jpeg")),
-                new DocumentImportFormat(".tif", "TIFF", List.of("image/tiff")),
+                new DocumentImportFormat(".tif", "TIF", List.of("image/tiff")),
                 new DocumentImportFormat(".tiff", "TIFF", List.of("image/tiff"))
         );
     }

@@ -24,11 +24,9 @@ class JarStartupSmokeTest {
 
             assertThat(health.statusCode()).isEqualTo(200);
             assertThat(health.body()).contains("\"status\":\"UP\"");
+            assertThat(health.body()).doesNotContain("components", "runtimeHome", "baseUrl");
 
-            assertThat(info.statusCode()).isEqualTo(200);
-            assertThat(info.body()).contains("\"llmMode\":\"stub\"");
-            assertThat(info.body()).contains("\"languageToolMode\":\"embedded\"");
-            assertThat(info.body()).contains("\"documentImportMode\":\"kreuzberg\"");
+            assertThat(info.statusCode()).isEqualTo(404);
         }
     }
 

@@ -1,6 +1,6 @@
 package app.textbuddy.wordsynonym;
 
-import app.textbuddy.integration.llm.WordSynonymLlmClient;
+import app.textbuddy.integration.llm.TextbuddyLlmClient;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedHashMap;
@@ -14,10 +14,10 @@ public class DefaultWordSynonymService implements WordSynonymService {
 
     private static final int MAX_SYNONYMS = 5;
 
-    private final WordSynonymLlmClient wordSynonymLlmClient;
+    private final TextbuddyLlmClient llmClient;
 
-    public DefaultWordSynonymService(WordSynonymLlmClient wordSynonymLlmClient) {
-        this.wordSynonymLlmClient = wordSynonymLlmClient;
+    public DefaultWordSynonymService(TextbuddyLlmClient llmClient) {
+        this.llmClient = llmClient;
     }
 
     @Override
@@ -31,7 +31,7 @@ public class DefaultWordSynonymService implements WordSynonymService {
 
         Map<String, String> normalizedCandidates = new LinkedHashMap<>();
 
-        for (String candidate : wordSynonymLlmClient.suggestSynonyms(word, context)) {
+        for (String candidate : llmClient.suggestSynonyms(word, context)) {
             String normalizedCandidate = normalize(candidate);
 
             if (normalizedCandidate.isBlank() || normalizedCandidate.equalsIgnoreCase(word)) {

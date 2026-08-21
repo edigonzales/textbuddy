@@ -1,7 +1,6 @@
 package app.textbuddy.advisor;
 
-import app.textbuddy.integration.advisor.AdvisorDocumentRepository;
-import app.textbuddy.integration.llm.AdvisorValidationLlmClient;
+import app.textbuddy.integration.llm.TextbuddyLlmClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriUtils;
@@ -14,6 +13,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -23,27 +23,25 @@ public final class DefaultAdvisorValidationService implements AdvisorValidationS
     static final int DEFAULT_RULE_BATCH_SIZE = 3;
     static final int MAX_RULES = 20;
 
-    private static final String ERROR_MESSAGE = "Advisor-Prüfung konnte nicht abgeschlossen werden.";
-
-    private final AdvisorDocumentRepository advisorDocumentRepository;
-    private final AdvisorValidationLlmClient advisorValidationLlmClient;
+    private final AdvisorCatalog advisorCatalog;
+    private final TextbuddyLlmClient llmClient;
     private final int ruleBatchSize;
 
     @Autowired
     public DefaultAdvisorValidationService(
-            AdvisorDocumentRepository advisorDocumentRepository,
-            AdvisorValidationLlmClient advisorValidationLlmClient
+            AdvisorCatalog advisorCatalog,
+            TextbuddyLlmClient llmClient
     ) {
-        this(advisorDocumentRepository, advisorValidationLlmClient, DEFAULT_RULE_BATCH_SIZE);
+        this(advisorCatalog, llmClient, DEFAULT_RULE_BATCH_SIZE);
     }
 
     DefaultAdvisorValidationService(
-            AdvisorDocumentRepository advisorDocumentRepository,
-            AdvisorValidationLlmClient advisorValidationLlmClient,
+            AdvisorCatalog advisorCatalog,
+            TextbuddyLlmClient llmClient,
             int ruleBatchSize
     ) {
-        this.advisorDocumentRepository = Objects.requireNonNull(advisorDocumentRepository);
-        this.advisorValidationLlmClient = Objects.requireNonNull(advisorValidationLlmClient);
+        this.advisorCatalog = Objects.requireNonNull(advisorCatalog);
+        this.llmClient = Objects.requireNonNull(llmClient);
         this.ruleBatchSize = Math.max(1, ruleBatchSize);
     }
 
@@ -59,36 +57,32 @@ public final class DefaultAdvisorValidationService implements AdvisorValidationS
             return;
         }
 
-        try {
-            List<AdvisorRuleCheck> ruleChecks = loadRuleChecks(selectedDocuments).stream()
-                    .limit(MAX_RULES)
-                    .toList();
+        List<AdvisorRuleCheck> ruleChecks = loadRuleChecks(selectedDocuments).stream()
+                .limit(MAX_RULES)
+                .toList();
 
-            if (ruleChecks.isEmpty()) {
-                handler.complete();
-                return;
-            }
+        if (ruleChecks.isEmpty()) {
+            handler.complete();
+            return;
+        }
 
-            for (List<AdvisorRuleCheck> batch : partitionRuleChecks(ruleChecks, ruleBatchSize)) {
-                Map<String, AdvisorRuleCheck> ruleChecksByKey = batch.stream()
-                        .collect(Collectors.toMap(
-                                ruleCheck -> ruleKey(ruleCheck.documentName(), ruleCheck.ruleId()),
-                                Function.identity()
-                        ));
+        for (List<AdvisorRuleCheck> batch : partitionRuleChecks(ruleChecks, ruleBatchSize)) {
+            Map<String, AdvisorRuleCheck> ruleChecksByKey = batch.stream()
+                    .collect(Collectors.toMap(
+                            ruleCheck -> ruleKey(ruleCheck.documentName(), ruleCheck.ruleId()),
+                            Function.identity()
+                    ));
 
-                for (AdvisorRuleMatch match : advisorValidationLlmClient.validate(text, batch)) {
-                    AdvisorRuleCheck ruleCheck = ruleChecksByKey.get(ruleKey(match.documentName(), match.ruleId()));
+            for (AdvisorRuleMatch match : llmClient.validate(text, batch)) {
+                AdvisorRuleCheck ruleCheck = ruleChecksByKey.get(ruleKey(match.documentName(), match.ruleId()));
 
-                    if (ruleCheck != null) {
-                        handler.validation(toEvent(ruleCheck, match));
-                    }
+                if (ruleCheck != null) {
+                    handler.validation(toEvent(ruleCheck, match));
                 }
             }
-
-            handler.complete();
-        } catch (RuntimeException exception) {
-            handler.error(ERROR_MESSAGE);
         }
+
+        handler.complete();
     }
 
     List<List<AdvisorRuleCheck>> partitionRuleChecks(List<AdvisorRuleCheck> ruleChecks, int batchSize) {
@@ -107,7 +101,7 @@ public final class DefaultAdvisorValidationService implements AdvisorValidationS
     }
 
     private List<AdvisorRuleCheck> loadRuleChecks(Set<String> selectedDocuments) {
-        return advisorDocumentRepository.findAll().stream()
+        return advisorCatalog.documents().stream()
                 .filter(document -> selectedDocuments.contains(document.name()))
                 .flatMap(document -> document.rules().stream().map(rule -> toRuleCheck(document, rule)))
                 .toList();
@@ -172,11 +166,14 @@ public final class DefaultAdvisorValidationService implements AdvisorValidationS
     }
 
     private String stableSegment(String value) {
-        String normalized = normalize(value)
-                .toLowerCase(Locale.ROOT)
-                .replaceAll("[^a-z0-9]+", "-");
+        String normalized = normalize(value).toLowerCase(Locale.ROOT);
+        String slug = normalized.replaceAll("[^a-z0-9]+", "-").replaceAll("(^-+|-+$)", "");
 
-        return normalized.replaceAll("(^-+|-+$)", "");
+        if (!slug.isBlank()) {
+            return slug;
+        }
+
+        return UUID.nameUUIDFromBytes(normalized.getBytes(StandardCharsets.UTF_8)).toString().substring(0, 12);
     }
 
     private String ruleKey(String documentName, String ruleId) {

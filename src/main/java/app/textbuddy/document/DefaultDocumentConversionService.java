@@ -1,6 +1,6 @@
 package app.textbuddy.document;
 
-import app.textbuddy.config.DocumentImportProperties;
+import app.textbuddy.config.TextbuddyProperties;
 import app.textbuddy.integration.docling.DoclingClient;
 import org.springframework.stereotype.Service;
 
@@ -15,18 +15,18 @@ public class DefaultDocumentConversionService implements DocumentConversionServi
 
     private final DoclingClient doclingClient;
     private final DocumentImportFormatCatalog formatCatalog;
-    private final DocumentImportProperties properties;
+    private final TextbuddyProperties.Document properties;
     private final EditorFriendlyHtmlPostProcessor htmlPostProcessor;
 
     public DefaultDocumentConversionService(
             DoclingClient doclingClient,
             DocumentImportFormatCatalog formatCatalog,
-            DocumentImportProperties properties,
+            TextbuddyProperties textbuddyProperties,
             EditorFriendlyHtmlPostProcessor htmlPostProcessor
     ) {
         this.doclingClient = doclingClient;
         this.formatCatalog = formatCatalog;
-        this.properties = properties;
+        this.properties = textbuddyProperties.getDocument();
         this.htmlPostProcessor = htmlPostProcessor;
     }
 
@@ -36,11 +36,11 @@ public class DefaultDocumentConversionService implements DocumentConversionServi
                 ? new DocumentUpload("", "", new byte[0])
                 : upload;
 
-        if (normalizedUpload.content().length == 0) {
+        if (normalizedUpload.size() == 0) {
             throw new EmptyDocumentUploadException(EMPTY_UPLOAD_MESSAGE);
         }
 
-        if (normalizedUpload.content().length > properties.normalizedMaxUploadSizeBytes()) {
+        if (normalizedUpload.size() > properties.normalizedMaxUploadSizeBytes()) {
             throw new DocumentUploadTooLargeException(
                     LARGE_UPLOAD_MESSAGE_PREFIX
                             + properties.describeMaxUploadSize()
@@ -61,6 +61,11 @@ public class DefaultDocumentConversionService implements DocumentConversionServi
                 doclingClient.convertToHtml(normalizedUpload, normalizedOcrLanguage),
                 ""
         );
+
+        if (html.isBlank()) {
+            throw new DocumentConversionFailedException("Dokumentimport hat keinen Inhalt geliefert.");
+        }
+
         String editorFriendlyHtml = htmlPostProcessor.postProcess(html);
 
         if (editorFriendlyHtml.isBlank()) {

@@ -222,7 +222,7 @@
   align-self: start;
 }
 
-#editor-island-root .quick-action-panel[data-quick-action-state="streaming"] .quick-action-status {
+#editor-island-root .quick-action-panel[data-quick-action-state="running"] .quick-action-status {
   background: rgba(161, 110, 27, 0.12);
   color: #7f4d14;
 }

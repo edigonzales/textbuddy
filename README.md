@@ -1,170 +1,62 @@
-# textbuddy
+# Textbuddy
 
-Dieses Repository enthält die planungs- und umsetzungsleitenden Unterlagen sowie die lauffähige Referenzimplementierung für die schrittweise Neuimplementierung von TextMate mit:
-
-- Gradle Groovy
-- Java 25
-- Spring Boot 4.x MVC
-- JTE
-- HTMX
-- Tiptap-JavaScript-Insel
-- SSE via `SseEmitter`
-
-## Implementierungsdokumentation
-
-Die Arbeitsgrundlage liegt unter [docs/implementation/00-master-spec.md](/Users/stefan/sources/textbuddy/docs/implementation/00-master-spec.md).
-
-Wichtige Einstiegsdateien:
-
-- [Master-Spec](/Users/stefan/sources/textbuddy/docs/implementation/00-master-spec.md)
-- [Workflow pro Session](/Users/stefan/sources/textbuddy/docs/implementation/01-workflow.md)
-- [Codex-Regeln](/Users/stefan/sources/textbuddy/docs/implementation/02-codex-rules.md)
-- [Slice-Index](/Users/stefan/sources/textbuddy/docs/implementation/03-slice-index.md)
-- [Status](/Users/stefan/sources/textbuddy/docs/implementation/STATUS.md)
+Textbuddy ist eine serverbasierte Schreibassistenz für Korrekturen, Umformulierungen, statische Schreibregeln und Dokumentimport. Das Backend ist eine Spring-Boot-MVC-Anwendung; der Editor ist eine kleine TypeScript-/Tiptap-Insel in serverseitig gerendertem JTE-HTML.
 
 ## Voraussetzungen
 
 - Java 25
-- Node.js 20+
-- aktuelles `npm`
+- Node.js 20.19 oder neuer und npm
+- optional: eine von Kreuzberg unterstützte lokale OCR-Laufzeit für Bild- und Scan-PDF-Texterkennung
 
-## Lokaler Entwicklungsstart
+## Lokal starten
+
+Der ungeschützte Modus ist ausschliesslich an einer expliziten Loopback-Adresse erlaubt. Die Stub-Adapter benötigen keine externen Dienste:
 
 ```bash
-./gradlew bootRun
+./gradlew bootRun --args='--server.address=127.0.0.1 --textbuddy.auth.enabled=false --textbuddy.llm.mode=stub --textbuddy.languagetool.mode=stub --textbuddy.document.mode=stub'
 ```
 
-Danach ist die Anwendung unter [http://localhost:8080](http://localhost:8080) erreichbar.
+Danach ist Textbuddy unter [http://127.0.0.1:8080](http://127.0.0.1:8080) erreichbar.
 
-Kompletter Build mit Java- und Frontend-Tests:
+## Prüfen und bauen
 
 ```bash
 ./gradlew test
-```
-
-## Release und Distribution (Phase 05)
-
-Release-Bundle erzeugen:
-
-```bash
+npm ci --prefix playwright
+npx --prefix playwright playwright install chromium
+npm test --prefix playwright
 ./gradlew clean verifyReleaseBundle installerZip
 ```
 
-Ergebnis:
+Das Release-Bundle liegt danach unter `build/release/`. Die CI führt Java-, Frontend-, Browser- und Accessibility-Tests sowie ein Dependency-Audit aus.
 
-- `build/release/textbuddy.jar`
-- `build/release/textbuddy-<version>.zip`
-- `build/release/docs/release/runbook-produktionsbetrieb.md`
-- `build/release/docs/release/abnahme-checkliste.md`
-- `build/release/config/examples/`
+## Produktion
 
-Standardstartpfad:
+Authentifizierung ist standardmässig aktiv und erfordert eine OIDC-Client-Konfiguration. LLM-Zugriff benötigt einen OpenAI-kompatiblen Provider. LanguageTool und Dokumentimport können eingebettet oder über HTTP betrieben werden. Konkrete Beispiele liegen unter `config/examples/`.
+
+Eine `.env`-Datei wird nicht automatisch geladen. Vor einem Start mit dem Beispiel muss sie explizit in die Shell übernommen werden:
 
 ```bash
-cd build/release
-java -jar textbuddy.jar
+set -a
+source config/examples/textbuddy.env.example
+set +a
+java --enable-native-access=ALL-UNNAMED -jar build/libs/textbuddy.jar \
+  --spring.config.additional-location=file:config/examples/application-production.properties.example
 ```
 
-Optionaler Installer-Start:
+Weitere Dokumentation:
 
-```bash
-unzip textbuddy-<version>.zip -d textbuddy
-cd textbuddy
-./bin/start-textbuddy.sh
-```
+- [Getting Started](docs/getting-started.md)
+- [Architektur](docs/architecture.md)
+- [Betrieb und Konfiguration](docs/operations.md)
+- [Accessibility](docs/accessibility.md)
 
-Weitere Details:
+## Sicherheitsmodell in Kürze
 
-- [Runbook Produktionsbetrieb](/Users/stefan/sources/textbuddy/docs/release/runbook-produktionsbetrieb.md)
-- [Konfigurationsbeispiele](/Users/stefan/sources/textbuddy/docs/release/konfigurationsbeispiele.md)
-- [Abnahme- und Release-Checkliste](/Users/stefan/sources/textbuddy/docs/release/abnahme-checkliste.md)
-- [CI- und Release-Pipeline](/Users/stefan/sources/textbuddy/docs/release/ci-und-release-pipeline.md)
+- `/api/**` ist im Normalbetrieb OIDC-geschützt und CSRF-gesichert.
+- `textbuddy.auth.enabled=false` startet nur mit expliziter Loopback-Bindung.
+- Actuator veröffentlicht ausschliesslich `/actuator/health`, ohne Komponenten oder Details.
+- Provider-Antworten und API-Schlüssel werden nicht in Fehlermeldungen ausgegeben.
+- Text- und Uploadgrössen werden vor der Verarbeitung begrenzt.
 
-## Signatur und Checksum
-
-Im Tag-Release werden zusätzlich erzeugt:
-
-- `textbuddy.jar.sha256`
-- `textbuddy.jar.asc`
-- `textbuddy.jar.sha256.asc`
-
-Verifikation (Linux):
-
-```bash
-sha256sum -c textbuddy.jar.sha256
-gpg --verify textbuddy.jar.asc textbuddy.jar
-gpg --verify textbuddy.jar.sha256.asc textbuddy.jar.sha256
-```
-
-## CI und Release
-
-Neue Workflows unter `.github/workflows/`:
-
-- `ci.yml` für Pull Requests und Push auf `main`
-- `release.yml` für Tag-Releases (`v*`) und `workflow_dispatch`
-
-Release wird als Draft erstellt und danach manuell über GitHub veröffentlicht.
-
-## Auth / OIDC
-
-Auth ist standardmässig deaktiviert:
-
-- `textbuddy.auth.enabled=false`
-- Home-Seite bleibt offen
-- APIs sind direkt nutzbar
-
-OIDC-Grundintegration aktivierst du über Properties. Beispiel:
-
-```bash
-./gradlew bootRun --args='
-  --textbuddy.auth.enabled=true
-  --spring.security.oauth2.client.registration.demo.client-id=demo-client
-  --spring.security.oauth2.client.registration.demo.client-secret=demo-secret
-  --spring.security.oauth2.client.registration.demo.scope=openid,profile,email
-  --spring.security.oauth2.client.registration.demo.authorization-grant-type=authorization_code
-  --spring.security.oauth2.client.registration.demo.redirect-uri={baseUrl}/login/oauth2/code/{registrationId}
-  --spring.security.oauth2.client.provider.demo.authorization-uri=https://issuer.example.test/oauth2/authorize
-  --spring.security.oauth2.client.provider.demo.token-uri=https://issuer.example.test/oauth2/token
-  --spring.security.oauth2.client.provider.demo.user-info-uri=https://issuer.example.test/userinfo
-  --spring.security.oauth2.client.provider.demo.user-name-attribute=sub
-  --spring.security.oauth2.client.provider.demo.jwk-set-uri=https://issuer.example.test/oauth2/jwks
-'
-```
-
-## Adapter-Konfiguration
-
-Der Standardpfad ist:
-
-- LLM im Provider-Modus
-- LanguageTool eingebettet in der JVM
-- Dokumentimport eingebettet über Kreuzberg
-
-Wichtige Properties:
-
-- `textbuddy.llm.mode=provider|stub`
-- `textbuddy.llm.base-url`
-- `textbuddy.llm.api-key`
-- `textbuddy.llm.model`
-- `textbuddy.llm.health-probe-enabled` (optional, Standard `false`)
-- `textbuddy.languagetool.mode=embedded|http|stub`
-- `textbuddy.languagetool.base-url`
-- `textbuddy.languagetool.ngram-path`
-- `textbuddy.document.mode=kreuzberg|http|stub`
-- `textbuddy.document.base-url`
-- `textbuddy.document.api-key`
-- `textbuddy.runtime.home`
-- `textbuddy.runtime.initialize-local-resources`
-
-OpenAI-kompatible Provider können direkt angebunden werden. Beispiel Infomaniak ohne Secret:
-
-```properties
-textbuddy.llm.base-url=https://api.infomaniak.com/2/ai/<project-id>/openai/v1
-textbuddy.llm.model=qwen3
-textbuddy.llm.api-key=<nicht-einchecken>
-```
-
-## Arbeitsmodus
-
-- Die Umsetzung erfolgt inkrementell.
-- Eine Implementierungssession bearbeitet genau einen Slice oder eine Produktionsphase.
-- Spätere Features dürfen nicht vorgezogen werden.
+API-Verträge und technische Entscheidungen stehen in [docs/architecture.md](docs/architecture.md); Hinweise zu Reverse Proxy, TLS, Rate Limits und Secrets in [docs/operations.md](docs/operations.md).

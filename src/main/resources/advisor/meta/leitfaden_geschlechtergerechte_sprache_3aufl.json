@@ -2,13 +2,13 @@
   "order": 2,
   "name": "leitfaden_geschlechtergerechte_sprache_3aufl",
   "title": "Leitfaden geschlechtergerechte Sprache",
-  "summary": "Demo-Referenz für inklusive Formulierungen und konsistente sprachliche Varianten.",
-  "source": "Projektinterne Demoquelle",
+  "summary": "Referenzblatt für inklusive und konsistente Personenbezeichnungen.",
+  "source": "Textbuddy Referenzblatt (projektintern)",
   "rules": [
     {
       "id": "mitarbeiter-neutral-formulieren",
       "title": "Mitarbeitende statt Mitarbeiter",
-      "page": 8,
+      "page": 1,
       "instructions": "Prüfe klassische Personenbezeichnungen auf eine inklusive Alternative.",
       "message": "Die Personenbezeichnung kann inklusiver formuliert werden.",
       "suggestion": "Nutze z.B. 'Mitarbeitende' oder eine andere neutrale Sammelbezeichnung.",
@@ -17,7 +17,7 @@
     {
       "id": "buerger-neutral-formulieren",
       "title": "Bürger geschlechtsneutral formulieren",
-      "page": 12,
+      "page": 1,
       "instructions": "Prüfe Bezeichnungen für adressierte Gruppen auf inklusive Formen.",
       "message": "Die Personenbezeichnung ist nicht geschlechterinklusiv.",
       "suggestion": "Nutze z.B. 'Bevölkerung', 'Einwohnende' oder eine passende neutrale Bezeichnung.",

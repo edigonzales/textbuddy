@@ -12,7 +12,7 @@ import java.util.ResourceBundle;
 @Component
 public class UiMessageCatalog {
 
-    private static final List<String> SUPPORTED_UI_LANGUAGES = List.of("de", "en", "fr", "it");
+    private static final List<String> SUPPORTED_UI_LANGUAGES = List.of("de", "en");
 
     public Locale normalizeUiLocale(Locale requestedLocale) {
         String language = requestedLocale == null ? "" : requestedLocale.getLanguage();
@@ -27,7 +27,11 @@ public class UiMessageCatalog {
 
     public Map<String, String> resolve(Locale requestedLocale) {
         Locale locale = normalizeUiLocale(requestedLocale);
-        ResourceBundle bundle = ResourceBundle.getBundle("messages.ui", locale);
+        ResourceBundle bundle = ResourceBundle.getBundle(
+                "messages.ui",
+                locale,
+                ResourceBundle.Control.getNoFallbackControl(ResourceBundle.Control.FORMAT_PROPERTIES)
+        );
         Map<String, String> messages = new LinkedHashMap<>();
 
         bundle.keySet().stream()

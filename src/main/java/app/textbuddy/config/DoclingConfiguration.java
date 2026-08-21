@@ -6,22 +6,23 @@ import app.textbuddy.integration.docling.KreuzbergDoclingClient;
 import app.textbuddy.integration.docling.StubDoclingClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
 import java.time.Duration;
 
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties(DocumentImportProperties.class)
+@EnableConfigurationProperties(TextbuddyProperties.class)
 public class DoclingConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(DoclingConfiguration.class);
 
     @Bean
-    DoclingClient doclingClient(DocumentImportProperties properties) {
+    DoclingClient doclingClient(TextbuddyProperties textbuddyProperties) {
+        TextbuddyProperties.Document properties = textbuddyProperties.getDocument();
         return switch (properties.getMode()) {
             case STUB -> {
                 log.info("Document import: stub mode");
@@ -37,11 +38,7 @@ public class DoclingConfiguration {
                         .build();
 
                 log.info("Document import: HTTP mode ({})", properties.normalizedBaseUrl());
-                yield new HttpDoclingClient(
-                        restClient,
-                        properties.getApiKey(),
-                        properties.normalizedMaxRetries()
-                );
+                yield new HttpDoclingClient(restClient, properties.getApiKey());
             }
             case KREUZBERG -> {
                 log.info("Document import: embedded Kreuzberg mode");

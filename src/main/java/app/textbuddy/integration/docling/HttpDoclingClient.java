@@ -4,8 +4,6 @@ import app.textbuddy.document.DocumentConversionFailedException;
 import app.textbuddy.document.DocumentImportServiceUnavailableException;
 import app.textbuddy.document.DocumentImportTimeoutException;
 import app.textbuddy.document.DocumentUpload;
-import app.textbuddy.integration.support.AdapterRetrySupport;
-import app.textbuddy.integration.support.RetriableAdapterException;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
@@ -26,29 +24,14 @@ public final class HttpDoclingClient implements DoclingClient {
 
     private final RestClient restClient;
     private final String apiKey;
-    private final int maxRetries;
 
     public HttpDoclingClient(RestClient restClient, String apiKey) {
-        this(restClient, apiKey, 0);
-    }
-
-    public HttpDoclingClient(RestClient restClient, String apiKey, int maxRetries) {
         this.restClient = restClient;
         this.apiKey = apiKey == null ? "" : apiKey.strip();
-        this.maxRetries = Math.max(0, maxRetries);
     }
 
     @Override
     public String convertToHtml(DocumentUpload upload, String ocrLanguage) {
-        return AdapterRetrySupport.withRetry(
-                "Docling",
-                maxRetries,
-                () -> convertToHtmlOnce(upload),
-                exception -> mapFinalFailure(exception)
-        );
-    }
-
-    private String convertToHtmlOnce(DocumentUpload upload) {
         JsonNode response;
 
         try {
@@ -69,10 +52,16 @@ public final class HttpDoclingClient implements DoclingClient {
             throw mapHttpFailure(exception);
         } catch (ResourceAccessException exception) {
             if (isTimeout(exception)) {
-                throw new RetriableAdapterException("Docling hat nicht rechtzeitig geantwortet.", exception);
+                throw new DocumentImportTimeoutException(
+                        "Dokumentimport hat das Zeitlimit überschritten.",
+                        exception
+                );
             }
 
-            throw new RetriableAdapterException("Docling ist momentan nicht erreichbar.", exception);
+            throw new DocumentImportServiceUnavailableException(
+                    "Docling ist momentan nicht verfügbar.",
+                    exception
+            );
         } catch (RuntimeException exception) {
             throw new DocumentImportServiceUnavailableException("Docling-Aufruf ist fehlgeschlagen.", exception);
         }
@@ -91,22 +80,11 @@ public final class HttpDoclingClient implements DoclingClient {
                     : "Docling antwortete mit HTTP " + statusCode + ".";
         };
 
-        if (AdapterRetrySupport.isRetriableStatusCode(statusCode)) {
-            return new RetriableAdapterException(message + compactBodySuffix(exception.getResponseBodyAsString()), exception);
+        if (statusCode == 429 || statusCode >= 500) {
+            return new DocumentImportServiceUnavailableException(message);
         }
 
-        return new DocumentConversionFailedException(message + compactBodySuffix(exception.getResponseBodyAsString()), exception);
-    }
-
-    private RuntimeException mapFinalFailure(RetriableAdapterException exception) {
-        if (isTimeout(exception)) {
-            return new DocumentImportTimeoutException("Dokumentimport hat das Zeitlimit überschritten.", exception);
-        }
-
-        return new DocumentImportServiceUnavailableException(
-                "Docling ist momentan nicht verfügbar.",
-                exception
-        );
+        return new DocumentConversionFailedException(message);
     }
 
     private boolean isTimeout(Throwable exception) {
@@ -186,23 +164,6 @@ public final class HttpDoclingClient implements DoclingClient {
             return nestedDocumentHtml;
         }
 
-        throw new DocumentConversionFailedException(
-                "Docling-Antwort enthält kein HTML: " + compactResponse(response)
-        );
-    }
-
-    private String compactResponse(JsonNode response) {
-        return response.toString();
-    }
-
-    private String compactBodySuffix(String body) {
-        String normalized = body == null ? "" : body.trim();
-
-        if (normalized.isBlank()) {
-            return "";
-        }
-
-        String compact = normalized.length() <= 180 ? normalized : normalized.substring(0, 180) + "…";
-        return " Antwort: " + compact;
+        throw new DocumentConversionFailedException("Docling-Antwort enthält kein HTML.");
     }
 }

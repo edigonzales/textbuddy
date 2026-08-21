@@ -15,6 +15,10 @@ function createSseBody(events: Array<{ event: string; payload: unknown }>): stri
     .join("");
 }
 
+function createQuickActionBody(text: string): string {
+  return JSON.stringify({ text });
+}
+
 async function expectNoCriticalOrSeriousViolations(page: Page): Promise<void> {
   const results = await new AxeBuilder({
     page,
@@ -61,31 +65,18 @@ test("axe: quick action configuration state has no critical or serious violation
   await expectNoCriticalOrSeriousViolations(page);
 });
 
-test("axe: streaming plus diff state has no critical or serious violations", async ({
+test("axe: completed quick action plus diff state has no critical or serious violations", async ({
   page,
 }) => {
-  await page.route("**/api/quick-actions/summarize/stream", async (route) => {
+  await page.route("**/api/quick-actions/summarize", async (route) => {
     const payload = route.request().postDataJSON() as QuickActionRequestPayload;
 
     await route.fulfill({
       status: 200,
-      headers: {
-        "Content-Type": "text/event-stream",
-      },
-      body: createSseBody([
-        {
-          event: "chunk",
-          payload: {
-            text: `Kurzfassung (${payload.option ?? "sentence"}): `,
-          },
-        },
-        {
-          event: "complete",
-          payload: {
-            text: "Kurzfassung (sentence): Das ist ein kurzer Testtext.",
-          },
-        },
-      ]),
+      contentType: "application/json",
+      body: createQuickActionBody(
+        `Kurzfassung (${payload.option ?? "sentence"}): Das ist ein kurzer Testtext.`,
+      ),
     });
   });
 

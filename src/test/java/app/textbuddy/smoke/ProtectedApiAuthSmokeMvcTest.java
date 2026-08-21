@@ -10,6 +10,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -38,6 +39,7 @@ class ProtectedApiAuthSmokeMvcTest {
     @Test
     void protectedApisRequireAuthenticationWhenAuthIsEnabled() throws Exception {
         mockMvc.perform(post("/api/text-correction")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -55,6 +57,7 @@ class ProtectedApiAuthSmokeMvcTest {
     void authenticatedUsersCanUseProtectedApis() throws Exception {
         mockMvc.perform(post("/api/text-correction")
                         .with(oauth2Login())
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

@@ -66,6 +66,18 @@ jobs:
           cache-dependency-path: |
             frontend/package-lock.json
 
+      - name: Install OCR runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes tesseract-ocr tesseract-ocr-deu tesseract-ocr-eng
+          TESSDATA_DIR="$(dirname "$(dpkg -L tesseract-ocr-eng | grep '/eng.traineddata$' | head -n 1)")"
+          echo "TESSDATA_PREFIX=$TESSDATA_DIR" >> "$GITHUB_ENV"
+
+      - name: Verify local OCR
+        env:
+          TEXTBUDDY_REQUIRE_OCR_TESTS: 'true'
+        run: ./gradlew ocrTest
+
       - name: Run release smoke tests
         run: ./gradlew test --tests 'app.textbuddy.smoke.JarStartupSmokeTest' --tests 'app.textbuddy.smoke.JarEndToEndSmokeTest' --tests 'app.textbuddy.smoke.JarPerformanceSmokeTest' --tests 'app.textbuddy.smoke.InstallerStartScriptSmokeTest'
 
@@ -76,9 +88,10 @@ jobs:
         run: |
           set -euo pipefail
           test -f build/release/textbuddy.jar
-          test -f build/release/docs/release/runbook-produktionsbetrieb.md
-          test -f build/release/docs/release/abnahme-checkliste.md
-          test -f build/release/docs/release/konfigurationsbeispiele.md
+          test -f build/release/README.md
+          test -f build/release/docs/architecture.md
+          test -f build/release/docs/operations.md
+          test -f build/release/docs/accessibility.md
           test -f build/release/config/examples/textbuddy.env.example
           test -f build/release/config/examples/application-production.properties.example
           test -f build/release/textbuddy-${{ steps.meta.outputs.release_version }}.zip
@@ -93,12 +106,14 @@ jobs:
           test -f "$WORK_DIR/extracted/textbuddy.jar"
           test -f "$WORK_DIR/extracted/bin/start-textbuddy.sh"
           test -f "$WORK_DIR/extracted/bin/start-textbuddy.cmd"
-          test -f "$WORK_DIR/extracted/docs/release/runbook-produktionsbetrieb.md"
+          test -f "$WORK_DIR/extracted/README.md"
+          test -f "$WORK_DIR/extracted/docs/operations.md"
           test -f "$WORK_DIR/extracted/config/examples/textbuddy.env.example"
 
           cd "$WORK_DIR/extracted"
           ./bin/start-textbuddy.sh \
             --server.port=18090 \
+            --server.address=127.0.0.1 \
             --textbuddy.auth.enabled=false \
             --textbuddy.llm.mode=stub \
             --textbuddy.languagetool.mode=stub \

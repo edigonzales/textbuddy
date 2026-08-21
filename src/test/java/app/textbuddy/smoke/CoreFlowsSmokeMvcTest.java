@@ -7,18 +7,15 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -68,8 +65,8 @@ class CoreFlowsSmokeMvcTest {
     }
 
     @Test
-    void streamingAndImportFlowsRemainOperational() throws Exception {
-        MvcResult streamResult = mockMvc.perform(post("/api/quick-actions/plain-language/stream")
+    void quickActionsAndImportFlowsRemainOperational() throws Exception {
+        mockMvc.perform(post("/api/quick-actions/plain-language")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -77,15 +74,8 @@ class CoreFlowsSmokeMvcTest {
                                   "language": "de-DE"
                                 }
                                 """))
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        streamResult.getAsyncResult(1_000L);
-
-        mockMvc.perform(asyncDispatch(streamResult))
                 .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM))
-                .andExpect(content().string(containsString("event:complete")));
+                .andExpect(jsonPath("$.text").value("Kurz und einfach: Der einfache Thema ist wichtig."));
 
         MockMultipartFile file = new MockMultipartFile(
                 "file",

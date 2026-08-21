@@ -82,6 +82,10 @@ function createSseBody(events: Array<{ event: string; payload: unknown }>): stri
     .join("");
 }
 
+function createQuickActionBody(text: string): string {
+  return JSON.stringify({ text });
+}
+
 async function runQuickAction(page: Page, actionTestId: string) {
   await page.getByTestId(actionTestId).click();
   await page.getByTestId("quick-action-run").click();
@@ -432,10 +436,12 @@ test("advisor catalog shows multiple selectable documents and serves reachable P
 
   expect(response.ok()).toBeTruthy();
   expect(response.headers()["content-type"]).toContain("application/pdf");
+  expect(response.headers()["x-frame-options"]).toBe("SAMEORIGIN");
+  expect(response.headers()["content-security-policy"]).toContain("frame-src 'self'");
   expect(body.toString("utf-8")).toContain("%PDF-1.4");
 });
 
-test("advisor pdf viewer supports page navigation, zoom and download", async ({ page }) => {
+test("advisor pdf viewer opens, downloads and closes the selected document", async ({ page }) => {
   await page.goto("/");
   await openInspectorTab(page, "advisor");
 
@@ -444,27 +450,7 @@ test("advisor pdf viewer supports page navigation, zoom and download", async ({ 
   await expect(page.getByTestId("advisor-pdf-viewer")).toBeVisible();
   await expect(page.getByTestId("advisor-pdf-frame")).toHaveAttribute(
     "src",
-    /\/api\/advisor\/doc\/empfehlungen-anglizismen-maerz-2020#page=1&zoom=100/,
-  );
-
-  await page.getByTestId("advisor-pdf-next").click();
-  await expect(page.getByTestId("advisor-pdf-frame")).toHaveAttribute(
-    "src",
-    /\/api\/advisor\/doc\/empfehlungen-anglizismen-maerz-2020#page=2&zoom=100/,
-  );
-
-  await page.getByTestId("advisor-pdf-zoom-in").click();
-  await expect(page.getByTestId("advisor-pdf-zoom-label")).toHaveText("110%");
-  await expect(page.getByTestId("advisor-pdf-frame")).toHaveAttribute(
-    "src",
-    /\/api\/advisor\/doc\/empfehlungen-anglizismen-maerz-2020#page=2&zoom=110/,
-  );
-
-  await page.getByTestId("advisor-pdf-page-input").fill("6");
-  await page.getByTestId("advisor-pdf-page-input").press("Tab");
-  await expect(page.getByTestId("advisor-pdf-frame")).toHaveAttribute(
-    "src",
-    /\/api\/advisor\/doc\/empfehlungen-anglizismen-maerz-2020#page=6&zoom=110/,
+    /\/api\/advisor\/doc\/empfehlungen-anglizismen-maerz-2020#page=1/,
   );
   await expect(page.getByTestId("advisor-pdf-download")).toHaveAttribute(
     "href",
@@ -487,12 +473,12 @@ test("advisor validation streams results and deduplicates them in the panel", as
       ruleId: "per-sofort-vermeiden",
       ruleTitle: "Per sofort durch ab sofort ersetzen",
       page: 7,
-      pageLabel: "Seite 7",
+      pageLabel: "Seite 1",
       message: "Die Formulierung wirkt intern und wenig standardisiert.",
       matchedText: "per sofort",
       excerpt: "Bitte handeln Sie per sofort und laden Sie die Datei herunter.",
       suggestion: "Nutze 'ab sofort'.",
-      referenceUrl: "/api/advisor/doc/schreibweisungen#page=7",
+      referenceUrl: "/api/advisor/doc/schreibweisungen#page=1",
     };
 
     requestBodies.push(payload);
@@ -523,12 +509,12 @@ test("advisor validation streams results and deduplicates them in the panel", as
             ruleId: "downloaden-statt-herunterladen",
             ruleTitle: "Deutsche Alternative für downloaden",
             page: 6,
-            pageLabel: "Seite 6",
+            pageLabel: "Seite 1",
             message: "Der Ausdruck wirkt als vermeidbarer Anglizismus.",
             matchedText: "downloaden",
             excerpt: "Bitte downloaden Sie das Formular per sofort.",
             suggestion: "Nutze nach Möglichkeit 'herunterladen'.",
-            referenceUrl: "/api/advisor/doc/empfehlungen-anglizismen-maerz-2020#page=6",
+            referenceUrl: "/api/advisor/doc/empfehlungen-anglizismen-maerz-2020#page=1",
           },
         },
       ]),
@@ -562,7 +548,7 @@ test("advisor validation streams results and deduplicates them in the panel", as
     "Per sofort durch ab sofort ersetzen",
   );
   await expect(page.getByTestId("advisor-result-detail-reference")).toContainText("Schreibweisungen");
-  await expect(page.getByTestId("advisor-result-detail-reference")).toContainText("Seite 7");
+  await expect(page.getByTestId("advisor-result-detail-reference")).toContainText("Seite 1");
 
   await page.getByTestId("advisor-result-select").nth(1).click();
 
@@ -574,56 +560,29 @@ test("advisor validation streams results and deduplicates them in the panel", as
   );
   await expect(page.getByTestId("advisor-result-detail-link")).toHaveAttribute(
     "href",
-    "/api/advisor/doc/empfehlungen-anglizismen-maerz-2020#page=6",
+    "/api/advisor/doc/empfehlungen-anglizismen-maerz-2020#page=1",
   );
 
   await page.getByTestId("advisor-result-detail-open").click();
   await expect(page.getByTestId("advisor-pdf-frame")).toHaveAttribute(
     "src",
-    /\/api\/advisor\/doc\/empfehlungen-anglizismen-maerz-2020#page=6&zoom=100/,
+    /\/api\/advisor\/doc\/empfehlungen-anglizismen-maerz-2020#page=1/,
   );
 });
 
-test("plain language streams into the editor, shows a diff and supports full undo", async ({
+test("plain language rewrites the editor, shows a diff and supports full undo", async ({
   page,
 }) => {
   const requestBodies: QuickActionRequestPayload[] = [];
 
-  await page.route("**/api/quick-actions/plain-language/stream", async (route) => {
+  await page.route("**/api/quick-actions/plain-language", async (route) => {
     const payload = route.request().postDataJSON() as QuickActionRequestPayload;
 
     requestBodies.push(payload);
     await route.fulfill({
       status: 200,
-      headers: {
-        "Content-Type": "text/event-stream",
-      },
-      body: createSseBody([
-        {
-          event: "chunk",
-          payload: {
-            text: "Kurz und einfach: ",
-          },
-        },
-        {
-          event: "chunk",
-          payload: {
-            text: "Der einfache Thema ",
-          },
-        },
-        {
-          event: "chunk",
-          payload: {
-            text: "ist wichtig.",
-          },
-        },
-        {
-          event: "complete",
-          payload: {
-            text: "Kurz und einfach: Der einfache Thema ist wichtig.",
-          },
-        },
-      ]),
+      contentType: "application/json",
+      body: createQuickActionBody("Kurz und einfach: Der einfache Thema ist wichtig."),
     });
   });
 
@@ -659,40 +618,19 @@ test("plain language streams into the editor, shows a diff and supports full und
   await expect(page.getByTestId("quick-action-status")).toContainText("rückgängig");
 });
 
-test("bullet points stream into the editor, show a diff and support full undo", async ({
+test("bullet points rewrite the editor, show a diff and support full undo", async ({
   page,
 }) => {
   const requestBodies: QuickActionRequestPayload[] = [];
 
-  await page.route("**/api/quick-actions/bullet-points/stream", async (route) => {
+  await page.route("**/api/quick-actions/bullet-points", async (route) => {
     const payload = route.request().postDataJSON() as QuickActionRequestPayload;
 
     requestBodies.push(payload);
     await route.fulfill({
       status: 200,
-      headers: {
-        "Content-Type": "text/event-stream",
-      },
-      body: createSseBody([
-        {
-          event: "chunk",
-          payload: {
-            text: "- Projektlage klaeren\n",
-          },
-        },
-        {
-          event: "chunk",
-          payload: {
-            text: "- Naechste Schritte festhalten",
-          },
-        },
-        {
-          event: "complete",
-          payload: {
-            text: "- Projektlage klaeren\n- Naechste Schritte festhalten",
-          },
-        },
-      ]),
+      contentType: "application/json",
+      body: createQuickActionBody("- Projektlage klaeren\n- Naechste Schritte festhalten"),
     });
   });
 
@@ -729,40 +667,19 @@ test("bullet points stream into the editor, show a diff and support full undo", 
   await expect(page.getByTestId("quick-action-status")).toContainText("rückgängig");
 });
 
-test("proofread streams into the editor, shows a diff and supports full undo", async ({
+test("proofread rewrites the editor, shows a diff and supports full undo", async ({
   page,
 }) => {
   const requestBodies: QuickActionRequestPayload[] = [];
 
-  await page.route("**/api/quick-actions/proofread/stream", async (route) => {
+  await page.route("**/api/quick-actions/proofread", async (route) => {
     const payload = route.request().postDataJSON() as QuickActionRequestPayload;
 
     requestBodies.push(payload);
     await route.fulfill({
       status: 200,
-      headers: {
-        "Content-Type": "text/event-stream",
-      },
-      body: createSseBody([
-        {
-          event: "chunk",
-          payload: {
-            text: "This is ",
-          },
-        },
-        {
-          event: "chunk",
-          payload: {
-            text: "the text.",
-          },
-        },
-        {
-          event: "complete",
-          payload: {
-            text: "This is the text.",
-          },
-        },
-      ]),
+      contentType: "application/json",
+      body: createQuickActionBody("This is the text."),
     });
   });
 
@@ -790,40 +707,19 @@ test("proofread streams into the editor, shows a diff and supports full undo", a
   await expect(page.getByTestId("quick-action-status")).toContainText("rückgängig");
 });
 
-test("summarize with the sentence option streams into the editor and sends the selected option", async ({
+test("summarize with the sentence option rewrites the editor and sends the selected option", async ({
   page,
 }) => {
   const requestBodies: QuickActionRequestPayload[] = [];
 
-  await page.route("**/api/quick-actions/summarize/stream", async (route) => {
+  await page.route("**/api/quick-actions/summarize", async (route) => {
     const payload = route.request().postDataJSON() as QuickActionRequestPayload;
 
     requestBodies.push(payload);
     await route.fulfill({
       status: 200,
-      headers: {
-        "Content-Type": "text/event-stream",
-      },
-      body: createSseBody([
-        {
-          event: "chunk",
-          payload: {
-            text: "Kurzfassung: ",
-          },
-        },
-        {
-          event: "chunk",
-          payload: {
-            text: "Der Kernpunkt steht fest.",
-          },
-        },
-        {
-          event: "complete",
-          payload: {
-            text: "Kurzfassung: Der Kernpunkt steht fest.",
-          },
-        },
-      ]),
+      contentType: "application/json",
+      body: createQuickActionBody("Kurzfassung: Der Kernpunkt steht fest."),
     });
   });
 
@@ -851,40 +747,21 @@ test("summarize with the sentence option streams into the editor and sends the s
   );
 });
 
-test("summarize with the management summary option streams the selected variant", async ({
+test("summarize with the management summary option returns the selected variant", async ({
   page,
 }) => {
   const requestBodies: QuickActionRequestPayload[] = [];
 
-  await page.route("**/api/quick-actions/summarize/stream", async (route) => {
+  await page.route("**/api/quick-actions/summarize", async (route) => {
     const payload = route.request().postDataJSON() as QuickActionRequestPayload;
 
     requestBodies.push(payload);
     await route.fulfill({
       status: 200,
-      headers: {
-        "Content-Type": "text/event-stream",
-      },
-      body: createSseBody([
-        {
-          event: "chunk",
-          payload: {
-            text: "Management Summary\n",
-          },
-        },
-        {
-          event: "chunk",
-          payload: {
-            text: "- Kernpunkt: Projekt ist freigegeben.\n- Empfehlung: Umsetzung starten.",
-          },
-        },
-        {
-          event: "complete",
-          payload: {
-            text: "Management Summary\n- Kernpunkt: Projekt ist freigegeben.\n- Empfehlung: Umsetzung starten.",
-          },
-        },
-      ]),
+      contentType: "application/json",
+      body: createQuickActionBody(
+        "Management Summary\n- Kernpunkt: Projekt ist freigegeben.\n- Empfehlung: Umsetzung starten.",
+      ),
     });
   });
 
@@ -911,12 +788,12 @@ test("summarize with the management summary option streams the selected variant"
   );
 });
 
-test("formality streams both formal and informal variants with the selected option", async ({
+test("formality returns formal and informal variants with the selected option", async ({
   page,
 }) => {
   const requestBodies: QuickActionRequestPayload[] = [];
 
-  await page.route("**/api/quick-actions/formality/stream", async (route) => {
+  await page.route("**/api/quick-actions/formality", async (route) => {
     const payload = route.request().postDataJSON() as QuickActionRequestPayload;
 
     requestBodies.push(payload);
@@ -928,29 +805,8 @@ test("formality streams both formal and informal variants with the selected opti
 
     await route.fulfill({
       status: 200,
-      headers: {
-        "Content-Type": "text/event-stream",
-      },
-      body: createSseBody([
-        {
-          event: "chunk",
-          payload: {
-            text: responseText.slice(0, 24),
-          },
-        },
-        {
-          event: "chunk",
-          payload: {
-            text: responseText.slice(24),
-          },
-        },
-        {
-          event: "complete",
-          payload: {
-            text: responseText,
-          },
-        },
-      ]),
+      contentType: "application/json",
+      body: createQuickActionBody(responseText),
     });
   });
 
@@ -990,12 +846,12 @@ test("formality streams both formal and informal variants with the selected opti
   );
 });
 
-test("social media streams multiple channel variants with the selected option", async ({
+test("social media returns multiple channel variants with the selected option", async ({
   page,
 }) => {
   const requestBodies: QuickActionRequestPayload[] = [];
 
-  await page.route("**/api/quick-actions/social-media/stream", async (route) => {
+  await page.route("**/api/quick-actions/social-media", async (route) => {
     const payload = route.request().postDataJSON() as QuickActionRequestPayload;
 
     requestBodies.push(payload);
@@ -1007,29 +863,8 @@ test("social media streams multiple channel variants with the selected option", 
 
     await route.fulfill({
       status: 200,
-      headers: {
-        "Content-Type": "text/event-stream",
-      },
-      body: createSseBody([
-        {
-          event: "chunk",
-          payload: {
-            text: responseText.slice(0, 24),
-          },
-        },
-        {
-          event: "chunk",
-          payload: {
-            text: responseText.slice(24),
-          },
-        },
-        {
-          event: "complete",
-          payload: {
-            text: responseText,
-          },
-        },
-      ]),
+      contentType: "application/json",
+      body: createQuickActionBody(responseText),
     });
   });
 
@@ -1064,10 +899,10 @@ test("social media streams multiple channel variants with the selected option", 
   await expect(page.getByTestId("rewrite-diff-after")).toContainText("Takeaway: Team ist bereit.");
 });
 
-test("medium streams multiple medium variants with the selected option", async ({ page }) => {
+test("medium returns multiple medium variants with the selected option", async ({ page }) => {
   const requestBodies: QuickActionRequestPayload[] = [];
 
-  await page.route("**/api/quick-actions/medium/stream", async (route) => {
+  await page.route("**/api/quick-actions/medium", async (route) => {
     const payload = route.request().postDataJSON() as QuickActionRequestPayload;
 
     requestBodies.push(payload);
@@ -1079,29 +914,8 @@ test("medium streams multiple medium variants with the selected option", async (
 
     await route.fulfill({
       status: 200,
-      headers: {
-        "Content-Type": "text/event-stream",
-      },
-      body: createSseBody([
-        {
-          event: "chunk",
-          payload: {
-            text: responseText.slice(0, 24),
-          },
-        },
-        {
-          event: "chunk",
-          payload: {
-            text: responseText.slice(24),
-          },
-        },
-        {
-          event: "complete",
-          payload: {
-            text: responseText,
-          },
-        },
-      ]),
+      contentType: "application/json",
+      body: createQuickActionBody(responseText),
     });
   });
 
@@ -1140,12 +954,12 @@ test("medium streams multiple medium variants with the selected option", async (
   await expect(page.getByTestId("rewrite-diff-after")).toContainText("Abschluss: Umsetzung beginnt sofort.");
 });
 
-test("character speech streams both direct and indirect variants with the selected option", async ({
+test("character speech returns direct and indirect variants with the selected option", async ({
   page,
 }) => {
   const requestBodies: QuickActionRequestPayload[] = [];
 
-  await page.route("**/api/quick-actions/character-speech/stream", async (route) => {
+  await page.route("**/api/quick-actions/character-speech", async (route) => {
     const payload = route.request().postDataJSON() as QuickActionRequestPayload;
 
     requestBodies.push(payload);
@@ -1157,29 +971,8 @@ test("character speech streams both direct and indirect variants with the select
 
     await route.fulfill({
       status: 200,
-      headers: {
-        "Content-Type": "text/event-stream",
-      },
-      body: createSseBody([
-        {
-          event: "chunk",
-          payload: {
-            text: responseText.slice(0, 24),
-          },
-        },
-        {
-          event: "chunk",
-          payload: {
-            text: responseText.slice(24),
-          },
-        },
-        {
-          event: "complete",
-          payload: {
-            text: responseText,
-          },
-        },
-      ]),
+      contentType: "application/json",
+      body: createQuickActionBody(responseText),
     });
   });
 
@@ -1224,10 +1017,10 @@ test("character speech streams both direct and indirect variants with the select
   );
 });
 
-test("custom quick action sends the custom prompt and streams the result", async ({ page }) => {
+test("custom quick action sends the custom prompt and returns the result", async ({ page }) => {
   const requestBodies: QuickActionRequestPayload[] = [];
 
-  await page.route("**/api/quick-actions/custom/stream", async (route) => {
+  await page.route("**/api/quick-actions/custom", async (route) => {
     const payload = route.request().postDataJSON() as QuickActionRequestPayload;
 
     requestBodies.push(payload);
@@ -1236,29 +1029,8 @@ test("custom quick action sends the custom prompt and streams the result", async
 
     await route.fulfill({
       status: 200,
-      headers: {
-        "Content-Type": "text/event-stream",
-      },
-      body: createSseBody([
-        {
-          event: "chunk",
-          payload: {
-            text: responseText.slice(0, 24),
-          },
-        },
-        {
-          event: "chunk",
-          payload: {
-            text: responseText.slice(24),
-          },
-        },
-        {
-          event: "complete",
-          payload: {
-            text: responseText,
-          },
-        },
-      ]),
+      contentType: "application/json",
+      body: createQuickActionBody(responseText),
     });
   });
 
@@ -1351,29 +1123,14 @@ test("language selector offers the planned locale set with umlaut labels", async
 test("language selection is sent with quick action requests", async ({ page }) => {
   const requestBodies: QuickActionRequestPayload[] = [];
 
-  await page.route("**/api/quick-actions/plain-language/stream", async (route) => {
+  await page.route("**/api/quick-actions/plain-language", async (route) => {
     const payload = route.request().postDataJSON() as QuickActionRequestPayload;
 
     requestBodies.push(payload);
     await route.fulfill({
       status: 200,
-      headers: {
-        "Content-Type": "text/event-stream",
-      },
-      body: createSseBody([
-        {
-          event: "chunk",
-          payload: {
-            text: "Plain result.",
-          },
-        },
-        {
-          event: "complete",
-          payload: {
-            text: "Plain result.",
-          },
-        },
-      ]),
+      contentType: "application/json",
+      body: createQuickActionBody("Plain result."),
     });
   });
 

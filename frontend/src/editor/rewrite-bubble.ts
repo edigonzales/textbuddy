@@ -1,5 +1,7 @@
 import type { Editor } from "@tiptap/core";
 
+import { apiFetch } from "./api-fetch";
+
 import { isApiLocked } from "./auth";
 import {
   documentPositionToPlainTextOffset,
@@ -372,7 +374,7 @@ export function mountRewriteBubble(
     positionBubble();
 
     try {
-      const response = await fetch("/api/word-synonym", {
+      const response = await apiFetch("/api/word-synonym", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -475,7 +477,7 @@ export function mountRewriteBubble(
     positionBubble();
 
     try {
-      const response = await fetch("/api/sentence-rewrite", {
+      const response = await apiFetch("/api/sentence-rewrite", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

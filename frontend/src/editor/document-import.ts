@@ -1,5 +1,7 @@
 import type { Editor } from "@tiptap/core";
 
+import { apiFetch } from "./api-fetch";
+
 import { isApiLocked } from "./auth";
 import { setEditorHtml } from "./editor-content";
 import { extractErrorMessage } from "./http-error";
@@ -135,7 +137,7 @@ export function mountDocumentImport(
     );
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/convert/doc?ocrLanguage=${encodeURIComponent(ocrLanguage)}`,
         {
           method: "POST",

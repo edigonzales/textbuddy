@@ -2,13 +2,13 @@
   "order": 1,
   "name": "empfehlungen-anglizismen-maerz-2020",
   "title": "Empfehlungen zu Anglizismen",
-  "summary": "Demo-Referenz für Formulierungen und Schreibweisen rund um Anglizismen im Verwaltungsumfeld.",
-  "source": "Projektinterne Demoquelle",
+  "summary": "Referenzblatt für verständliche deutsche Alternativen zu häufigen Anglizismen.",
+  "source": "Textbuddy Referenzblatt (projektintern)",
   "rules": [
     {
       "id": "downloaden-statt-herunterladen",
       "title": "Deutsche Alternative für downloaden",
-      "page": 6,
+      "page": 1,
       "instructions": "Prüfe, ob englische Verbformen durch eine deutsche Alternative ersetzt werden sollten.",
       "message": "Der Ausdruck wirkt als vermeidbarer Anglizismus.",
       "suggestion": "Nutze nach Möglichkeit 'herunterladen' statt der englischen Verbform.",
@@ -17,7 +17,7 @@
     {
       "id": "meeting-und-feedback-pruefen",
       "title": "Meeting- und Feedback-Begriffe einordnen",
-      "page": 11,
+      "page": 1,
       "instructions": "Prüfe englische Organisations- und Rückmeldebegriffe auf Verständlichkeit.",
       "message": "Der Begriff ist englisch geprägt und sollte für breite Zielgruppen eingeordnet werden.",
       "suggestion": "Prüfe 'Rückmeldung', 'Besprechung' oder eine kurze Erklärung.",

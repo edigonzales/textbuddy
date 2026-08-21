@@ -29,9 +29,30 @@ jobs:
           cache: npm
           cache-dependency-path: |
             frontend/package-lock.json
+            playwright/package-lock.json
+
+      - name: Install OCR runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes tesseract-ocr tesseract-ocr-deu tesseract-ocr-eng
+          TESSDATA_DIR="$(dirname "$(dpkg -L tesseract-ocr-eng | grep '/eng.traineddata$' | head -n 1)")"
+          echo "TESSDATA_PREFIX=$TESSDATA_DIR" >> "$GITHUB_ENV"
+
+      - name: Audit frontend dependencies
+        run: npm audit --prefix frontend --audit-level=high
 
       - name: Build and test
+        env:
+          TEXTBUDDY_REQUIRE_OCR_TESTS: 'true'
         run: ./gradlew clean test verifyReleaseBundle installerZip
+
+      - name: Install browser test dependencies
+        run: |
+          npm ci --prefix playwright
+          npx --prefix playwright playwright install --with-deps chromium
+
+      - name: Run browser and accessibility tests
+        run: npm test --prefix playwright
 
       - name: Upload failure reports
         if: failure()

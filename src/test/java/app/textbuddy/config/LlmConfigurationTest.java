@@ -1,7 +1,7 @@
 package app.textbuddy.config;
 
-import app.textbuddy.integration.llm.LlmClientFacade;
 import app.textbuddy.integration.llm.OpenAiCompatibleChatClient;
+import app.textbuddy.integration.llm.TextbuddyLlmClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
@@ -36,8 +36,7 @@ class LlmConfigurationTest {
                 )
                 .run(context -> {
                     assertThat(context).hasNotFailed();
-                    assertThat(context).hasBean("llmClientFacade");
-                    assertThat(context.getBean("llmClientFacade")).isInstanceOf(LlmClientFacade.class);
+                    assertThat(context).hasSingleBean(TextbuddyLlmClient.class);
                     assertThat(context).hasSingleBean(OpenAiCompatibleChatClient.class);
                 });
     }

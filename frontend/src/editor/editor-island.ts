@@ -12,7 +12,7 @@ import {
 import { mountDocumentImport } from "./document-import";
 import { dispatchSelectionChanged, dispatchTextChanged } from "./events";
 import { countWords, getPlainText, plainTextToHtml } from "./plain-text";
-import { mountQuickActionStream } from "./quick-action-stream";
+import { mountQuickActions } from "./quick-actions";
 import { mountRewriteBubble } from "./rewrite-bubble";
 import { mountTextCorrectionBridge } from "./text-correction";
 import type { EditorElements } from "./types";
@@ -124,6 +124,6 @@ export function mountEditorIsland(): void {
   }
 
   if (quickActionElements) {
-    mountQuickActionStream(editor, elements.root, quickActionElements);
+  mountQuickActions(editor, elements.root, quickActionElements);
   }
 }

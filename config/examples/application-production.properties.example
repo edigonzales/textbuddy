@@ -1,34 +1,36 @@
-# Produktionsprofil ohne externe Sidecars
-textbuddy.auth.enabled=false
+# Zentraler Server hinter einem vertrauenswürdigen TLS-Reverse-Proxy
+server.address=0.0.0.0
+server.forward-headers-strategy=framework
+textbuddy.auth.enabled=true
 
-# Runtime-Verzeichnis (wird bei Start initialisiert)
-textbuddy.runtime.home=/opt/textbuddy/runtime
-textbuddy.runtime.initialize-local-resources=true
+# OIDC: Werte über die Umgebung oder eine Secret-Verwaltung setzen
+spring.security.oauth2.client.registration.textbuddy.provider=textbuddy
+spring.security.oauth2.client.registration.textbuddy.client-id=${TEXTBUDDY_OIDC_CLIENT_ID}
+spring.security.oauth2.client.registration.textbuddy.client-secret=${TEXTBUDDY_OIDC_CLIENT_SECRET}
+spring.security.oauth2.client.registration.textbuddy.scope=openid,profile,email
+spring.security.oauth2.client.registration.textbuddy.authorization-grant-type=authorization_code
+spring.security.oauth2.client.registration.textbuddy.redirect-uri={baseUrl}/login/oauth2/code/{registrationId}
+spring.security.oauth2.client.provider.textbuddy.issuer-uri=${TEXTBUDDY_OIDC_ISSUER_URI}
 
-# LLM-Provider (Pflicht)
+# OpenAI-kompatibler LLM-Provider
 textbuddy.llm.mode=provider
-textbuddy.llm.base-url=https://api.openai.com/v1
-textbuddy.llm.api-key=<set-your-key>
-textbuddy.llm.model=gpt-5.4-mini
+textbuddy.llm.base-url=${TEXTBUDDY_LLM_BASE_URL}
+textbuddy.llm.api-key=${TEXTBUDDY_LLM_API_KEY}
+textbuddy.llm.model=${TEXTBUDDY_LLM_MODEL}
 textbuddy.llm.timeout=30s
-textbuddy.llm.max-retries=1
-textbuddy.llm.health-probe-enabled=false
+textbuddy.llm.temperature=0.2
 
-# Infomaniak OpenAI-kompatibel, Beispiel ohne Secret:
-# textbuddy.llm.base-url=https://api.infomaniak.com/2/ai/<project-id>/openai/v1
-# textbuddy.llm.model=qwen3
-
-# Sidecar-freier Standardbetrieb
+# Lokale Standardadapter
 textbuddy.languagetool.mode=embedded
-textbuddy.languagetool.timeout=10s
-textbuddy.languagetool.max-retries=1
-
 textbuddy.document.mode=kreuzberg
 textbuddy.document.max-upload-size=20MB
 textbuddy.document.timeout=45s
-textbuddy.document.max-retries=1
 
-# Actuator
-management.endpoints.web.exposure.include=health,info
-management.endpoint.health.show-components=always
-management.endpoint.health.show-details=always
+# Eingabegrenzen
+textbuddy.input.max-text-length=50000
+textbuddy.input.max-prompt-length=2000
+
+# Nur Health ohne interne Details veröffentlichen
+management.endpoints.web.exposure.include=health
+management.endpoint.health.show-components=never
+management.endpoint.health.show-details=never

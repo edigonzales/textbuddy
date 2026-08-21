@@ -35,4 +35,4 @@ else
   JAVA_OPTS_ARRAY=()
 fi
 
-exec java "${JAVA_OPTS_ARRAY[@]}" -jar "${JAR_PATH}" "$@"
+exec java --enable-native-access=ALL-UNNAMED "${JAVA_OPTS_ARRAY[@]}" -jar "${JAR_PATH}" "$@"

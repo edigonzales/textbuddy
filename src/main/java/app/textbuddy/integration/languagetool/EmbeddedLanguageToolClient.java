@@ -1,6 +1,6 @@
 package app.textbuddy.integration.languagetool;
 
-import app.textbuddy.config.LanguageToolProperties;
+import app.textbuddy.config.TextbuddyProperties;
 import org.languagetool.JLanguageTool;
 import org.languagetool.Language;
 import org.languagetool.Languages;
@@ -30,7 +30,7 @@ public final class EmbeddedLanguageToolClient implements LanguageToolClient {
 
     private final Optional<Path> ngramPath;
 
-    public EmbeddedLanguageToolClient(LanguageToolProperties properties) {
+    public EmbeddedLanguageToolClient(TextbuddyProperties.LanguageTool properties) {
         this.ngramPath = Objects.requireNonNull(properties).normalizedNgramPath();
     }
 

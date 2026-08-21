@@ -1,6 +1,6 @@
 package app.textbuddy.document;
 
-import app.textbuddy.config.DocumentImportProperties;
+import app.textbuddy.config.TextbuddyProperties;
 import app.textbuddy.integration.docling.DoclingClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.unit.DataSize;
@@ -92,9 +92,9 @@ class DefaultDocumentConversionServiceTest {
             called.set(true);
             return "<p>ignored</p>";
         };
-        DocumentImportProperties properties = new DocumentImportProperties();
-        properties.setMode(DocumentImportProperties.Mode.STUB);
-        properties.setMaxUploadSize(DataSize.ofBytes(4));
+        TextbuddyProperties properties = new TextbuddyProperties();
+        properties.getDocument().setMode(TextbuddyProperties.Document.Mode.STUB);
+        properties.getDocument().setMaxUploadSize(DataSize.ofBytes(4));
         DefaultDocumentConversionService service = new DefaultDocumentConversionService(
                 doclingClient,
                 new DocumentImportFormatCatalog(properties),
@@ -114,8 +114,8 @@ class DefaultDocumentConversionServiceTest {
     }
 
     private DefaultDocumentConversionService createService(DoclingClient doclingClient) {
-        DocumentImportProperties properties = new DocumentImportProperties();
-        properties.setMode(DocumentImportProperties.Mode.STUB);
+        TextbuddyProperties properties = new TextbuddyProperties();
+        properties.getDocument().setMode(TextbuddyProperties.Document.Mode.STUB);
 
         return new DefaultDocumentConversionService(
                 doclingClient,

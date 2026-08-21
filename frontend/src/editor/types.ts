@@ -128,16 +128,8 @@ export interface WordSynonymResponse {
   synonyms: string[];
 }
 
-export interface QuickActionSseChunkPayload {
+export interface QuickActionResponse {
   text: string;
-}
-
-export interface QuickActionSseCompletePayload {
-  text: string;
-}
-
-export interface QuickActionSseErrorPayload {
-  message: string;
 }
 
 export interface AdvisorValidationEventPayload {

@@ -1,6 +1,6 @@
 package app.textbuddy.integration.languagetool;
 
-import app.textbuddy.config.LanguageToolProperties;
+import app.textbuddy.config.TextbuddyProperties;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class EmbeddedLanguageToolClientTest {
 
     private final EmbeddedLanguageToolClient client =
-            new EmbeddedLanguageToolClient(new LanguageToolProperties());
+            new EmbeddedLanguageToolClient(new TextbuddyProperties.LanguageTool());
 
     @ParameterizedTest
     @CsvSource(delimiter = '|', textBlock = """

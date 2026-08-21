@@ -1,7 +1,6 @@
 package app.textbuddy.integration.llm;
 
 import app.textbuddy.quickaction.CharacterSpeechPrompt;
-import app.textbuddy.quickaction.CustomQuickActionPrompt;
 import app.textbuddy.quickaction.FormalityPrompt;
 import app.textbuddy.quickaction.MediumCurrentUser;
 import app.textbuddy.quickaction.MediumPrompt;
@@ -89,9 +88,9 @@ public final class QuickActionPromptComposer {
         ));
     }
 
-    public PromptMessages custom(String text, String language, CustomQuickActionPrompt prompt) {
+    public PromptMessages custom(String text, String language, String prompt) {
         return quickAction("source/quick-actions/custom.system.txt", text, language, Map.of(
-                "custom_instruction", normalize(prompt == null ? null : prompt.userPrompt())
+                "custom_instruction", normalize(prompt)
         ));
     }
 

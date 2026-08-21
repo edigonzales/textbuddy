@@ -1,8 +1,6 @@
 package app.textbuddy.integration.languagetool;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import app.textbuddy.integration.support.AdapterRetrySupport;
-import app.textbuddy.integration.support.RetriableAdapterException;
 import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -16,25 +14,14 @@ import java.util.Locale;
 public final class HttpLanguageToolClient implements LanguageToolClient {
 
     private final RestClient restClient;
-    private final int maxRetries;
 
     public HttpLanguageToolClient(RestClient restClient) {
-        this(restClient, 0);
-    }
-
-    public HttpLanguageToolClient(RestClient restClient, int maxRetries) {
         this.restClient = restClient;
-        this.maxRetries = Math.max(0, maxRetries);
     }
 
     @Override
     public List<LanguageToolMatch> check(String text, String language) {
-        return AdapterRetrySupport.withRetry(
-                "LanguageTool",
-                maxRetries,
-                () -> checkOnce(text, language),
-                exception -> new LanguageToolUnavailableException(exception.getMessage(), exception.getCause())
-        );
+        return checkOnce(text, language);
     }
 
     private List<LanguageToolMatch> checkOnce(String text, String language) {
@@ -54,7 +41,7 @@ public final class HttpLanguageToolClient implements LanguageToolClient {
         } catch (RestClientResponseException exception) {
             throw mapHttpFailure(exception);
         } catch (ResourceAccessException exception) {
-            throw new RetriableAdapterException(
+            throw new LanguageToolUnavailableException(
                     "LanguageTool ist momentan nicht erreichbar.",
                     exception
             );
@@ -84,25 +71,7 @@ public final class HttpLanguageToolClient implements LanguageToolClient {
                     : "LanguageTool antwortete mit HTTP " + statusCode + ".";
         };
 
-        if (AdapterRetrySupport.isRetriableStatusCode(statusCode)) {
-            return new RetriableAdapterException(message + compactBodySuffix(exception.getResponseBodyAsString()), exception);
-        }
-
-        return new LanguageToolUnavailableException(
-                message + compactBodySuffix(exception.getResponseBodyAsString()),
-                exception
-        );
-    }
-
-    private String compactBodySuffix(String body) {
-        String normalized = normalize(body);
-
-        if (normalized.isBlank()) {
-            return "";
-        }
-
-        String compact = normalized.length() <= 180 ? normalized : normalized.substring(0, 180) + "…";
-        return " Antwort: " + compact;
+        return new LanguageToolUnavailableException(message);
     }
 
     private String normalize(String value) {

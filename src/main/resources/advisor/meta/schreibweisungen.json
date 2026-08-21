@@ -2,14 +2,13 @@
   "order": 4,
   "name": "schreibweisungen",
   "title": "Schreibweisungen",
-  "summary": "Demo-Referenz für interne Schreibstandards, Tonalität und standardisierte Begriffe.",
-  "source": "Projektinterne Demoquelle",
-  "allowedRoles": ["ROLE_ADVISOR_INTERNAL"],
+  "summary": "Referenzblatt für klare interne Schreibstandards, Adressierungen und Abkürzungen.",
+  "source": "Textbuddy Referenzblatt (projektintern)",
   "rules": [
     {
       "id": "per-sofort-vermeiden",
       "title": "Per sofort durch ab sofort ersetzen",
-      "page": 7,
+      "page": 1,
       "instructions": "Prüfe intern geerbte Formulierungen auf klarere Standardformen.",
       "message": "Die Formulierung wirkt intern und wenig standardisiert.",
       "suggestion": "Nutze 'ab sofort'.",
@@ -18,7 +17,7 @@
     {
       "id": "zhd-ausschreiben",
       "title": "Adressierung ausschreiben",
-      "page": 15,
+      "page": 1,
       "instructions": "Prüfe Abkürzungen in der Briefadressierung auf Lesbarkeit.",
       "message": "Abkürzungen in der Adressierung sollten ausgeschrieben werden.",
       "suggestion": "Nutze eine ausgeschriebene Form wie 'zuhanden von'.",

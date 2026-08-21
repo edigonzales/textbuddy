@@ -1,6 +1,6 @@
 package app.textbuddy.sentencerewrite;
 
-import app.textbuddy.integration.llm.LlmClientFacade;
+import app.textbuddy.integration.llm.TextbuddyLlmClient;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,10 +11,10 @@ public class DefaultSentenceRewriteService implements SentenceRewriteService {
 
     private static final int MAX_ALTERNATIVES = 3;
 
-    private final LlmClientFacade llmClientFacade;
+    private final TextbuddyLlmClient llmClient;
 
-    public DefaultSentenceRewriteService(LlmClientFacade llmClientFacade) {
-        this.llmClientFacade = llmClientFacade;
+    public DefaultSentenceRewriteService(TextbuddyLlmClient llmClient) {
+        this.llmClient = llmClient;
     }
 
     @Override
@@ -26,7 +26,7 @@ public class DefaultSentenceRewriteService implements SentenceRewriteService {
             return new SentenceRewriteResponse(original, List.of());
         }
 
-        List<String> alternatives = llmClientFacade.rewriteSentence(original, context).stream()
+        List<String> alternatives = llmClient.rewriteSentence(original, context).stream()
                 .map(this::normalize)
                 .filter(candidate -> !candidate.isBlank())
                 .filter(candidate -> !candidate.equals(original))

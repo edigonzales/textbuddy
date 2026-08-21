@@ -2,6 +2,7 @@ import type {
   AdvisorValidationErrorPayload,
   AdvisorValidationEventPayload,
 } from "./types";
+import { apiFetch } from "./api-fetch";
 import { extractErrorMessage } from "./http-error";
 
 interface AdvisorValidationSseCallbacks {
@@ -46,7 +47,7 @@ export async function postAdvisorValidationSse(
   url: string,
   callbacks: AdvisorValidationSseCallbacks,
 ): Promise<void> {
-  const response = await fetch(url, {
+  const response = await apiFetch(url, {
     method: "POST",
     headers: {
       Accept: "text/event-stream",

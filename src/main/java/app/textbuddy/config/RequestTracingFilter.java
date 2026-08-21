@@ -10,10 +10,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 public class RequestTracingFilter extends OncePerRequestFilter {
 
     private static final String TRACE_ID_MDC_KEY = "traceId";
+    private static final Pattern SAFE_TRACE_ID = Pattern.compile("[A-Za-z0-9._-]{1,64}");
 
     @Override
     protected void doFilterInternal(
@@ -37,8 +39,12 @@ public class RequestTracingFilter extends OncePerRequestFilter {
     private String resolveTraceId(HttpServletRequest request) {
         String headerValue = request.getHeader(TraceIdSupport.TRACE_ID_HEADER);
 
-        if (headerValue != null && !headerValue.isBlank()) {
-            return headerValue.strip();
+        if (headerValue != null) {
+            String normalized = headerValue.strip();
+
+            if (SAFE_TRACE_ID.matcher(normalized).matches()) {
+                return normalized;
+            }
         }
 
         return UUID.randomUUID().toString();

@@ -328,23 +328,6 @@ a {
     font-weight: 600;
 }
 
-.workspace-notes {
-    border: 1px solid rgba(15, 109, 104, 0.14);
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.86);
-    padding: 0.55rem 0.75rem;
-}
-
-.workspace-notes summary {
-    cursor: pointer;
-    color: var(--accent);
-    font-weight: 700;
-}
-
-.workspace-notes[open] .chip-row {
-    margin-top: 0.6rem;
-}
-
 .chip-row-compact {
     gap: 0.5rem;
 }
@@ -688,10 +671,6 @@ a {
     box-shadow: 0 12px 24px rgba(28, 39, 48, 0.08);
 }
 
-.problems-footnotes {
-    margin-top: 1rem;
-}
-
 .advisor-panel {
     align-self: start;
 }
@@ -993,53 +972,6 @@ a {
     margin: 0;
 }
 
-.advisor-pdf-controls {
-    display: grid;
-    gap: 0.75rem;
-}
-
-.advisor-pdf-control-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-    align-items: center;
-}
-
-.advisor-pdf-page-shell {
-    display: inline-grid;
-    gap: 0.2rem;
-}
-
-.advisor-pdf-page-shell span {
-    font-size: 0.82rem;
-    color: var(--muted);
-    font-weight: 700;
-}
-
-.advisor-pdf-page-shell input {
-    width: 5.5rem;
-    padding: 0.52rem 0.6rem;
-    border-radius: 12px;
-    border: 1px solid rgba(15, 109, 104, 0.18);
-    background: rgba(255, 255, 255, 0.94);
-    color: var(--text);
-    font: inherit;
-}
-
-.advisor-pdf-zoom-label {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 2.5rem;
-    min-width: 4.5rem;
-    padding: 0.35rem 0.6rem;
-    border-radius: 12px;
-    border: 1px solid rgba(15, 109, 104, 0.12);
-    color: var(--accent);
-    background: rgba(15, 109, 104, 0.08);
-    font-weight: 700;
-}
-
 .advisor-pdf-frame {
     width: 100%;
     min-height: 520px;
@@ -1082,13 +1014,4 @@ a {
         flex-direction: column;
     }
 
-    .advisor-pdf-control-group {
-        align-items: stretch;
-    }
-
-    .advisor-pdf-page-shell,
-    .advisor-pdf-page-shell input,
-    .advisor-pdf-zoom-label {
-        width: 100%;
-    }
 }

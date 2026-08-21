@@ -2,13 +2,13 @@
   "order": 5,
   "name": "merkblatt_behoerdenbriefe",
   "title": "Merkblatt Behördenbriefe",
-  "summary": "Demo-Referenz für klar strukturierte Behördenbriefe, Leseführung und adressatengerechte Sprache.",
-  "source": "Projektinterne Demoquelle",
+  "summary": "Referenzblatt für klare, aktive und adressatengerechte Behördenbriefe.",
+  "source": "Textbuddy Referenzblatt (projektintern)",
   "rules": [
     {
       "id": "beiliegend-modernisieren",
       "title": "Beiliegend direkter formulieren",
-      "page": 5,
+      "page": 1,
       "instructions": "Prüfe typische Briefeinstiege auf eine klarere aktive Form.",
       "message": "Die Einleitung kann direkter und klarer formuliert werden.",
       "suggestion": "Benenne die Anlage direkt oder formuliere den Satz aktiv.",
@@ -17,7 +17,7 @@
     {
       "id": "obgenannt-vermeiden",
       "title": "Obgenannt vermeiden",
-      "page": 9,
+      "page": 1,
       "instructions": "Prüfe schwer verständliche Verwaltungssprache auf konkrete Alternativen.",
       "message": "Der Ausdruck ist für viele Leserinnen und Leser unklar.",
       "suggestion": "Nutze konkrete Bezeichnungen statt verweisender Amtsprache.",

@@ -37,8 +37,8 @@ class KreuzbergDoclingClientTest {
 
     @Test
     void convertsScannedImageWithLocalOcrWhenRuntimeProvidesOcrBackend() throws IOException {
-        Assumptions.assumeTrue(isOcrRuntimeAvailable(), "Keine lokale OCR-Engine verfügbar.");
-        Assumptions.assumeTrue(isOcrRuntimeReady("en"), "Lokale OCR ist vorhanden, aber nicht betriebsbereit.");
+        requireOrAssumeOcr(isOcrRuntimeAvailable(), "Keine lokale OCR-Engine verfügbar.");
+        requireOrAssumeOcr(isOcrRuntimeReady("en"), "Lokale OCR ist vorhanden, aber nicht betriebsbereit.");
 
         byte[] image = createScannedPng("HELLO OCR");
         String html = client.convertToHtml(new DocumentUpload("scan.png", "image/png", image), "en");
@@ -49,8 +49,8 @@ class KreuzbergDoclingClientTest {
 
     @Test
     void convertsScannedPdfWithLocalOcrWhenRuntimeProvidesOcrBackend() throws IOException {
-        Assumptions.assumeTrue(isOcrRuntimeAvailable(), "Keine lokale OCR-Engine verfügbar.");
-        Assumptions.assumeTrue(isOcrRuntimeReady("de"), "Lokale OCR ist vorhanden, aber nicht betriebsbereit.");
+        requireOrAssumeOcr(isOcrRuntimeAvailable(), "Keine lokale OCR-Engine verfügbar.");
+        requireOrAssumeOcr(isOcrRuntimeReady("de"), "Lokale OCR ist vorhanden, aber nicht betriebsbereit.");
 
         byte[] scannedPdf = createScannedPdf("OCR PDF");
         String html = client.convertToHtml(new DocumentUpload("scan.pdf", "application/pdf", scannedPdf), "de");
@@ -201,6 +201,15 @@ class KreuzbergDoclingClientTest {
         } catch (Exception exception) {
             return false;
         }
+    }
+
+    private static void requireOrAssumeOcr(boolean available, String message) {
+        if (Boolean.parseBoolean(System.getenv("TEXTBUDDY_REQUIRE_OCR_TESTS"))) {
+            assertThat(available).as(message).isTrue();
+            return;
+        }
+
+        Assumptions.assumeTrue(available, message);
     }
 
     private boolean isOcrRuntimeReady(String language) {

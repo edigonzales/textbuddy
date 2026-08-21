@@ -1,16 +1,15 @@
 plugins {
     id 'java'
     id 'org.springframework.boot' version '4.0.5'
+    id 'gg.jte.gradle' version '3.2.3'
 }
 
 group = 'app.textbuddy'
 version = '0.0.1-SNAPSHOT'
-description = 'Phase 05 release distribution and production acceptance for Textbuddy'
+description = 'Textbuddy writing assistant'
 
 ext {
     jteVersion = '3.2.3'
-    htmxVersion = '2.0.8'
-    springAiVersion = '2.0.0-M2'
     languageToolVersion = '6.7'
     kreuzbergVersion = '4.7.3'
 }
@@ -49,7 +48,6 @@ dependencies {
     implementation "dev.kreuzberg:kreuzberg:${kreuzbergVersion}"
     implementation 'org.jsoup:jsoup:1.18.3'
     implementation "gg.jte:jte-spring-boot-starter-4:${jteVersion}"
-    implementation "org.webjars.npm:htmx.org:${htmxVersion}"
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-webmvc-test'
@@ -58,6 +56,11 @@ dependencies {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    options.compilerArgs += '-Xlint:deprecation'
+}
+
+jte {
+    generate()
 }
 
 sourceSets {
@@ -125,10 +128,12 @@ tasks.named('bootJar') {
 tasks.register('releaseBundle', Sync) {
     dependsOn 'bootJar'
     into releaseDir
+    includeEmptyDirs = false
 
     from(tasks.named('bootJar').flatMap { it.archiveFile })
-    from(layout.projectDirectory.dir('docs/release')) {
-        into 'docs/release'
+    from(layout.projectDirectory.file('README.md'))
+    from(layout.projectDirectory.dir('docs')) {
+        into 'docs'
     }
     from(layout.projectDirectory.dir('config/examples')) {
         into 'config/examples'
@@ -140,9 +145,11 @@ tasks.register('verifyReleaseBundle') {
     doLast {
         List<String> requiredPaths = [
                 'textbuddy.jar',
-                'docs/release/runbook-produktionsbetrieb.md',
-                'docs/release/abnahme-checkliste.md',
-                'docs/release/konfigurationsbeispiele.md',
+                'README.md',
+                'docs/getting-started.md',
+                'docs/architecture.md',
+                'docs/operations.md',
+                'docs/accessibility.md',
                 'config/examples/textbuddy.env.example',
                 'config/examples/application-production.properties.example'
         ]
@@ -162,9 +169,11 @@ tasks.register('installerZip', Zip) {
     destinationDirectory = releaseDir
     archiveFileName = "textbuddy-${releaseVersion}.zip"
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    includeEmptyDirs = false
 
     from(releaseDir) {
         include 'textbuddy.jar'
+        include 'README.md'
         include 'docs/**'
         include 'config/**'
     }
@@ -173,11 +182,35 @@ tasks.register('installerZip', Zip) {
     }
 }
 
+tasks.register('ocrTest', Test) {
+    description = 'Runs the native Kreuzberg OCR integration tests in an isolated JVM.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    filter.includeTestsMatching('app.textbuddy.integration.docling.Kreuzberg*Test')
+    useJUnitPlatform()
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
+}
+
+tasks.register('embeddedLanguageToolTest', Test) {
+    description = 'Runs the memory-intensive embedded LanguageTool tests in an isolated JVM.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    filter.includeTestsMatching('app.textbuddy.integration.languagetool.EmbeddedLanguageToolClientTest')
+    useJUnitPlatform()
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
+}
+
 tasks.named('test') {
     dependsOn 'bootJar'
     dependsOn 'testFrontendUnit'
+    dependsOn 'ocrTest'
+    dependsOn 'embeddedLanguageToolTest'
+    exclude 'app/textbuddy/integration/docling/Kreuzberg*Test.class'
+    exclude 'app/textbuddy/integration/languagetool/EmbeddedLanguageToolClientTest.class'
     maxParallelForks = 1
-    forkEvery = 1
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
     useJUnitPlatform()
     doFirst {
         systemProperty 'textbuddy.bootJarPath', tasks.named('bootJar').get().archiveFile.get().asFile.absolutePath

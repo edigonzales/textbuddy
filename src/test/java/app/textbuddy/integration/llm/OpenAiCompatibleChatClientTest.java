@@ -1,6 +1,6 @@
 package app.textbuddy.integration.llm;
 
-import app.textbuddy.config.LlmProperties;
+import app.textbuddy.config.TextbuddyProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
@@ -32,7 +32,7 @@ class OpenAiCompatibleChatClientTest {
     }
 
     @Test
-    void completeTextUsesAuthorizationModelAndChatCompletionsEndpoint() throws Exception {
+    void completesTextWithTheConfiguredEndpointAndCredentials() throws Exception {
         AtomicInteger requestCount = new AtomicInteger();
         startServer(exchange -> {
             requestCount.incrementAndGet();
@@ -40,146 +40,77 @@ class OpenAiCompatibleChatClientTest {
             assertThat(exchange.getRequestHeaders().getFirst("Authorization")).isEqualTo("Bearer test-token");
 
             JsonNode request = readRequestJson(exchange);
-            assertThat(request.path("model").asText()).isEqualTo("qwen3");
+            assertThat(request.path("model").asText()).isEqualTo("test-model");
             assertThat(request.path("stream").asBoolean()).isFalse();
             assertThat(request.path("messages").path(0).path("role").asText()).isEqualTo("system");
             assertThat(request.path("messages").path(1).path("role").asText()).isEqualTo("user");
-
-            writeJson(exchange, 200, """
-                    {
-                      "choices": [
-                        {
-                          "message": {
-                            "content": "Antworttext"
-                          }
-                        }
-                      ]
-                    }
-                    """);
+            writeJson(exchange, 200, "{\"choices\":[{\"message\":{\"content\":\"Antworttext\"}}]}");
         });
 
-        OpenAiCompatibleChatClient client = newClient(serverBaseUrl());
-
-        assertThat(client.completeText("System", "User")).isEqualTo("Antworttext");
+        assertThat(newClient().completeText("System", "User")).isEqualTo("Antworttext");
         assertThat(requestCount).hasValue(1);
     }
 
     @Test
-    void streamTextParsesOpenAiCompatibleSseChunks() throws Exception {
-        startServer(exchange -> {
-            JsonNode request = readRequestJson(exchange);
-            assertThat(request.path("stream").asBoolean()).isTrue();
-
-            writeText(exchange, 200, "text/event-stream", """
-                    data: {"choices":[{"delta":{"role":"assistant","content":""}}]}
-
-                    data: {"choices":[{"delta":{"content":"STREAM"}}]}
-
-                    data: {"choices":[{"delta":{"content":"_OK"}}]}
-
-                    data: {"choices":[{"delta":{"content":""},"finish_reason":"stop"}]}
-
-                    data: [DONE]
-                    """);
-        });
-
-        OpenAiCompatibleChatClient client = newClient(serverBaseUrl());
-
-        assertThat(client.streamText("System", "User")).containsExactly("STREAM", "_OK");
-    }
-
-    @Test
-    void completeJsonRetriesOnceWhenModelReturnsInvalidJson() throws Exception {
+    void parsesJsonInsideCodeFencesWithoutAnotherProviderCall() throws Exception {
         AtomicInteger requestCount = new AtomicInteger();
         startServer(exchange -> {
-            int count = requestCount.incrementAndGet();
-
-            if (count == 1) {
-                writeJson(exchange, 200, """
-                        {
-                          "choices": [
-                            {
-                              "message": {
-                                "content": "Das ist kein JSON."
-                              }
-                            }
-                          ]
-                        }
-                        """);
-                return;
-            }
-
-            writeJson(exchange, 200, """
-                    {
-                      "choices": [
-                        {
-                          "message": {
-                            "content": "```json\\n{\\"synonyms\\":[\\"rasch\\"]}\\n```"
-                          }
-                        }
-                      ]
-                    }
-                    """);
+            requestCount.incrementAndGet();
+            writeJson(exchange, 200, "{\"choices\":[{\"message\":{\"content\":\"```json\\n{\\\"synonyms\\\":[\\\"rasch\\\"]}\\n```\"}}]}");
         });
 
-        OpenAiCompatibleChatClient client = newClient(serverBaseUrl());
-
-        JsonNode response = client.completeJson("System", "User");
+        JsonNode response = newClient().completeJson("System", "User");
 
         assertThat(response.path("synonyms").path(0).asText()).isEqualTo("rasch");
-        assertThat(requestCount).hasValue(2);
+        assertThat(requestCount).hasValue(1);
     }
 
     @Test
-    void retriesOnRateLimitResponses() throws Exception {
+    void doesNotRetryInvalidJson() throws Exception {
         AtomicInteger requestCount = new AtomicInteger();
         startServer(exchange -> {
-            int count = requestCount.incrementAndGet();
-
-            if (count == 1) {
-                writeJson(exchange, 429, "{\"error\":\"rate_limit\"}");
-                return;
-            }
-
-            writeJson(exchange, 200, """
-                    {
-                      "choices": [
-                        {
-                          "message": {
-                            "content": "Nach Retry"
-                          }
-                        }
-                      ]
-                    }
-                    """);
+            requestCount.incrementAndGet();
+            writeJson(exchange, 200, "{\"choices\":[{\"message\":{\"content\":\"kein JSON\"}}]}");
         });
 
-        OpenAiCompatibleChatClient client = newClient(serverBaseUrl());
-
-        assertThat(client.completeText("System", "User")).isEqualTo("Nach Retry");
-        assertThat(requestCount).hasValue(2);
+        assertThatThrownBy(() -> newClient().completeJson("System", "User"))
+                .isInstanceOf(LlmProviderException.class)
+                .hasMessageContaining("gültiges JSON");
+        assertThat(requestCount).hasValue(1);
     }
 
     @Test
-    void throwsProviderExceptionOnUnauthorizedResponses() throws Exception {
-        startServer(exchange -> writeJson(exchange, 401, "{\"error\":\"unauthorized\"}"));
+    void doesNotRetryRateLimitsOrExposeTheProviderBody() throws Exception {
+        AtomicInteger requestCount = new AtomicInteger();
+        startServer(exchange -> {
+            requestCount.incrementAndGet();
+            writeJson(exchange, 429, "{\"error\":\"secret-provider-detail\"}");
+        });
 
-        OpenAiCompatibleChatClient client = newClient(serverBaseUrl());
-
-        assertThatThrownBy(() -> client.completeText("System", "User"))
+        assertThatThrownBy(() -> newClient().completeText("System", "User"))
                 .isInstanceOf(LlmProviderException.class)
-                .hasMessageContaining("Anmeldedaten");
+                .hasMessageContaining("Rate Limit")
+                .hasMessageNotContaining("secret-provider-detail");
+        assertThat(requestCount).hasValue(1);
     }
 
-    private OpenAiCompatibleChatClient newClient(String baseUrl) {
-        LlmProperties properties = new LlmProperties();
-        properties.setMode(LlmProperties.Mode.PROVIDER);
-        properties.setBaseUrl(baseUrl);
-        properties.setApiKey("test-token");
-        properties.setModel("qwen3");
-        properties.setTimeout(Duration.ofSeconds(5));
-        properties.setMaxRetries(1);
+    @Test
+    void mapsUnauthorizedResponsesWithoutExposingTheirBody() throws Exception {
+        startServer(exchange -> writeJson(exchange, 401, "{\"error\":\"secret\"}"));
 
+        assertThatThrownBy(() -> newClient().completeText("System", "User"))
+                .isInstanceOf(LlmProviderException.class)
+                .hasMessageContaining("Anmeldedaten")
+                .hasMessageNotContaining("secret");
+    }
+
+    private OpenAiCompatibleChatClient newClient() {
+        TextbuddyProperties.Llm properties = new TextbuddyProperties.Llm();
+        properties.setMode(TextbuddyProperties.Llm.Mode.PROVIDER);
+        properties.setBaseUrl("http://localhost:" + server.getAddress().getPort() + "/v1/models");
+        properties.setApiKey("test-token");
+        properties.setModel("test-model");
+        properties.setTimeout(Duration.ofSeconds(5));
         return new OpenAiCompatibleChatClient(
                 HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build(),
                 objectMapper,
@@ -199,23 +130,14 @@ class OpenAiCompatibleChatClientTest {
         server.start();
     }
 
-    private String serverBaseUrl() {
-        return "http://localhost:" + server.getAddress().getPort() + "/v1/models";
-    }
-
     private JsonNode readRequestJson(HttpExchange exchange) throws IOException {
         return objectMapper.readTree(exchange.getRequestBody().readAllBytes());
     }
 
     private void writeJson(HttpExchange exchange, int status, String body) throws IOException {
-        writeText(exchange, status, "application/json", body);
-    }
-
-    private void writeText(HttpExchange exchange, int status, String contentType, String body) throws IOException {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
-        exchange.getResponseHeaders().set("Content-Type", contentType);
+        exchange.getResponseHeaders().set("Content-Type", "application/json");
         exchange.sendResponseHeaders(status, bytes.length);
-
         try (OutputStream outputStream = exchange.getResponseBody()) {
             outputStream.write(bytes);
         }

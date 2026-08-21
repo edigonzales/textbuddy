@@ -60,7 +60,7 @@ public class GlobalErrorHandler {
 
     private HttpStatusCode resolveStatus(Exception exception) {
         if (exception instanceof MaxUploadSizeExceededException) {
-            return HttpStatus.PAYLOAD_TOO_LARGE;
+            return HttpStatus.CONTENT_TOO_LARGE;
         }
 
         if (exception instanceof ErrorResponse errorResponse) {
@@ -151,6 +151,11 @@ public class GlobalErrorHandler {
         String path = request.getRequestURI();
 
         if (status.is5xxServerError()) {
+            if (hasResponseStatusAnnotation(exception) || exception instanceof ErrorResponse) {
+                log.error("[{}] {} {} -> {} {}", traceId, method, path, status.value(), detail);
+                return;
+            }
+
             log.error("[{}] {} {} failed: {}", traceId, method, path, detail, exception);
             return;
         }

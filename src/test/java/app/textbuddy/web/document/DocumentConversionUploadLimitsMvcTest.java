@@ -38,7 +38,7 @@ class DocumentConversionUploadLimitsMvcTest {
         );
 
         mockMvc.perform(multipart("/api/convert/doc").file(file))
-                .andExpect(status().isPayloadTooLarge())
+                .andExpect(status().isContentTooLarge())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.detail").value(containsString("Datei ist zu gross")))
                 .andExpect(jsonPath("$.path").value("/api/convert/doc"));

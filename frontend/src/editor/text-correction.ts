@@ -1,5 +1,6 @@
 import type { Editor } from "@tiptap/core";
 
+import { apiFetch } from "./api-fetch";
 import { isApiLocked } from "./auth";
 import {
   plainTextRangeToDocumentRange,
@@ -34,7 +35,7 @@ const DEBOUNCE_MESSAGE = t("correction.status.debounce");
 const LOADING_MESSAGE = t("correction.status.loading");
 const ERROR_MESSAGE = t("correction.status.error");
 const AUTH_REQUIRED_MESSAGE = t("correction.status.authRequired");
-const STREAMING_MESSAGE = t("correction.status.streaming");
+const RUNNING_MESSAGE = t("correction.status.running");
 
 interface SegmentCorrectionState extends TextCorrectionSegment {
   blocks: TextCorrectionBlock[];
@@ -111,8 +112,8 @@ export function mountTextCorrectionBridge(
   const dictionaryStore = createLocalDictionaryStore();
   const inFlightRequests = new Set<AbortController>();
 
-  function isQuickActionStreaming(): boolean {
-    return root.dataset.quickActionStreaming === "true";
+  function isQuickActionRunning(): boolean {
+    return root.dataset.quickActionRunning === "true";
   }
 
   function setPanelState(state: "idle" | "loading" | "success" | "error", message: string): void {
@@ -437,7 +438,7 @@ export function mountTextCorrectionBridge(
     inFlightRequests.add(controller);
 
     try {
-      const response = await fetch("/api/text-correction", {
+      const response = await apiFetch("/api/text-correction", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -619,7 +620,7 @@ export function mountTextCorrectionBridge(
 
     currentText = detail.text;
 
-    if (isQuickActionStreaming()) {
+    if (isQuickActionRunning()) {
       latestRequestId += 1;
 
       if (typeof debounceHandle === "number") {
@@ -629,7 +630,7 @@ export function mountTextCorrectionBridge(
 
       abortInFlightRequests();
       clearCorrections();
-      setPanelState("idle", STREAMING_MESSAGE);
+      setPanelState("idle", RUNNING_MESSAGE);
       return;
     }
 

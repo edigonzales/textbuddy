@@ -11,7 +11,6 @@
     <title>${title}</title>
     <link rel="stylesheet" href="/styles/app.css">
     <link rel="stylesheet" href="/editor/editor-island.css">
-    <script src="/webjars/htmx.org/2.0.8/dist/htmx.min.js" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#main-content" data-testid="skip-link">${skipLinkLabel}</a>

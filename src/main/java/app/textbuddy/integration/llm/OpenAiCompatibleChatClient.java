@@ -1,25 +1,20 @@
 package app.textbuddy.integration.llm;
 
-import app.textbuddy.config.LlmProperties;
+import app.textbuddy.config.TextbuddyProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 public final class OpenAiCompatibleChatClient {
 
@@ -27,12 +22,12 @@ public final class OpenAiCompatibleChatClient {
 
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
-    private final LlmProperties properties;
+    private final TextbuddyProperties.Llm properties;
 
     public OpenAiCompatibleChatClient(
             HttpClient httpClient,
             ObjectMapper objectMapper,
-            LlmProperties properties
+            TextbuddyProperties.Llm properties
     ) {
         this.httpClient = Objects.requireNonNull(httpClient);
         this.objectMapper = Objects.requireNonNull(objectMapper);
@@ -46,41 +41,11 @@ public final class OpenAiCompatibleChatClient {
     }
 
     public String completeText(String systemPrompt, String userPrompt) {
-        return withTransportRetry(() -> completeTextOnce(systemPrompt, userPrompt));
-    }
-
-    public JsonNode completeJson(String systemPrompt, String userPrompt) {
-        String currentPrompt = userPrompt;
-
-        for (int attempt = 0; attempt < 2; attempt += 1) {
-            String response = completeText(systemPrompt, currentPrompt);
-
-            try {
-                return parseEmbeddedJson(response);
-            } catch (IOException exception) {
-                if (attempt >= 1) {
-                    throw new LlmProviderException("LLM-Antwort enthielt kein gültiges JSON.", exception);
-                }
-
-                currentPrompt = userPrompt + "\n\n"
-                        + "Wichtig: Antworte jetzt ausschließlich mit gültigem JSON. "
-                        + "Kein Markdown, keine Code-Fences, keine zusätzlichen Erläuterungen.";
-            }
-        }
-
-        throw new LlmProviderException("LLM-Antwort enthielt kein gültiges JSON.");
-    }
-
-    public List<String> streamText(String systemPrompt, String userPrompt) {
-        return withTransportRetry(() -> streamTextOnce(systemPrompt, userPrompt));
-    }
-
-    private String completeTextOnce(String systemPrompt, String userPrompt) {
-        HttpRequest request = buildRequest(systemPrompt, userPrompt, false);
+        HttpRequest request = buildRequest(systemPrompt, userPrompt);
 
         try {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-            ensureSuccessfulStatus(response.statusCode(), response.body());
+            ensureSuccessfulStatus(response.statusCode());
 
             JsonNode root = objectMapper.readTree(response.body());
             String content = extractMessageContent(root);
@@ -90,67 +55,25 @@ public final class OpenAiCompatibleChatClient {
             }
 
             return content;
-        } catch (RetriableTransportException exception) {
-            throw exception;
         } catch (IOException exception) {
-            throw new RetriableTransportException("LLM-Antwort konnte nicht gelesen werden.", exception);
+            throw new LlmProviderException("LLM-Antwort konnte nicht gelesen werden.", exception);
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             throw new LlmProviderException("LLM-Anfrage wurde unterbrochen.", exception);
         }
     }
 
-    private List<String> streamTextOnce(String systemPrompt, String userPrompt) {
-        HttpRequest request = buildRequest(systemPrompt, userPrompt, true);
+    public JsonNode completeJson(String systemPrompt, String userPrompt) {
+        String response = completeText(systemPrompt, userPrompt);
 
         try {
-            HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
-
-            if (response.statusCode() >= 400) {
-                ensureSuccessfulStatus(response.statusCode(), readBody(response.body()));
-            }
-
-            List<String> chunks = new ArrayList<>();
-
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(response.body(), StandardCharsets.UTF_8)
-            )) {
-                String line;
-
-                while ((line = reader.readLine()) != null) {
-                    String normalized = line.trim();
-
-                    if (normalized.isEmpty() || !normalized.startsWith("data:")) {
-                        continue;
-                    }
-
-                    String data = normalized.substring("data:".length()).trim();
-
-                    if ("[DONE]".equals(data)) {
-                        break;
-                    }
-
-                    JsonNode event = objectMapper.readTree(data);
-                    String content = extractStreamDeltaContent(event);
-
-                    if (!content.isEmpty()) {
-                        chunks.add(content);
-                    }
-                }
-            }
-
-            return List.copyOf(chunks);
-        } catch (RetriableTransportException exception) {
-            throw exception;
+            return parseEmbeddedJson(response);
         } catch (IOException exception) {
-            throw new RetriableTransportException("LLM-Stream konnte nicht gelesen werden.", exception);
-        } catch (InterruptedException exception) {
-            Thread.currentThread().interrupt();
-            throw new LlmProviderException("LLM-Stream wurde unterbrochen.", exception);
+            throw new LlmProviderException("LLM-Antwort enthielt kein gültiges JSON.", exception);
         }
     }
 
-    private HttpRequest buildRequest(String systemPrompt, String userPrompt, boolean stream) {
+    private HttpRequest buildRequest(String systemPrompt, String userPrompt) {
         String jsonBody = toJson(new ChatCompletionRequest(
                 properties.getModel(),
                 List.of(
@@ -158,7 +81,7 @@ public final class OpenAiCompatibleChatClient {
                         new ChatMessage("user", normalize(userPrompt))
                 ),
                 properties.normalizedTemperature(),
-                stream
+                false
         ));
 
         Duration timeout = properties.normalizedTimeout();
@@ -173,32 +96,7 @@ public final class OpenAiCompatibleChatClient {
                 .build();
     }
 
-    private <T> T withTransportRetry(Supplier<T> supplier) {
-        int attempts = properties.normalizedMaxRetries() + 1;
-        RetriableTransportException lastException = null;
-
-        for (int attempt = 1; attempt <= attempts; attempt += 1) {
-            try {
-                return supplier.get();
-            } catch (RetriableTransportException exception) {
-                lastException = exception;
-
-                if (attempt >= attempts) {
-                    break;
-                }
-
-                log.warn("LLM-Aufruf fehlgeschlagen, neuer Versuch {}/{}.", attempt, attempts, exception);
-            }
-        }
-
-        if (lastException != null) {
-            throw new LlmProviderException(lastException.getMessage(), lastException.getCause());
-        }
-
-        throw new LlmProviderException("LLM-Aufruf ist fehlgeschlagen.");
-    }
-
-    private void ensureSuccessfulStatus(int statusCode, String body) {
+    private void ensureSuccessfulStatus(int statusCode) {
         if (statusCode < 400) {
             return;
         }
@@ -211,31 +109,11 @@ public final class OpenAiCompatibleChatClient {
                     : "LLM-Provider antwortete mit HTTP " + statusCode + ".";
         };
 
-        if (statusCode == 429 || statusCode >= 500) {
-            throw new RetriableTransportException(message + compactBodySuffix(body), null);
-        }
-
-        throw new LlmProviderException(message + compactBodySuffix(body));
-    }
-
-    private String compactBodySuffix(String body) {
-        String normalized = normalize(body);
-
-        if (normalized.isBlank()) {
-            return "";
-        }
-
-        String compact = normalized.length() <= 240 ? normalized : normalized.substring(0, 240) + "…";
-        return " Antwort: " + compact;
+        throw new LlmProviderException(message);
     }
 
     private String extractMessageContent(JsonNode root) throws IOException {
         JsonNode contentNode = root.path("choices").path(0).path("message").path("content");
-        return extractContentValue(contentNode);
-    }
-
-    private String extractStreamDeltaContent(JsonNode root) throws IOException {
-        JsonNode contentNode = root.path("choices").path(0).path("delta").path("content");
         return extractContentValue(contentNode);
     }
 
@@ -266,7 +144,7 @@ public final class OpenAiCompatibleChatClient {
             return builder.toString();
         }
 
-        throw new IOException("Unbekanntes LLM-Content-Format: " + contentNode);
+        throw new IOException("Unbekanntes LLM-Content-Format.");
     }
 
     private JsonNode parseEmbeddedJson(String response) throws IOException {
@@ -333,10 +211,6 @@ public final class OpenAiCompatibleChatClient {
         }
     }
 
-    private String readBody(InputStream inputStream) throws IOException {
-        return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-    }
-
     private String normalize(String value) {
         return value == null ? "" : value.trim();
     }
@@ -353,10 +227,4 @@ public final class OpenAiCompatibleChatClient {
     private record ChatMessage(String role, String content) {
     }
 
-    private static final class RetriableTransportException extends RuntimeException {
-
-        private RetriableTransportException(String message, Throwable cause) {
-            super(message, cause);
-        }
-    }
 }

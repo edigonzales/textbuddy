@@ -10,9 +10,6 @@
             <p>${page.subtitle()}</p>
         </div>
         <div class="status-strip">
-            <div class="status-pill" data-testid="release-status-pill">
-                ${page.t("home.releaseStatus")}
-            </div>
             <div class="status-pill" data-testid="auth-status-pill">
                 <strong>${page.auth().statusTitle()}</strong>
                 <span>${page.auth().statusMessage()}</span>
@@ -21,6 +18,7 @@
                 <div class="status-pill status-pill-account" data-testid="auth-account-pill">
                     <strong data-testid="auth-user">${page.auth().userDisplayName()}</strong>
                     <form method="post" action="/logout" class="auth-form" data-testid="auth-logout-form">
+                        <input type="hidden" name="${page.csrfParameterName()}" value="${page.csrfToken()}">
                         <button type="submit" class="inline-action" data-testid="auth-logout">${page.t("auth.logout")}</button>
                     </form>
                 </div>
@@ -50,6 +48,8 @@
             data-auth-enabled="${Boolean.toString(page.auth().enabled())}"
             data-authenticated="${Boolean.toString(page.auth().authenticated())}"
             data-auth-login-url="${page.auth().loginUrl()}"
+            data-csrf-header="${page.csrfHeaderName()}"
+            data-csrf-token="${page.csrfToken()}"
             data-ui-locale="${page.uiLocaleLanguage()}"
             data-ui-messages="${page.uiMessagesJson()}"
             data-inspector-active-tab="actions"
@@ -116,17 +116,6 @@
                         </div>
                     </section>
 
-                    <details class="workspace-notes" data-testid="workspace-notes">
-                        <summary>${page.t("editor.notes.summary")}</summary>
-                        <div class="chip-row chip-row-compact">
-                            <span class="chip">${page.t("editor.notes.chip.sse")}</span>
-                            <span class="chip">${page.t("editor.notes.chip.segments")}</span>
-                            <span class="chip">${page.t("editor.notes.chip.dictionary")}</span>
-                            <span class="chip">${page.t("editor.notes.chip.advisor")}</span>
-                            <span class="chip">${page.t("editor.notes.chip.import")}</span>
-                            <span class="chip">${page.t("editor.notes.chip.oidc")}</span>
-                        </div>
-                    </details>
                 </div>
             </section>
 
@@ -307,16 +296,6 @@
                         <p class="problem-status" data-correction-status data-testid="correction-status" role="status" aria-live="polite" aria-atomic="true">${page.t("correction.status.idle")}</p>
                         <div class="problem-list" data-correction-list data-testid="correction-problem-list" role="list" aria-label="${page.t("correction.problemList.ariaLabel")}"></div>
 
-                        <div class="stack-list problems-footnotes">
-                            <div class="stack-item">
-                                <strong>${page.t("correction.note.production.title")}</strong>
-                                ${page.t("correction.note.production.body")}
-                            </div>
-                            <div class="stack-item">
-                                <strong>${page.t("correction.note.scope.title")}</strong>
-                                ${page.t("correction.note.scope.body")}
-                            </div>
-                        </div>
                     </section>
 
                     <section id="inspector-panel-advisor" class="inspector-section advisor-panel" data-inspector-panel="advisor" data-testid="advisor-panel" data-advisor-panel data-advisor-state="idle" role="tabpanel" aria-labelledby="inspector-tab-advisor" hidden>
@@ -395,40 +374,15 @@
                                     <h3 id="advisor-pdf-title" data-advisor-pdf-title data-testid="advisor-pdf-title">${page.t("viewer.title")}</h3>
                                 </div>
 
-                                <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-close data-testid="advisor-pdf-close">${page.t("viewer.close")}</button>
-                            </div>
-
-                            <div class="advisor-pdf-controls">
-                                <div class="advisor-pdf-control-group">
-                                    <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-prev data-testid="advisor-pdf-prev">${page.t("viewer.prev")}</button>
-                                    <label class="advisor-pdf-page-shell" for="advisor-pdf-page-input">
-                                        <span>${page.t("viewer.page")}</span>
-                                        <input id="advisor-pdf-page-input" type="number" min="1" value="1" data-advisor-pdf-page-input data-testid="advisor-pdf-page-input">
-                                    </label>
-                                    <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-next data-testid="advisor-pdf-next">${page.t("viewer.next")}</button>
-                                </div>
-
-                                <div class="advisor-pdf-control-group">
-                                    <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-zoom-out data-testid="advisor-pdf-zoom-out">${page.t("viewer.zoomOut")}</button>
-                                    <span class="advisor-pdf-zoom-label" data-advisor-pdf-zoom-label data-testid="advisor-pdf-zoom-label">100%</span>
-                                    <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-zoom-in data-testid="advisor-pdf-zoom-in">${page.t("viewer.zoomIn")}</button>
+                                <div class="advisor-detail-actions">
                                     <a class="advisor-link" href="#" data-advisor-pdf-download data-testid="advisor-pdf-download">${page.t("viewer.download")}</a>
+                                    <button type="button" class="advisor-link advisor-link-secondary" data-advisor-pdf-close data-testid="advisor-pdf-close">${page.t("viewer.close")}</button>
                                 </div>
                             </div>
 
                             <iframe class="advisor-pdf-frame" data-advisor-pdf-frame data-testid="advisor-pdf-frame" title="${page.t("viewer.frameTitle")}" loading="lazy"></iframe>
                         </section>
 
-                        <div class="stack-list advisor-footnotes">
-                            <div class="stack-item">
-                                <strong>${page.t("advisor.note.multiSelect.title")}</strong>
-                                ${page.t("advisor.note.multiSelect.body")}
-                            </div>
-                            <div class="stack-item">
-                                <strong>${page.t("advisor.note.static.title")}</strong>
-                                ${page.t("advisor.note.static.body")}
-                            </div>
-                        </div>
                     </section>
 
                     <section id="inspector-panel-import" class="inspector-section document-import-panel" data-inspector-panel="import" data-document-import-panel data-document-import-state="idle" data-document-import-labels="${String.join(", ", page.documentImportFormats())}" data-testid="document-import-panel" role="tabpanel" aria-labelledby="inspector-tab-import" hidden>
