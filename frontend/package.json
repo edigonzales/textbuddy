@@ -14,7 +14,9 @@
     "vite": "^8.2.2"
   },
   "dependencies": {
+    "@mohtasham/md-to-docx": "3.0.1",
     "@tiptap/core": "^3.22.0",
-    "@tiptap/starter-kit": "^3.22.0"
+    "@tiptap/starter-kit": "^3.22.0",
+    "diff": "9.0.0"
   }
 }

@@ -1,120 +1,78 @@
 # Funktionsübersicht
 
-Textbuddy unterstützt beim Schreiben, Korrigieren, Umformulieren, Prüfen und Importieren von Texten. Diese Übersicht beschreibt die Funktionen aus Sicht der Anwendenden und zeigt, welche Anbindungen dafür benötigt werden.
+Der Textbuddy-MVP verwendet eine breite, TextMate-artige Arbeitsfläche. Farben, Typografie, Abstände und Zustandsfarben stammen weiterhin aus dem Textbuddy-Designsystem.
 
-## Was funktioniert womit?
+## Sichtbare MVP-Werkzeuge
+
+Textbuddy startet bei jedem Aufruf im Modus **Überarbeiten**. In der normalen Oberfläche sind genau drei Werkzeuge freigeschaltet:
+
+- **Korrektur** prüft den Text automatisch und abschnittsweise.
+- **Verständlicher schreiben** bearbeitet den vollständigen Text.
+- **Zusammenfassen** bietet die Varianten ein Satz, drei Sätze, ein Absatz, eine Seite und Management Summary.
+
+Die vorhandenen Funktionen für Advisor, Synonyme, Satzvarianten, Aufzählungen, Proofread, Formalität, Social Media, Medium, Figurenrede und eigene Aktionen bleiben technisch erhalten. Ihre Frontend-Module, Typen, Services und HTTP-Schnittstellen werden nicht entfernt, sind im MVP aber nicht sichtbar oder per Tastatur erreichbar.
+
+## Überarbeiten
+
+Im Startmodus füllt der Editor die verfügbare Breite bis maximal etwa 72 rem aus. Das Ribbon enthält die Zusammenfassungsvarianten und **Verständlicher schreiben**. Korrekturen laufen auch in diesem Modus im Hintergrund; vorhandene Befunde werden als Zähler bei **Prüfen** und als Markierungen im Text sichtbar, öffnen jedoch keine Seitenleiste.
+
+Ein Klick auf eine Korrekturmarkierung wechselt direkt zu **Prüfen**, öffnet die zugehörigen Ergebnisse und fokussiert den Befund.
+
+## Prüfen und persönliches Wörterbuch
+
+Der Modus **Prüfen** bündelt im Ribbon:
+
+- den aktuellen Prüfstatus,
+- die gemeinsame Text- und Korrektursprache,
+- **Ergebnisse (n)** zum Öffnen oder Schliessen der Ergebnisleiste,
+- einen Wiederholungsbutton, falls die Prüfung fehlgeschlagen ist.
+
+Die Ergebnisleiste existiert nur bei mindestens einem Befund. Auf dem Desktop liegt sie ohne Kartenabstand rechts neben dem Editor; mobil öffnet sie als Slideover. Bei null Befunden verschwindet sie vollständig. Vorschläge können direkt übernommen werden.
+
+Das zunächst eingeklappte persönliche Wörterbuch liegt ausschliesslich im lokalen Browserspeicher. Es wird weder synchronisiert noch serverseitig gespeichert.
+
+Verfügbare Textsprachen sind automatische Erkennung, Deutsch (Schweiz), Französisch, Italienisch, Englisch (USA) und Englisch (UK).
+
+## Transformationen prüfen
+
+**Verständlicher schreiben** und **Zusammenfassen** verändern den Editor nicht sofort. Textbuddy zeigt das Ergebnis zuerst in einer vollbreiten Diff-Prüfung:
+
+- Standardmässig erscheint ein Inline-Diff; eine Zweispaltenansicht ist umschaltbar.
+- Mehrere Änderungen können einzeln angenommen oder abgelehnt werden.
+- **Alle annehmen**, **Alle ablehnen**, **Erneut ausführen** und **Abbrechen** bearbeiten den gesamten Review-Ablauf.
+- Erst wenn alle Änderungen entschieden sind, wird das aufgelöste Ergebnis in einer einzigen rückgängig machbaren Editortransaktion übernommen.
+- Abbrechen, vollständiges Ablehnen, Fehler und ungültige leere Antworten lassen den Originaltext unverändert.
+
+Bei einem unveränderten Resultat erscheint **Keine Änderungen gefunden**. Nach einer Übernahme startet die automatische Korrektur erneut.
+
+## Werkzeugleiste und Dokumente
+
+Die kompakte Werkzeugleiste am unteren Editorrand enthält:
+
+- Undo und Redo,
+- Upload sowie Drag-and-drop auf die ganze Editorfläche,
+- Kopieren in die Zwischenablage,
+- clientseitigen DOCX-Download als `textbuddy-YYYY-MM-DD.docx`,
+- Zeichen- und Wortzahl mit einem Popover für Silben, Sätze, Durchschnittswerte und Flesch-Lesbarkeit.
+
+Beim Import ersetzt der konvertierte Dokumentinhalt den bisherigen Editorinhalt. Unterstützte Eingaben sind PDF, DOCX, PPTX, XLSX, HTML, Markdown, AsciiDoc, TXT, PNG, JPG/JPEG und TIF/TIFF. Die OCR-Sprache folgt der Textsprache; bei automatischer Erkennung wird Deutsch verwendet. Die Standardgrenze beträgt 20 MB und kann im Betrieb konfiguriert werden.
+
+## Anbindungen, Daten und Grenzen
 
 | Bereich | Benötigte Anbindung |
 | --- | --- |
-| Editor, Undo/Redo und Textstatistik | keine externe Anbindung |
-| Textkorrektur und Korrekturvorschläge | LanguageTool, lokal eingebettet oder über HTTP |
-| Synonyme, Satzalternativen und Quick Actions | LLM-Provider |
-| Advisor-Prüfung | LLM-Provider; die Referenzdokumente sind in Textbuddy enthalten |
+| Editor, Undo/Redo, Statistik, Kopieren und DOCX | keine externe Anbindung |
+| Korrektur und Vorschläge | LanguageTool, eingebettet oder über HTTP |
+| Verständlicher schreiben und Zusammenfassen | LLM-Provider |
 | Dokumentimport | lokaler Kreuzberg-Adapter oder HTTP-Dokumentdienst |
-| OCR für Bilder und Scan-PDFs | zusätzlich eine passende OCR-Laufzeit und Sprachdaten |
-| Anmeldung im Team- oder Produktionsbetrieb | OIDC-Provider |
+| OCR | passende OCR-Laufzeit und Sprachdaten |
+| zentraler Betrieb | OIDC-Provider |
 
-Die Adapter können zu Demonstrations- und Testzwecken auch im Stub-Modus laufen. Diese Antworten bilden keine echte fachliche Prüfung ab.
-
-## Schreiben und gezielt umformulieren
-
-Der zentrale Editor nimmt den Text auf, der mit den übrigen Werkzeugen bearbeitet wird.
-
-- **Undo und Redo** machen Änderungen im Editor rückgängig oder stellen sie wieder her.
-- **Synonyme** erscheinen nach einer bewussten Auswahl innerhalb genau eines Wortes und berücksichtigen dessen Satzkontext. Ein ausgewählter Vorschlag ersetzt nur dieses Wort.
-- **Satz umformulieren** erscheint bei einer Auswahl innerhalb genau eines abgeschlossenen Satzes und berücksichtigt den umgebenden Absatz. Ein ausgewählter Vorschlag ersetzt nur diesen Satz.
-- Zeichen- und Wortzahl werden während des Schreibens laufend aktualisiert.
-
-Synonyme und Satzalternativen benötigen einen LLM-Provider. Tippen, eine reine Cursorbewegung, Leerraum oder eine satzübergreifende Auswahl öffnen keine Vorschläge. Escape oder ein Klick ausserhalb schliesst die Vorschläge für die aktuelle Auswahl.
-
-## Textkorrektur und lokales Wörterbuch
-
-Textbuddy prüft den Text nach einer kurzen Tipppause und verarbeitet danach nur die geänderten Textabschnitte erneut. Gefundene Probleme werden im Editor markiert und im Korrekturpanel mit Erläuterungen und möglichen Ersetzungen angezeigt. Ein Vorschlag kann direkt in den Text übernommen werden.
-
-Für die Korrektur stehen diese Spracheinstellungen zur Verfügung:
-
-- Automatische Erkennung
-- Deutsch (Schweiz)
-- Französisch
-- Italienisch
-- Englisch (USA)
-- Englisch (UK)
-
-Wörter, die absichtlich verwendet werden, können direkt aus einem Treffer oder über das Eingabefeld zum lokalen Wörterbuch hinzugefügt und später wieder entfernt werden. Das Wörterbuch liegt ausschliesslich im lokalen Browserspeicher. Es wird weder mit anderen Browsern synchronisiert noch serverseitig gesichert.
-
-Die echte Prüfung verwendet das eingebettete LanguageTool oder einen konfigurierten LanguageTool-HTTP-Dienst. Der Stub-Modus erkennt nur wenige fest eingebaute Testfehler.
-
-## Quick Actions für den gesamten Text
-
-Quick Actions wenden eine gewählte Umformulierung immer auf den vollständigen Inhalt des Editors an. Die eingestellte Textsprache wird dabei berücksichtigt.
-
-| Aktion | Wirkung und Varianten |
-| --- | --- |
-| **Vereinfachen** | Schreibt den Text in verständlichere, einfachere Sprache um. |
-| **Stichpunkte** | Strukturiert den Inhalt als Aufzählung. |
-| **Korrigieren** | Glättet den Text stilistisch und orthografisch. |
-| **Zusammenfassen** | Erstellt einen Satz, drei Sätze, einen Absatz, eine Seite oder ein Management Summary. |
-| **Ton ändern** | Formuliert den Text formell oder informell. |
-| **Social Media** | Erstellt einen Beitrag für Bluesky, Instagram oder LinkedIn. |
-| **Format anpassen** | Formt den Inhalt als E-Mail, offiziellen Brief, Präsentation oder Bericht. |
-| **Rede umformen** | Wandelt den Inhalt in direkte oder indirekte Rede um. |
-| **Eigener Auftrag** | Führt eine frei formulierte Anweisung für den gesamten Text aus. |
-
-Nach einer erfolgreichen Aktion zeigt Textbuddy den Unterschied zwischen ursprünglichem und neuem Text. Die Umformulierung kann dort mit einer eigenen Rückgängig-Funktion zurückgenommen werden. Alle Quick Actions benötigen einen LLM-Provider.
-
-## Advisor-Prüfung mit Referenzdokumenten
-
-Der Advisor prüft den Editorinhalt gegen Regeln aus den mitgelieferten Referenzdokumenten:
-
-1. Ein oder mehrere Referenzdokumente auswählen.
-2. Die Advisor-Prüfung starten.
-3. Treffer bereits während der laufenden Prüfung ansehen.
-4. Einen Treffer auswählen, um Textstelle, Erläuterung, Empfehlung und Dokumentreferenz zu sehen.
-
-Die Trefferliste wird während der Prüfung fortlaufend aktualisiert und führt identische Treffer nicht mehrfach auf. Die zugehörigen PDFs können im integrierten Viewer, in einem neuen Browser-Tab oder als Download geöffnet werden.
-
-Die Dokumente und ihre Regeln sind Bestandteil von Textbuddy. Für die inhaltliche Advisor-Prüfung wird ein LLM-Provider benötigt.
-
-## Dokumente importieren
-
-Dokumente können über den Upload-Button oder per Drag-and-drop importiert werden. Textbuddy wandelt den Inhalt in editorfreundliches HTML um und **ersetzt damit den bisherigen Editorinhalt**.
-
-Vorgesehen sind folgende Formate:
-
-- PDF, DOCX, PPTX und XLSX
-- HTML, Markdown, AsciiDoc und TXT
-- PNG, JPG/JPEG und TIF/TIFF
-
-Welche Formate die lokale Verarbeitung tatsächlich unterstützt, hängt von der installierten Kreuzberg-Laufzeit ab. Alternativ kann ein konfigurierter HTTP-Dokumentdienst verwendet werden. Im Stub-Modus werden Textformate vereinfacht verarbeitet; binäre Dokumente liefern nur einen Platzhalter.
-
-Für Bilder und Scan-PDFs kann die OCR-Sprache Deutsch, Englisch, Französisch oder Italienisch gewählt werden. Echte Texterkennung benötigt eine funktionierende OCR-Laufzeit und die passenden Sprachdaten. Die standardmässige Uploadgrenze beträgt 20 MB und kann vom Betrieb angepasst werden.
-
-## Textstatistik und Oberflächensprache
-
-Die Textstatistik wird direkt im Browser berechnet und zeigt:
-
-- Zeichen, Wörter, Silben und Sätze,
-- durchschnittliche Satzlänge,
-- durchschnittliche Silbenzahl pro Wort,
-- Flesch-Lesbarkeitsindex mit verständlicher Einordnung.
-
-Die Oberfläche kann zwischen Deutsch und Englisch umgeschaltet werden. Die gewählte Oberflächensprache ist unabhängig von der Textsprache für Korrekturen und LLM-Aktionen.
-
-## Anmeldung, Daten und Grenzen
-
-Im zentralen Betrieb schützt OIDC die Funktionen mit einer Benutzeranmeldung. Für die lokale Entwicklung kann die Anmeldung deaktiviert werden; dieser Modus ist nur über eine explizite Loopback-Adresse erlaubt. Die Auswirkungen sind im [Getting Started](getting-started.md#5-was-bedeutet-betrieb-ohne-anmeldung) beschrieben.
-
-Für die Verarbeitung gilt:
-
-- Bearbeitete Texte und hochgeladene Dokumente werden von Textbuddy nicht dauerhaft serverseitig gespeichert.
-- Das lokale Wörterbuch verbleibt im verwendeten Browserprofil.
-- Bei einem externen LLM-, LanguageTool- oder Dokumentdienst verlassen die jeweils verarbeiteten Inhalte den Textbuddy-Prozess. Datenschutz und Aufbewahrung richten sich dann auch nach diesem Dienst.
-- Stub-Antworten dienen nur dazu, Oberfläche und Abläufe auszuprobieren.
-- LLM-Ergebnisse können unvollständig oder fehlerhaft sein und sollten fachlich geprüft werden.
+Für Entwicklung und Tests stehen Stub-Adapter zur Verfügung; ihre Antworten sind keine fachliche Prüfung. Text und Uploads werden von Textbuddy nicht dauerhaft serverseitig gespeichert. Bei externen LLM-, Korrektur- oder Dokumentdiensten verlassen die verarbeiteten Inhalte den Textbuddy-Prozess. LLM-Ergebnisse sollten fachlich geprüft werden.
 
 ## Weiterführende Dokumentation
 
-- [Getting Started](getting-started.md) – Installation, erster Start und LLM-Anbindung
-- [Betrieb und Konfiguration](operations.md) – OIDC, Adapter, Limits und Produktion
-- [Architektur](architecture.md) – technische Komponenten und HTTP-Verträge
-- [Accessibility](accessibility.md) – Barrierefreiheit und manuelle Abnahme
+- [Getting Started](getting-started.md)
+- [Betrieb und Konfiguration](operations.md)
+- [Architektur](architecture.md)
+- [Accessibility](accessibility.md)

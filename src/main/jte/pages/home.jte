@@ -7,6 +7,13 @@
     <header class="app-header" data-testid="shell-header">
         <div class="app-header-inner">
             <span class="app-brand">${page.t("home.header.brand")}</span>
+            <nav class="workspace-mode-tabs" role="tablist" aria-label="${page.t("workspace.mode.ariaLabel")}" data-testid="workspace-mode-tabs">
+                <button type="button" class="workspace-mode-tab" role="tab" aria-selected="true" data-workspace-mode="transform" data-testid="workspace-mode-transform">${page.t("workspace.mode.transform")}</button>
+                <button type="button" class="workspace-mode-tab" role="tab" aria-selected="false" tabindex="-1" data-workspace-mode="validate" data-testid="workspace-mode-validate">
+                    ${page.t("workspace.mode.validate")}
+                    <span class="workspace-mode-badge" data-correction-mode-badge data-testid="correction-mode-badge" hidden>0</span>
+                </button>
+            </nav>
             <div class="header-actions">
             @if (page.auth().enabled() && page.auth().authenticated())
                 <div class="account-actions" data-testid="auth-account-pill">
@@ -34,6 +41,55 @@
         </div>
     </header>
 
+    <section class="workspace-ribbon" aria-label="${page.t("workspace.ribbon.ariaLabel")}" data-testid="workspace-ribbon">
+        <div class="workspace-ribbon-inner" data-workspace-ribbon="transform">
+            <div class="ribbon-group">
+                <span class="ribbon-group-label">${page.t("workspace.ribbon.structure")}</span>
+                <div class="ribbon-action-row">
+                    <label class="sr-only" for="mvp-summary-option">${page.t("quickAction.option.summarize.label")}</label>
+                    <select id="mvp-summary-option" class="ribbon-select" data-mvp-summary-option data-testid="mvp-summary-option">
+                        <option value="sentence">${page.t("quickAction.option.summarize.sentence")}</option>
+                        <option value="three_sentence" selected>${page.t("quickAction.option.summarize.threeSentence")}</option>
+                        <option value="paragraph">${page.t("quickAction.option.summarize.paragraph")}</option>
+                        <option value="page">${page.t("quickAction.option.summarize.page")}</option>
+                        <option value="management_summary">Management Summary</option>
+                    </select>
+                    <button type="button" class="ribbon-action" data-mvp-quick-action="summarize" data-testid="mvp-action-summarize">${page.t("quickAction.action.summarize")}</button>
+                </div>
+            </div>
+            <span class="ribbon-divider" aria-hidden="true"></span>
+            <div class="ribbon-group">
+                <span class="ribbon-group-label">${page.t("workspace.ribbon.style")}</span>
+                <button type="button" class="ribbon-action" data-mvp-quick-action="plain-language" data-testid="mvp-action-plain-language">${page.t("workspace.action.plainLanguage")}</button>
+            </div>
+        </div>
+
+        <div class="workspace-ribbon-inner" data-workspace-ribbon="validate" hidden>
+            <div class="ribbon-group ribbon-group-status">
+                <span class="ribbon-group-label">${page.t("correction.title")}</span>
+                <p class="ribbon-status" data-correction-ribbon-status data-testid="correction-ribbon-status" role="status" aria-live="polite"></p>
+            </div>
+            <span class="ribbon-divider" aria-hidden="true"></span>
+            <div class="ribbon-group">
+                <label class="ribbon-group-label" for="workspace-language">${page.t("correction.language.label")}</label>
+                <select id="workspace-language" class="ribbon-select" data-workspace-language data-testid="workspace-language">
+                    <option value="auto" selected>${page.t("correction.language.auto")}</option>
+                    <option value="de-CH">${page.t("correction.language.deCH")}</option>
+                    <option value="fr">${page.t("correction.language.fr")}</option>
+                    <option value="it">${page.t("correction.language.it")}</option>
+                    <option value="en-US">${page.t("correction.language.enUS")}</option>
+                    <option value="en-GB">${page.t("correction.language.enGB")}</option>
+                </select>
+            </div>
+            <div class="ribbon-group ribbon-group-actions">
+                <button type="button" class="ribbon-action" data-correction-results-toggle data-testid="correction-results-toggle" aria-expanded="false" disabled>
+                    ${page.t("workspace.correction.results")} (<span data-correction-result-count>0</span>)
+                </button>
+                <button type="button" class="ribbon-action ribbon-action-secondary" data-correction-retry data-testid="correction-retry" hidden>${page.t("workspace.correction.retry")}</button>
+            </div>
+        </div>
+    </section>
+
     @if (!page.auth().enabled())
         <div class="local-mode-wrap">
             <p class="local-mode-notice" data-testid="auth-status-pill">
@@ -56,27 +112,44 @@
             data-ui-locale="${page.uiLocaleLanguage()}"
             data-ui-messages="${page.uiMessagesJson()}"
             data-inspector-active-tab="actions"
+            data-workspace-mode="transform"
+            data-workspace-view="editor"
         >
-            <section class="panel editor-panel" data-testid="editor-shell" aria-labelledby="editor-shell-title">
+            <section class="panel editor-panel" data-editor-shell data-testid="editor-shell" aria-labelledby="editor-shell-title">
                 <div class="panel-body">
-                    <h1 id="editor-shell-title">${page.t("editor.shell.title")}</h1>
-                    <p class="panel-copy">${page.t("editor.shell.copy")}</p>
+                    <h1 id="editor-shell-title" class="sr-only">${page.t("editor.shell.title")}</h1>
+                    <p class="sr-only">${page.t("editor.shell.copy")}</p>
+
+                    <p class="workspace-status" data-workspace-status data-testid="workspace-status" role="status" aria-live="polite" aria-atomic="true" hidden></p>
 
                     <div class="editor-toolbar" data-testid="editor-toolbar">
                         <div class="editor-toolbar-group">
-                            <button type="button" class="editor-button" data-editor-action="undo" data-testid="editor-undo" disabled>${page.t("editor.undo")}</button>
-                            <button type="button" class="editor-button" data-editor-action="redo" data-testid="editor-redo" disabled>${page.t("editor.redo")}</button>
+                            <button type="button" class="editor-button editor-icon-button" data-editor-action="undo" data-testid="editor-undo" title="${page.t("editor.undo")}" aria-label="${page.t("editor.undo")}" disabled><span aria-hidden="true">↶</span></button>
+                            <button type="button" class="editor-button editor-icon-button" data-editor-action="redo" data-testid="editor-redo" title="${page.t("editor.redo")}" aria-label="${page.t("editor.redo")}" disabled><span aria-hidden="true">↷</span></button>
+                            <button type="button" class="editor-button editor-icon-button" data-editor-action="upload" data-testid="editor-upload" title="${page.t("toolbar.upload")}" aria-label="${page.t("toolbar.upload")}"><span aria-hidden="true">↑</span></button>
+                            <button type="button" class="editor-button editor-icon-button" data-editor-action="copy" data-testid="editor-copy" title="${page.t("toolbar.copy")}" aria-label="${page.t("toolbar.copy")}" disabled><span aria-hidden="true">⧉</span></button>
+                            <button type="button" class="editor-button editor-icon-button" data-editor-action="download" data-testid="editor-download" title="${page.t("toolbar.download")}" aria-label="${page.t("toolbar.download")}" disabled><span aria-hidden="true">↓</span></button>
                         </div>
 
                         <div class="editor-counter-bar" aria-live="polite">
-                            <span class="counter-pill"><strong data-editor-count="characters" data-testid="editor-character-count">0</strong> ${page.t("editor.count.characters")}</span>
-                            <span class="counter-pill"><strong data-editor-count="words" data-testid="editor-word-count">0</strong> ${page.t("editor.count.words")}</span>
+                            <button type="button" class="counter-pill counter-button" data-editor-action="stats" data-testid="editor-stats-toggle" aria-expanded="false" aria-controls="text-stats-popover">
+                                <strong data-editor-count="characters" data-testid="editor-character-count">0</strong> ${page.t("editor.count.characters")} ·
+                                <strong data-editor-count="words" data-testid="editor-word-count">0</strong> ${page.t("editor.count.words")}
+                            </button>
                         </div>
+                        <span class="sr-only" data-editor-toolbar-status data-testid="editor-toolbar-status" aria-live="polite"></span>
+                        <div id="text-stats-popover" class="stats-popover" data-stats-popover data-testid="stats-popover" hidden></div>
                     </div>
 
-                    <div class="editor-canvas" data-testid="editor-canvas" data-editor-canvas>
+                    <div class="editor-view" data-editor-view>
+                    <div class="editor-canvas" data-testid="editor-canvas" data-editor-canvas data-editor-import-drop-target data-dragging="false">
                         <div class="editor-surface" data-editor-surface data-editor-placeholder="${page.t("editor.placeholder")}"></div>
                         <textarea hidden name="text" data-editor-mirror data-testid="editor-mirror"></textarea>
+
+                        <div class="editor-drop-overlay" aria-hidden="true">
+                            <strong>${page.t("import.dropzone.title")}</strong>
+                            <span>${page.t("import.dropzone.hint")}</span>
+                        </div>
 
                         <div class="rewrite-bubble" data-rewrite-bubble data-testid="rewrite-bubble" role="dialog" aria-modal="false" hidden>
                             <div class="rewrite-action-row">
@@ -90,33 +163,53 @@
                             </div>
                         </div>
                     </div>
+                    </div>
 
-                    <section class="rewrite-diff-panel" data-rewrite-diff-panel data-testid="rewrite-diff-panel" hidden>
-                        <div class="rewrite-diff-head">
-                            <h2>${page.t("rewrite.diff.title")}</h2>
-
-                            <button type="button" class="rewrite-diff-undo" data-rewrite-diff-undo data-testid="rewrite-diff-undo">${page.t("rewrite.diff.undo")}</button>
-                        </div>
-
-                        <div class="rewrite-diff-grid">
-                            <article class="rewrite-diff-column">
+                    <section class="rewrite-diff-panel diff-review" data-review-view data-rewrite-diff-panel data-testid="rewrite-diff-panel" hidden>
+                        <header class="diff-review-head">
+                            <div>
+                                <h2 data-review-title>${page.t("rewrite.diff.title")}</h2>
+                                <p data-review-progress></p>
+                            </div>
+                            <div class="diff-review-actions">
+                                <button type="button" class="review-button" data-review-mode="inline" aria-pressed="true">${page.t("review.inline")}</button>
+                                <button type="button" class="review-button" data-review-mode="split" aria-pressed="false">${page.t("review.split")}</button>
+                                <button type="button" class="review-button" data-review-retry>${page.t("review.retry")}</button>
+                                <button type="button" class="review-button" data-review-reject-all>${page.t("review.rejectAll")}</button>
+                                <button type="button" class="review-button review-button-primary" data-review-accept-all>${page.t("review.acceptAll")}</button>
+                                <button type="button" class="review-button" data-rewrite-diff-undo data-testid="rewrite-diff-undo">${page.t("review.cancel")}</button>
+                            </div>
+                        </header>
+                        <p class="review-no-changes" data-review-no-changes hidden>${page.t("review.noChanges")}</p>
+                        <div class="diff-inline" data-review-inline data-testid="review-inline"></div>
+                        <div class="diff-split" data-review-split data-testid="review-split" hidden>
+                            <article>
                                 <strong>${page.t("rewrite.diff.before")}</strong>
-                                <div class="rewrite-diff-content" data-rewrite-diff-before data-testid="rewrite-diff-before"></div>
+                                <div data-review-split-before></div>
                             </article>
-
-                            <article class="rewrite-diff-column">
+                            <article>
                                 <strong>${page.t("rewrite.diff.after")}</strong>
-                                <div class="rewrite-diff-content" data-rewrite-diff-after data-testid="rewrite-diff-after"></div>
+                                <div data-review-split-after></div>
                             </article>
+                        </div>
+                        <div hidden aria-hidden="true">
+                            <div data-rewrite-diff-before data-testid="rewrite-diff-before"></div>
+                            <div data-rewrite-diff-after data-testid="rewrite-diff-after"></div>
                         </div>
                     </section>
+
+                    <div class="workspace-busy-overlay" aria-hidden="true">
+                        <span class="workspace-spinner"></span>
+                        <strong>${page.t("quickAction.status.running")}</strong>
+                    </div>
 
                 </div>
             </section>
 
-            <aside class="panel inspector-panel" data-testid="inspector-panel" aria-label="${page.t("inspector.title")}">
+            <div class="correction-overlay" data-correction-overlay hidden></div>
+            <aside class="panel inspector-panel correction-rail" data-correction-rail data-testid="inspector-panel" aria-label="${page.t("correction.title")}" aria-hidden="true" hidden>
                 <div class="panel-body inspector-body">
-                    <div class="inspector-head">
+                    <div class="inspector-head" data-compatibility-host hidden inert>
                         <div class="inspector-tabs" role="tablist" aria-label="${page.t("inspector.tabs.ariaLabel")}">
                             <button type="button" id="inspector-tab-correction" class="inspector-tab" role="tab" aria-controls="inspector-panel-correction" aria-selected="false" data-inspector-tab="correction" data-testid="inspector-tab-correction">${page.t("inspector.tab.correction")}</button>
                             <button type="button" id="inspector-tab-actions" class="inspector-tab" role="tab" aria-controls="inspector-panel-actions" aria-selected="true" data-inspector-tab="actions" data-testid="inspector-tab-actions">${page.t("inspector.tab.actions")}</button>
@@ -126,7 +219,7 @@
                         </div>
                     </div>
 
-                    <section id="inspector-panel-actions" class="inspector-section quick-action-panel" data-inspector-panel="actions" data-quick-action-panel data-testid="quick-action-panel" data-quick-action-state="idle" data-quick-action-selected-action="plain-language" role="tabpanel" aria-labelledby="inspector-tab-actions">
+                    <section id="inspector-panel-actions" class="inspector-section quick-action-panel" data-inspector-panel="actions" data-quick-action-panel data-testid="quick-action-panel" data-quick-action-state="idle" data-quick-action-selected-action="plain-language" role="tabpanel" aria-labelledby="inspector-tab-actions" data-compatibility-host hidden inert>
                         <div class="quick-action-panel-head">
                             <p class="quick-action-status" data-quick-action-status data-testid="quick-action-status" role="status" aria-live="polite" aria-atomic="true"></p>
                         </div>
@@ -243,8 +336,11 @@
                         </div>
                     </section>
 
-                    <section id="inspector-panel-correction" class="inspector-section correction-panel" data-inspector-panel="correction" data-testid="correction-panel" data-correction-panel data-correction-state="idle" role="tabpanel" aria-labelledby="inspector-tab-correction" hidden>
-                        <h3 id="correction-panel-title">${page.t("correction.title")}</h3>
+                    <section id="inspector-panel-correction" class="inspector-section correction-panel" data-inspector-panel="correction" data-testid="correction-panel" data-correction-panel data-correction-state="idle" role="region" aria-labelledby="correction-panel-title" hidden>
+                        <div class="correction-rail-head">
+                            <h3 id="correction-panel-title">${page.t("correction.title")}</h3>
+                            <button type="button" class="correction-rail-close" data-correction-rail-close aria-label="${page.t("workspace.correction.close")}" title="${page.t("workspace.correction.close")}">×</button>
+                        </div>
 
                         <div class="correction-controls" data-testid="correction-controls">
                             <label class="control-stack" for="correction-language">
@@ -259,12 +355,13 @@
                                 </select>
                             </label>
 
-                            <div class="dictionary-shell" data-testid="dictionary-shell">
-                                <div class="dictionary-head">
+                            <details class="dictionary-shell" data-testid="dictionary-shell">
+                                <summary class="dictionary-head">
                                     <strong>${page.t("dictionary.title")}</strong>
                                     <span>${page.t("dictionary.subtitle")}</span>
-                                </div>
+                                </summary>
 
+                                <div class="dictionary-content">
                                 <form class="dictionary-form" data-dictionary-form data-testid="dictionary-form">
                                     <label class="sr-only" for="dictionary-input">${page.t("dictionary.input.label")}</label>
                                     <input id="dictionary-input" type="text" class="dictionary-input" data-dictionary-input data-testid="dictionary-input" placeholder="${page.t("dictionary.input.placeholder")}" autocomplete="off" />
@@ -273,7 +370,8 @@
 
                                 <p class="dictionary-empty" data-dictionary-empty data-testid="dictionary-empty">${page.t("dictionary.empty")}</p>
                                 <ul class="dictionary-list" data-dictionary-list data-testid="dictionary-list"></ul>
-                            </div>
+                                </div>
+                            </details>
                         </div>
 
                         <p class="problem-status" data-correction-status data-testid="correction-status" role="status" aria-live="polite" aria-atomic="true"></p>
@@ -281,7 +379,7 @@
 
                     </section>
 
-                    <section id="inspector-panel-advisor" class="inspector-section advisor-panel" data-inspector-panel="advisor" data-testid="advisor-panel" data-advisor-panel data-advisor-state="idle" role="tabpanel" aria-labelledby="inspector-tab-advisor" hidden>
+                    <section id="inspector-panel-advisor" class="inspector-section advisor-panel" data-inspector-panel="advisor" data-testid="advisor-panel" data-advisor-panel data-advisor-state="idle" role="tabpanel" aria-labelledby="inspector-tab-advisor" data-compatibility-host hidden inert>
                         <h3 id="advisor-panel-title">${page.t("advisor.title")}</h3>
 
                         <div class="advisor-toolbar">
@@ -360,7 +458,7 @@
 
                     </section>
 
-                    <section id="inspector-panel-import" class="inspector-section document-import-panel" data-inspector-panel="import" data-document-import-panel data-document-import-state="idle" data-document-import-labels="${String.join(", ", page.documentImportFormats())}" data-testid="document-import-panel" role="tabpanel" aria-labelledby="inspector-tab-import" hidden>
+                    <section id="inspector-panel-import" class="inspector-section document-import-panel" data-inspector-panel="import" data-document-import-panel data-document-import-state="idle" data-document-import-labels="${String.join(", ", page.documentImportFormats())}" data-testid="document-import-panel" role="tabpanel" aria-labelledby="inspector-tab-import" data-compatibility-host hidden inert>
                         <h3 id="document-import-title">${page.t("import.title")}</h3>
                         <p class="document-import-status" data-document-import-status data-testid="document-import-status" role="status" aria-live="polite" aria-atomic="true"></p>
 
@@ -392,7 +490,7 @@
                         </div>
                     </section>
 
-                    <section id="inspector-panel-stats" class="inspector-section text-stats-panel" data-inspector-panel="stats" data-text-stats-panel data-testid="text-stats-panel" role="tabpanel" aria-labelledby="inspector-tab-stats" hidden>
+                    <section id="inspector-panel-stats" class="inspector-section text-stats-panel" data-inspector-panel="stats" data-text-stats-panel data-testid="text-stats-panel" role="tabpanel" aria-labelledby="inspector-tab-stats" data-compatibility-host hidden inert>
                         <div class="text-stats-head">
                             <div>
                                 <h3>${page.t("stats.title")}</h3>

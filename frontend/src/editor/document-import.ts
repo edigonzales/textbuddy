@@ -5,13 +5,13 @@ import { apiFetch } from "./api-fetch";
 import { isApiLocked } from "./auth";
 import { setEditorHtml } from "./editor-content";
 import { extractErrorMessage } from "./http-error";
+import { mapTextLanguageToOcr } from "./import-language";
 import type { DocumentImportElements } from "./types";
 import { t } from "./ui-i18n";
 
 const IDLE_MESSAGE = "";
 const DEFAULT_ERROR_MESSAGE = t("import.status.defaultError");
 const AUTH_REQUIRED_MESSAGE = t("import.status.authRequired");
-const DEFAULT_OCR_LANGUAGE = "de";
 
 interface DocumentConversionResponse {
   html: string;
@@ -50,22 +50,15 @@ function isSupportedFile(file: File, accept: string): boolean {
   return tokens.some((token) => fileMatchesToken(file, token));
 }
 
-function resolveOcrLanguage(value: string): string {
-  const normalized = value.trim().toLowerCase();
-
-  if (normalized === "de" || normalized === "en" || normalized === "fr" || normalized === "it") {
-    return normalized;
-  }
-
-  return DEFAULT_OCR_LANGUAGE;
-}
-
 export function mountDocumentImport(
   editor: Editor,
   root: HTMLElement,
   elements: DocumentImportElements,
 ): void {
   let activeRequest: AbortController | null = null;
+  const toolbarUploadButton = root.querySelector<HTMLButtonElement>("[data-editor-action='upload']");
+  const externalDropTarget = root.querySelector<HTMLElement>("[data-editor-import-drop-target]");
+  const workspaceStatus = document.querySelector<HTMLElement>("[data-workspace-status]");
 
   function setPanelState(
     state: "idle" | "loading" | "success" | "error",
@@ -77,6 +70,18 @@ export function mountDocumentImport(
     elements.status.setAttribute("aria-live", state === "error" ? "assertive" : "polite");
     elements.status.setAttribute("aria-atomic", "true");
     elements.status.textContent = message;
+    if (workspaceStatus && message) {
+      workspaceStatus.dataset.state = state;
+      workspaceStatus.textContent = message;
+      workspaceStatus.hidden = false;
+      workspaceStatus.setAttribute("role", state === "error" ? "alert" : "status");
+    }
+    root.dispatchEvent(
+      new CustomEvent("document-import:state", {
+        bubbles: true,
+        detail: { state, message },
+      }),
+    );
   }
 
   function setBusy(busy: boolean): void {
@@ -95,6 +100,15 @@ export function mountDocumentImport(
     elements.dropzone.dataset.authLocked = authLocked ? "true" : "false";
     elements.dropzone.setAttribute("aria-busy", busy ? "true" : "false");
     elements.dropzone.setAttribute("aria-disabled", busy || authLocked ? "true" : "false");
+    toolbarUploadButton?.toggleAttribute("disabled", busy || authLocked);
+    root.dataset.documentImportRunning = busy ? "true" : "false";
+    editor.setEditable(!busy && root.dataset.quickActionRunning !== "true");
+    root.dispatchEvent(
+      new CustomEvent("workspace:busy-changed", {
+        bubbles: true,
+        detail: { busy, view: "editor" },
+      }),
+    );
   }
 
   function openFilePicker(): void {
@@ -121,7 +135,11 @@ export function mountDocumentImport(
 
     const controller = new AbortController();
     const formData = new FormData();
-    const ocrLanguage = resolveOcrLanguage(elements.ocrLanguageSelect.value);
+    const selectedTextLanguage =
+      root.querySelector<HTMLSelectElement>("[data-correction-language]")?.value ??
+      elements.ocrLanguageSelect.value;
+    const ocrLanguage = mapTextLanguageToOcr(selectedTextLanguage);
+    elements.ocrLanguageSelect.value = ocrLanguage;
     const ocrLabel =
       elements.ocrLanguageSelect.selectedOptions.item(0)?.textContent?.trim() ?? ocrLanguage;
 
@@ -179,6 +197,7 @@ export function mountDocumentImport(
   elements.button.addEventListener("click", () => {
     openFilePicker();
   });
+  toolbarUploadButton?.addEventListener("click", openFilePicker);
 
   elements.dropzone.addEventListener("click", (event) => {
     const target = event.target;
@@ -250,6 +269,38 @@ export function mountDocumentImport(
 
     void importFile(file);
   });
+
+  if (externalDropTarget) {
+    externalDropTarget.addEventListener("dragenter", (event) => {
+      event.preventDefault();
+      if (!elements.input.disabled) {
+        externalDropTarget.dataset.dragging = "true";
+      }
+    });
+    externalDropTarget.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      if (!elements.input.disabled) {
+        externalDropTarget.dataset.dragging = "true";
+      }
+    });
+    externalDropTarget.addEventListener("dragleave", (event) => {
+      const nextTarget = event.relatedTarget;
+      if (!(nextTarget instanceof Node) || !externalDropTarget.contains(nextTarget)) {
+        externalDropTarget.dataset.dragging = "false";
+      }
+    });
+    externalDropTarget.addEventListener("drop", (event) => {
+      event.preventDefault();
+      externalDropTarget.dataset.dragging = "false";
+      if (elements.input.disabled) {
+        return;
+      }
+      const [file] = Array.from(event.dataTransfer?.files ?? []);
+      if (file) {
+        void importFile(file);
+      }
+    });
+  }
 
   setBusy(false);
 

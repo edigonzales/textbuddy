@@ -6,16 +6,16 @@ export default defineConfig({
   fullyParallel: false,
   reporter: "list",
   use: {
-    baseURL: "http://127.0.0.1:4173",
+    baseURL: "http://127.0.0.1:4174",
     trace: "retain-on-failure",
   },
   webServer: {
     command:
-      "./gradlew bootRun --args='--server.address=127.0.0.1 --server.port=4173 --textbuddy.auth.enabled=false --textbuddy.llm.mode=stub --textbuddy.languagetool.mode=stub --textbuddy.document.mode=stub'",
+      "./gradlew bootRun --args='--server.address=127.0.0.1 --server.port=4174 --textbuddy.auth.enabled=false --textbuddy.llm.mode=stub --textbuddy.languagetool.mode=stub --textbuddy.document.mode=stub'",
     cwd: resolve(__dirname, ".."),
     reuseExistingServer: false,
     timeout: 120_000,
-    url: "http://127.0.0.1:4173",
+    url: "http://127.0.0.1:4174",
   },
   projects: [
     {

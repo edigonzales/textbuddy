@@ -2,26 +2,39 @@
 
 Textbuddy strebt WCAG 2.2 AA an, erhebt aber ohne vollständige manuelle Prüfung keinen Konformitätsanspruch.
 
-## Technischer Stand
+## Tastaturführung im MVP
 
-- Die Hauptbereiche verwenden semantische Überschriften, Labels und Landmarken.
-- Eine Skip-Link-Navigation führt zum Hauptinhalt.
-- Werkzeug-Tabs und modale beziehungsweise eingeblendete Bereiche besitzen ARIA-Beziehungen.
-- Statusänderungen werden über zurückhaltende Live-Regionen ausgegeben.
-- Editor- und Werkzeugaktionen sind per Tastatur erreichbar; sichtbare Fokusdarstellung bleibt erhalten.
-- Das nichtmodale Vorschlags-Popup erhält seinen zugänglichen Namen aus der aktuellen Textauswahl, lässt sich mit Escape schliessen und fokussiert nach tastaturbedientem Laden den ersten Vorschlag.
-- Die Browser-Suite prüft Kernabläufe mit Playwright und `axe-core`.
+- Der Skip-Link führt direkt zur Arbeitsfläche.
+- **Überarbeiten** und **Prüfen** sind als Tabs umgesetzt. Linke und rechte Pfeiltaste wechseln zwischen ihnen.
+- Alle Ribbon- und Editoraktionen sind mit der Tastatur erreichbar und besitzen zugängliche Bezeichnungen.
+- Korrekturmarkierungen sind fokussierbar. Ihre Aktivierung wechselt zu **Prüfen**, öffnet die Ergebnisleiste und fokussiert den zugehörigen Befund.
+- Auf Mobilgeräten hält die geöffnete Korrekturleiste den Fokus. Escape schliesst sie und gibt den Fokus an den Auslöser zurück.
+- Das Statistik-Popover lässt sich mit Escape schliessen; der Fokus kehrt zum Zähler zurück.
+- Diff-Blöcke können einzeln oder global angenommen und abgelehnt werden. Moduswechsel und weitere mutierende Aktionen sind während Verarbeitung und Review deaktiviert.
+- Status-, Erfolgs- und Fehlermeldungen werden über Live-Regions angekündigt.
 
-Automatische Tests finden nicht alle Barrieren. Insbesondere Screenreader-Verständlichkeit, sinnvolle Fokusreihenfolge, Zoom/Reflow und die Bedienung komplexer Tiptap-Auswahlzustände brauchen manuelle Abnahme.
+Nicht freigeschaltete Werkzeuge liegen in verborgenen, inerten Compatibility-Bereichen. Dadurch bleiben ihre technischen DOM-Verträge erhalten, ohne dass die Einstiege sichtbar oder fokussierbar sind.
+
+## Automatische Abdeckung
+
+Die Browser-Suite prüft mit Playwright und `axe-core`:
+
+- die leere Editorarbeitsfläche,
+- die geöffnete Korrekturleiste,
+- Inline- und Zweispalten-Diff,
+- das Statistik-Popover,
+- die mobile Ribbon- und Slideover-Nutzung.
+
+Unit- und Browser-Tests decken ausserdem Fokus-Rückgabe, Escape, fehlenden horizontalen Überlauf, verborgene Nicht-MVP-Werkzeuge und die dynamische Ergebnisleiste ab.
 
 ## Manuelle Abnahme pro Release
 
-1. Gesamten Kernablauf nur mit Tastatur bedienen: Anmeldung, Schreiben, Korrektur, Quick Action, Advisor, Import und PDF-Viewer.
-2. Fokus nach Öffnen, Schliessen, Fehlern und dynamischen Ergebnissen prüfen; kein Fokus darf verloren gehen.
-3. Mit NVDA/Firefox oder VoiceOver/Safari Bezeichnungen, Statusmeldungen und Ergebnislisten nachvollziehen.
-4. Bei 200 % und 400 % Zoom prüfen, dass Inhalt ohne horizontales Scrollen nutzbar bleibt, soweit WCAG dies verlangt.
-5. Kontrast in Standard-, Hover-, Fokus-, Fehler- und Disabled-Zuständen prüfen.
-6. Bewegungsreduktion mit `prefers-reduced-motion` testen.
-7. Deutsch und Englisch auf fehlende oder technisch klingende Texte prüfen.
+1. Mit Tastatur schreiben, korrigieren, Modus wechseln, Ergebnisse schliessen und wieder öffnen.
+2. Transformation starten und alle Einzel- und Globalentscheidungen im Inline- sowie Zweispalten-Diff bedienen.
+3. Upload, Drag-and-drop, Kopieren, DOCX-Download und Statistik prüfen.
+4. Mit NVDA/Firefox oder VoiceOver/Safari Namen, Statusmeldungen, Ergebnisliste und Review nachvollziehen.
+5. Bei 200 % und 400 % Zoom sowie auf 390 px Breite Reflow und horizontalen Überlauf prüfen.
+6. Standard-, Hover-, Fokus-, Fehler- und Disabled-Zustände auf Kontrast prüfen.
+7. Bewegungsreduktion mit `prefers-reduced-motion` und beide Oberflächensprachen prüfen.
 
-Gefundene Barrieren sollten als reproduzierbarer Test ergänzt werden, sofern sie automatisierbar sind. Das verhindert, dass dieselbe Regression erneut einzieht.
+Automatische Tests ersetzen keine Prüfung der Screenreader-Verständlichkeit, sinnvollen Fokusreihenfolge und komplexen Tiptap-Auswahlzustände. Reproduzierbare Barrieren sollten als Regressionstest ergänzt werden.

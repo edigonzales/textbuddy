@@ -22,6 +22,7 @@ import {
   type TextCorrectionSegment,
 } from "./text-correction-segments";
 import type {
+  CorrectionStateChangedDetail,
   CorrectionElements,
   EditorTextChangedDetail,
   TextCorrectionBlock,
@@ -108,6 +109,7 @@ export function mountTextCorrectionBridge(
   let panelMessage = IDLE_MESSAGE;
   let segmentStates: SegmentCorrectionState[] = [];
   let dictionaryWords = new Set<string>();
+  let visibleBlockCount = 0;
 
   const dictionaryStore = createLocalDictionaryStore();
   const inFlightRequests = new Set<AbortController>();
@@ -125,6 +127,16 @@ export function mountTextCorrectionBridge(
     elements.status.setAttribute("aria-live", state === "error" ? "assertive" : "polite");
     elements.status.setAttribute("aria-atomic", "true");
     elements.status.textContent = message;
+    root.dispatchEvent(
+      new CustomEvent<CorrectionStateChangedDetail>("correction:state-changed", {
+        bubbles: true,
+        detail: {
+          state,
+          message,
+          count: visibleBlockCount,
+        },
+      }),
+    );
   }
 
   function abortInFlightRequests(): void {
@@ -136,6 +148,7 @@ export function mountTextCorrectionBridge(
 
   function clearCorrections(): void {
     segmentStates = [];
+    visibleBlockCount = 0;
     setTextCorrections(editor, []);
     elements.list.replaceChildren();
   }
@@ -174,7 +187,7 @@ export function mountTextCorrectionBridge(
     index: number,
   ): HTMLElement {
     const item = document.createElement("article");
-    const header = document.createElement("div");
+    const header = document.createElement("button");
     const fragment = document.createElement("code");
     const title = document.createElement("p");
     const detail = document.createElement("p");
@@ -184,14 +197,17 @@ export function mountTextCorrectionBridge(
 
     item.className = "problem-item";
     item.dataset.testid = "correction-problem-item";
-    item.tabIndex = 0;
-    item.setAttribute("role", "button");
-    item.setAttribute(
+    item.dataset.correctionItemIndex = String(index);
+    item.setAttribute("role", "listitem");
+
+    header.type = "button";
+    header.className = "problem-item-head problem-focus-button";
+    header.dataset.correctionFocusIndex = String(index);
+    header.setAttribute(
       "aria-label",
       `${t("correction.problem.badge", { index: index + 1 })}: ${problemText}`,
     );
 
-    header.className = "problem-item-head";
     header.append(createProblemBadge(index));
 
     fragment.className = "problem-fragment";
@@ -240,16 +256,7 @@ export function mountTextCorrectionBridge(
       suggestions.append(dictionaryButton);
     }
 
-    item.addEventListener("click", () => {
-      focusProblem(block);
-    });
-
-    item.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter" && event.key !== " ") {
-        return;
-      }
-
-      event.preventDefault();
+    header.addEventListener("click", () => {
       focusProblem(block);
     });
 
@@ -275,6 +282,7 @@ export function mountTextCorrectionBridge(
     message?: string,
   ): void {
     const blocks = buildVisibleBlocks(original);
+    visibleBlockCount = blocks.length;
 
     setTextCorrections(
       editor,
@@ -612,6 +620,36 @@ export function mountTextCorrectionBridge(
       forceFullCheck: true,
       immediate: true,
     });
+  });
+
+  root.addEventListener("correction:retry", () => {
+    scheduleCorrection("", currentText, {
+      forceFullCheck: true,
+      immediate: true,
+    });
+  });
+
+  root.addEventListener("click", (event) => {
+    const target = event.target;
+
+    if (!(target instanceof Element)) {
+      return;
+    }
+
+    const mark = target.closest<HTMLElement>("[data-correction-index]");
+
+    if (!mark) {
+      return;
+    }
+
+    root.dispatchEvent(
+      new CustomEvent<{ index: number }>("workspace:open-correction", {
+        bubbles: true,
+        detail: {
+          index: Number.parseInt(mark.dataset.correctionIndex ?? "0", 10) || 0,
+        },
+      }),
+    );
   });
 
   root.addEventListener("editor:text-changed", (event) => {

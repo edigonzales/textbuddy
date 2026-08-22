@@ -159,4 +159,29 @@ export interface RewriteDiffView {
   before: RewriteDiffToken[];
   after: RewriteDiffToken[];
   hasChanges: boolean;
+  segments: RewriteDiffSegment[];
+}
+
+export type RewriteDiffHunkStatus = "pending" | "accepted" | "rejected";
+
+export interface RewriteDiffHunk {
+  key: string;
+  removedText: string;
+  addedText: string;
+  status: RewriteDiffHunkStatus;
+}
+
+export type RewriteDiffSegment =
+  | { kind: "text"; value: string }
+  | { kind: "change"; hunk: RewriteDiffHunk };
+
+export interface CorrectionStateChangedDetail {
+  state: "idle" | "loading" | "success" | "error";
+  message: string;
+  count: number;
+}
+
+export interface WorkspaceBusyChangedDetail {
+  busy: boolean;
+  view: "editor" | "diff-review";
 }

@@ -15,12 +15,13 @@ import { countWords, getPlainText, plainTextToHtml } from "./plain-text";
 import { mountQuickActions } from "./quick-actions";
 import { mountRewriteBubble } from "./rewrite-bubble";
 import { mountTextCorrectionBridge } from "./text-correction";
-import type { EditorElements } from "./types";
+import { isMvpToolVisible } from "./tool-catalog";
+import type { EditorElements, WorkspaceBusyChangedDetail } from "./types";
 import { t } from "./ui-i18n";
 
-function syncUndoRedoState(elements: EditorElements, editor: Editor): void {
-  elements.undoButton.disabled = !editor.can().chain().focus().undo().run();
-  elements.redoButton.disabled = !editor.can().chain().focus().redo().run();
+function syncUndoRedoState(elements: EditorElements, editor: Editor, busy = false): void {
+  elements.undoButton.disabled = busy || !editor.can().chain().focus().undo().run();
+  elements.redoButton.disabled = busy || !editor.can().chain().focus().redo().run();
 }
 
 function syncTextState(elements: EditorElements, editor: Editor): void {
@@ -60,6 +61,7 @@ export function mountEditorIsland(): void {
   const documentImportElements = findDocumentImportElements(elements.root);
   const rewriteBubbleElements = findRewriteBubbleElements(elements.root);
   const quickActionElements = findQuickActionElements(elements.root);
+  let workspaceBusy = false;
 
   const editor = new Editor({
     element: elements.surface,
@@ -88,26 +90,37 @@ export function mountEditorIsland(): void {
     onCreate: ({ editor: activeEditor }) => {
       syncTextState(elements, activeEditor);
       syncSelectionState(elements, activeEditor);
-      syncUndoRedoState(elements, activeEditor);
+      syncUndoRedoState(elements, activeEditor, workspaceBusy);
     },
     onUpdate: ({ editor: activeEditor }) => {
       syncTextState(elements, activeEditor);
-      syncUndoRedoState(elements, activeEditor);
+      syncUndoRedoState(elements, activeEditor, workspaceBusy);
     },
     onSelectionUpdate: ({ editor: activeEditor }) => {
       syncSelectionState(elements, activeEditor);
-      syncUndoRedoState(elements, activeEditor);
+      syncUndoRedoState(elements, activeEditor, workspaceBusy);
     },
     onTransaction: ({ editor: activeEditor }) => {
-      syncUndoRedoState(elements, activeEditor);
+      syncUndoRedoState(elements, activeEditor, workspaceBusy);
     },
   });
 
+  elements.root.addEventListener("workspace:busy-changed", (event) => {
+    workspaceBusy = (event as CustomEvent<WorkspaceBusyChangedDetail>).detail.busy;
+    syncUndoRedoState(elements, editor, workspaceBusy);
+  });
+
   elements.undoButton.addEventListener("click", () => {
+    if (workspaceBusy) {
+      return;
+    }
     editor.chain().focus().undo().run();
   });
 
   elements.redoButton.addEventListener("click", () => {
+    if (workspaceBusy) {
+      return;
+    }
     editor.chain().focus().redo().run();
   });
 
@@ -119,11 +132,14 @@ export function mountEditorIsland(): void {
     mountTextCorrectionBridge(editor, elements.root, correctionElements);
   }
 
-  if (rewriteBubbleElements) {
+  if (
+    rewriteBubbleElements &&
+    (isMvpToolVisible("word-synonym") || isMvpToolVisible("sentence-rewrite"))
+  ) {
     mountRewriteBubble(editor, elements.root, elements, rewriteBubbleElements);
   }
 
   if (quickActionElements) {
-  mountQuickActions(editor, elements.root, quickActionElements);
+    mountQuickActions(editor, elements.root, quickActionElements);
   }
 }
