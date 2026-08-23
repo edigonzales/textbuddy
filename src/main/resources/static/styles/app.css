@@ -1011,7 +1011,7 @@ code {
 
 .workspace-mode-tabs {
     display: flex;
-    align-self: end;
+    align-self: center;
     justify-self: center;
     gap: 0.25rem;
 }
