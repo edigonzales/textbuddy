@@ -40,7 +40,6 @@
 #editor-island-root .editor-button,
 #editor-island-root .quick-action-button,
 #editor-island-root .quick-action-apply,
-#editor-island-root .rewrite-diff-undo,
 #editor-island-root .rewrite-primary-action,
 #editor-island-root .rewrite-secondary-action {
   display: inline-flex;
@@ -59,7 +58,6 @@
 
 #editor-island-root .editor-button:hover:enabled,
 #editor-island-root .quick-action-button:hover:enabled,
-#editor-island-root .rewrite-diff-undo:hover,
 #editor-island-root .rewrite-secondary-action:hover:enabled {
   border-color: var(--textbuddy-color-primary);
   background: var(--textbuddy-neutral-hover);
@@ -741,14 +739,17 @@
 }
 
 #editor-island-root .diff-removed {
-  background: var(--textbuddy-color-danger-bg);
-  color: var(--textbuddy-color-danger-text);
+  background: var(--textbuddy-neutral-deleted-bg);
+  color: var(--textbuddy-neutral-muted);
   text-decoration: line-through;
+  text-decoration-color: var(--textbuddy-neutral-muted);
 }
 
 #editor-island-root .diff-rejected {
+  background: var(--textbuddy-neutral-deleted-bg);
   color: var(--textbuddy-neutral-muted);
   text-decoration: line-through;
+  text-decoration-color: var(--textbuddy-neutral-muted);
 }
 
 #editor-island-root .diff-arrow {
@@ -766,17 +767,49 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 2rem;
+  height: 2rem;
   padding: 0;
-  border: 1px solid var(--textbuddy-neutral-border);
+  border: 0;
   border-radius: var(--textbuddy-radius);
-  background: var(--textbuddy-neutral-surface);
+  background: var(--textbuddy-neutral-header);
+  color: var(--textbuddy-neutral-ink);
+}
+
+#editor-island-root .diff-decision:hover {
+  background: var(--textbuddy-neutral-hover);
+  color: var(--textbuddy-neutral-emphasis);
 }
 
 #editor-island-root .diff-decision-accepted {
-  border-color: var(--textbuddy-color-success);
-  color: var(--textbuddy-color-success-text);
+  background: var(--textbuddy-color-success);
+  color: #ffffff;
+}
+
+#editor-island-root .diff-decision-accepted:hover {
+  background: var(--textbuddy-color-success);
+  color: #ffffff;
+}
+
+#editor-island-root .diff-decision-rejected {
+  background: var(--textbuddy-neutral-header);
+  color: var(--textbuddy-neutral-ink);
+}
+
+#editor-island-root .diff-decision-rejected:hover {
+  background: var(--textbuddy-neutral-hover);
+  color: var(--textbuddy-neutral-emphasis);
+}
+
+#editor-island-root .diff-decision-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: 0 0 auto;
+}
+
+#editor-island-root .diff-decision-rejected .diff-decision-icon {
+  width: 1.35rem;
+  height: 1.35rem;
 }
 
 #editor-island-root .review-no-changes {
@@ -836,8 +869,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  #editor-island-root .document-import-button,
-  #editor-island-root .rewrite-diff-undo {
+  #editor-island-root .document-import-button {
     width: 100%;
   }
 

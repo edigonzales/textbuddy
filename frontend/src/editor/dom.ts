@@ -259,7 +259,6 @@ export function findQuickActionElements(root: HTMLElement): QuickActionElements 
   const diffPanel = queryRequired<HTMLElement>(root, "[data-rewrite-diff-panel]");
   const diffBefore = queryRequired<HTMLElement>(root, "[data-rewrite-diff-before]");
   const diffAfter = queryRequired<HTMLElement>(root, "[data-rewrite-diff-after]");
-  const diffUndoButton = queryRequired<HTMLButtonElement>(root, "[data-rewrite-diff-undo]");
 
   if (
     !panel ||
@@ -284,8 +283,7 @@ export function findQuickActionElements(root: HTMLElement): QuickActionElements 
     !customPromptInput ||
     !diffPanel ||
     !diffBefore ||
-    !diffAfter ||
-    !diffUndoButton
+    !diffAfter
   ) {
     return null;
   }
@@ -314,6 +312,5 @@ export function findQuickActionElements(root: HTMLElement): QuickActionElements 
     diffPanel,
     diffBefore,
     diffAfter,
-    diffUndoButton,
   };
 }

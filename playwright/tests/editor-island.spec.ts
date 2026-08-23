@@ -298,11 +298,52 @@ test("plain-language review preserves the original and commits as one undoable t
   await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
   await expect(page.getByTestId("editor-input")).toBeHidden();
   await expect(page.getByTestId("editor-mirror")).toHaveValue("Das alte Haus ist klein.");
+  await expect(page.getByRole("button", { name: "Abbrechen" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Inline" })).toHaveAttribute(
+    "title",
+    "Inline",
+  );
+  await expect(page.getByRole("button", { name: "Inline" }).locator("svg")).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Zwei Spalten" }).locator("svg")).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Erneut ausführen" }).locator("svg")).toHaveCount(1);
+  await expect(page.locator("[data-review-inline] .diff-removed").first()).toHaveCSS(
+    "background-color",
+    "rgb(232, 237, 240)",
+  );
+  await expect(page.locator("[data-review-inline] .diff-removed").first()).toHaveCSS(
+    "color",
+    "rgb(94, 109, 121)",
+  );
+  await expect(page.locator("[data-review-inline] .diff-removed").first()).toHaveCSS(
+    "text-decoration-line",
+    "line-through",
+  );
   await expect(
     page.locator("[data-review-inline] [data-diff-decision='accepted']"),
   ).toHaveCount(2);
+  await expect(
+    page.locator("[data-review-inline] [data-diff-decision='accepted']").first(),
+  ).toHaveCSS("background-color", "rgb(25, 135, 84)");
+  await expect(
+    page.locator("[data-review-inline] [data-diff-decision='accepted']").first(),
+  ).toHaveCSS("border-top-width", "0px");
+  await expect(
+    page.locator("[data-review-inline] [data-diff-decision='accepted']").first().locator("svg"),
+  ).toHaveCount(1);
+  await expect(
+    page.locator("[data-review-inline] [data-diff-decision='rejected']").first(),
+  ).toHaveCSS("background-color", "rgb(237, 242, 245)");
+  await expect(
+    page.locator("[data-review-inline] [data-diff-decision='rejected']").first().locator("svg"),
+  ).toHaveCount(1);
 
   await page.locator("[data-review-inline] [data-diff-decision='accepted']").first().click();
+  await page.getByRole("button", { name: "Zwei Spalten" }).click();
+  await expect(page.locator("[data-review-split-before] .diff-rejected").first()).toHaveCSS(
+    "background-color",
+    "rgb(232, 237, 240)",
+  );
+  await page.getByRole("button", { name: "Inline" }).click();
   await page.locator("[data-review-inline] [data-diff-decision='rejected']").first().click();
   await expect(page.getByTestId("editor-mirror")).toHaveValue("Das neue Haus ist klein.");
   await page.getByTestId("editor-undo").click();
@@ -324,6 +365,20 @@ test("summary keeps option values, supports split review, reject-all and retry",
   await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
   expect(payloads[0]?.option).toBe("management_summary");
   await expect(page.getByTestId("mvp-summary-option")).toHaveValue("");
+  await expect(page.getByRole("button", { name: "Alle ablehnen" })).toHaveCSS(
+    "background-color",
+    "rgb(237, 242, 245)",
+  );
+  await expect(page.getByRole("button", { name: "Alle ablehnen" }).locator("svg")).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Alle annehmen" })).toHaveCSS(
+    "background-color",
+    "rgb(209, 231, 221)",
+  );
+  await expect(page.getByRole("button", { name: "Alle annehmen" })).toHaveCSS(
+    "color",
+    "rgb(10, 54, 34)",
+  );
+  await expect(page.getByRole("button", { name: "Alle annehmen" }).locator("svg")).toHaveCount(1);
   await page.getByRole("button", { name: "Zwei Spalten" }).click();
   await expect(page.getByTestId("review-split")).toBeVisible();
   await page.getByRole("button", { name: "Erneut ausführen" }).click();
@@ -349,7 +404,7 @@ test("unchanged and failed transformations never alter the editor", async ({ pag
 
   await page.getByTestId("mvp-action-plain-language").click();
   await expect(page.getByText("Keine Änderungen gefunden")).toBeVisible();
-  await page.getByRole("button", { name: "Abbrechen" }).click();
+  await page.getByRole("button", { name: "Alle ablehnen" }).click();
   await page.getByTestId("mvp-action-plain-language").click();
   await expect(page.getByTestId("workspace-status")).toContainText(
     "Transformation fehlgeschlagen",

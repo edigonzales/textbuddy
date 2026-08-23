@@ -195,12 +195,38 @@
                                 <p data-review-progress></p>
                             </div>
                             <div class="diff-review-actions">
-                                <button type="button" class="review-button" data-review-mode="inline" aria-pressed="true">${page.t("review.inline")}</button>
-                                <button type="button" class="review-button" data-review-mode="split" aria-pressed="false">${page.t("review.split")}</button>
-                                <button type="button" class="review-button" data-review-retry>${page.t("review.retry")}</button>
-                                <button type="button" class="review-button" data-review-reject-all>${page.t("review.rejectAll")}</button>
-                                <button type="button" class="review-button review-button-primary" data-review-accept-all>${page.t("review.acceptAll")}</button>
-                                <button type="button" class="review-button" data-rewrite-diff-undo data-testid="rewrite-diff-undo">${page.t("review.cancel")}</button>
+                                <button type="button" class="review-button review-button-icon-only" data-review-mode="inline" aria-pressed="true" aria-label="${page.t("review.inline")}" title="${page.t("review.inline")}">
+                                    <svg class="review-button-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                                        <circle cx="2.5" cy="4" r=".75" fill="currentColor"/>
+                                        <circle cx="2.5" cy="8" r=".75" fill="currentColor"/>
+                                        <circle cx="2.5" cy="12" r=".75" fill="currentColor"/>
+                                        <path d="M5 4h8M5 8h8M5 12h8" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/>
+                                    </svg>
+                                </button>
+                                <button type="button" class="review-button review-button-icon-only" data-review-mode="split" aria-pressed="false" aria-label="${page.t("review.split")}" title="${page.t("review.split")}">
+                                    <svg class="review-button-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                                        <rect x="1.75" y="2.25" width="5.25" height="11.5" rx=".75" stroke="currentColor" stroke-width="1.5"/>
+                                        <rect x="9" y="2.25" width="5.25" height="11.5" rx=".75" stroke="currentColor" stroke-width="1.5"/>
+                                    </svg>
+                                </button>
+                                <button type="button" class="review-button review-button-icon-only" data-review-retry aria-label="${page.t("review.retry")}" title="${page.t("review.retry")}">
+                                    <svg class="review-button-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                                        <path d="M13.5 3.5v3h-3" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>
+                                        <path d="M13.1 6.5A5.5 5.5 0 1 0 13 9" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/>
+                                    </svg>
+                                </button>
+                                <button type="button" class="review-button review-button-bulk-reject" data-review-reject-all aria-label="${page.t("review.rejectAll")}" title="${page.t("review.rejectAll")}">
+                                    <svg class="review-button-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                                        <path d="m3.25 3.25 9.5 9.5m0-9.5-9.5 9.5" stroke="currentColor" stroke-linecap="round" stroke-width="1.75"/>
+                                    </svg>
+                                    ${page.t("review.rejectAll")}
+                                </button>
+                                <button type="button" class="review-button review-button-bulk-accept" data-review-accept-all aria-label="${page.t("review.acceptAll")}" title="${page.t("review.acceptAll")}">
+                                    <svg class="review-button-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                                        <path d="m2.75 8.25 3.25 3.25 7.25-7.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"/>
+                                    </svg>
+                                    ${page.t("review.acceptAll")}
+                                </button>
                             </div>
                         </header>
                         <p class="review-no-changes" data-review-no-changes hidden>${page.t("review.noChanges")}</p>

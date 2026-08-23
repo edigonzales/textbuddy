@@ -55,7 +55,6 @@ export interface QuickActionElements {
   diffPanel: HTMLElement;
   diffBefore: HTMLElement;
   diffAfter: HTMLElement;
-  diffUndoButton: HTMLButtonElement;
 }
 
 export interface RewriteBubbleElements {

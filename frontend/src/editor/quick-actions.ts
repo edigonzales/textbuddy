@@ -100,6 +100,50 @@ function hasValidCustomPrompt(value: string): boolean {
   );
 }
 
+type ReviewIconName = "check" | "x";
+
+function appendSvgElement(
+  svg: SVGSVGElement,
+  name: string,
+  attributes: Record<string, string>,
+): void {
+  const element = document.createElementNS("http://www.w3.org/2000/svg", name);
+  Object.entries(attributes).forEach(([attribute, value]) => {
+    element.setAttribute(attribute, value);
+  });
+  svg.append(element);
+}
+
+function createReviewIcon(name: ReviewIconName): SVGSVGElement {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("class", "diff-decision-icon");
+  svg.setAttribute("width", "16");
+  svg.setAttribute("height", "16");
+  svg.setAttribute("viewBox", "0 0 16 16");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("focusable", "false");
+
+  if (name === "check") {
+    appendSvgElement(svg, "path", {
+      d: "m2.75 8.25 3.25 3.25 7.25-7.5",
+      stroke: "currentColor",
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round",
+      "stroke-width": "1.75",
+    });
+  } else {
+    appendSvgElement(svg, "path", {
+      d: "m3.25 3.25 9.5 9.5m0-9.5-9.5 9.5",
+      stroke: "currentColor",
+      "stroke-linecap": "round",
+      "stroke-width": "1.75",
+    });
+  }
+
+  return svg;
+}
+
 function isAbortError(error: unknown): boolean {
   return error instanceof DOMException
     ? error.name === "AbortError"
@@ -126,7 +170,7 @@ function createDecisionButton(
   button.dataset.diffHunkKey = hunk.key;
   button.setAttribute("aria-label", label);
   button.title = label;
-  button.textContent = decision === "accepted" ? "✓" : "×";
+  button.append(createReviewIcon(decision === "accepted" ? "check" : "x"));
   button.addEventListener("click", () => onDecision(hunk.key, decision));
   return button;
 }
@@ -475,11 +519,15 @@ export function mountQuickActions(
     if (reviewNoChanges) {
       reviewNoChanges.hidden = hunks.length > 0;
     }
-    [acceptAllButton, rejectAllButton, inlineButton, splitButton].forEach((button) => {
+    [acceptAllButton, inlineButton, splitButton].forEach((button) => {
       if (button) {
         button.hidden = hunks.length === 0;
       }
     });
+    if (rejectAllButton) {
+      // This is also the exit action for a review that produced no changes.
+      rejectAllButton.hidden = false;
+    }
     inlineButton?.setAttribute("aria-pressed", viewMode === "inline" ? "true" : "false");
     splitButton?.setAttribute("aria-pressed", viewMode === "split" ? "true" : "false");
 
@@ -586,7 +634,7 @@ export function mountQuickActions(
       setRunning(false);
       setStatus("success", action.successMessage);
       renderReview();
-      (diff.hasChanges ? acceptAllButton : elements.diffUndoButton)?.focus();
+      (diff.hasChanges ? acceptAllButton : retryButton)?.focus();
     } catch (error) {
       if (isAbortError(error) || activeRequest?.controller !== controller) {
         return;
@@ -609,7 +657,6 @@ export function mountQuickActions(
   });
   elements.runButton.addEventListener("click", () => void runQuickAction(selectedAction));
   elements.customPromptInput.addEventListener("input", syncAvailability);
-  elements.diffUndoButton.addEventListener("click", () => exitReview());
   directPlainLanguage?.addEventListener("click", () => void runQuickAction("plain-language"));
   directSummaryOption?.addEventListener("change", () => {
     if (!directSummaryOption.value) {
