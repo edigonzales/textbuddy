@@ -75,24 +75,24 @@
 
     <section class="workspace-ribbon" aria-label="${page.t("workspace.ribbon.ariaLabel")}" data-testid="workspace-ribbon">
         <div class="workspace-ribbon-inner" data-workspace-ribbon="transform">
-            <div class="ribbon-group">
-                <span class="ribbon-group-label">${page.t("workspace.ribbon.structure")}</span>
+            <div class="ribbon-group ribbon-group-with-title">
                 <div class="ribbon-action-row">
                     <label class="sr-only" for="mvp-summary-option">${page.t("quickAction.option.summarize.label")}</label>
                     <select id="mvp-summary-option" class="ribbon-select" data-mvp-summary-option data-testid="mvp-summary-option">
+                        <option value="" selected disabled>${page.t("quickAction.action.summarize")}</option>
                         <option value="sentence">${page.t("quickAction.option.summarize.sentence")}</option>
-                        <option value="three_sentence" selected>${page.t("quickAction.option.summarize.threeSentence")}</option>
+                        <option value="three_sentence">${page.t("quickAction.option.summarize.threeSentence")}</option>
                         <option value="paragraph">${page.t("quickAction.option.summarize.paragraph")}</option>
                         <option value="page">${page.t("quickAction.option.summarize.page")}</option>
                         <option value="management_summary">Management Summary</option>
                     </select>
-                    <button type="button" class="ribbon-action" data-mvp-quick-action="summarize" data-testid="mvp-action-summarize">${page.t("quickAction.action.summarize")}</button>
                 </div>
+                <span class="ribbon-group-title">${page.t("workspace.ribbon.restructure")}</span>
             </div>
             <span class="ribbon-divider" aria-hidden="true"></span>
-            <div class="ribbon-group">
-                <span class="ribbon-group-label">${page.t("workspace.ribbon.style")}</span>
+            <div class="ribbon-group ribbon-group-with-title">
                 <button type="button" class="ribbon-action" data-mvp-quick-action="plain-language" data-testid="mvp-action-plain-language">${page.t("workspace.action.plainLanguage")}</button>
+                <span class="ribbon-group-title">${page.t("workspace.ribbon.improve")}</span>
             </div>
         </div>
 

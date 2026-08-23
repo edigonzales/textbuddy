@@ -1125,11 +1125,26 @@ code {
     min-width: 0;
 }
 
+.ribbon-group-with-title {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
 .ribbon-group-label {
     color: var(--textbuddy-neutral-muted);
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.ribbon-group-title {
+    color: var(--textbuddy-neutral-ink);
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.25;
+    text-align: center;
     white-space: nowrap;
 }
 
@@ -1349,6 +1364,10 @@ body[data-correction-slideover-open="true"] {
     .ribbon-group {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .ribbon-group-with-title {
+        align-items: center;
     }
 
     .ribbon-action-row {

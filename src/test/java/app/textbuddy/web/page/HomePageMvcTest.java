@@ -45,7 +45,7 @@ class HomePageMvcTest {
                 .andExpect(content().string(containsString("data-icon=\"file-earmark-check\"")))
                 .andExpect(content().string(not(containsString("data-testid=\"locale-switcher\""))))
                 .andExpect(content().string(containsString("data-testid=\"workspace-ribbon\"")))
-                .andExpect(content().string(containsString("data-testid=\"mvp-action-summarize\"")))
+                .andExpect(content().string(containsString("data-testid=\"mvp-summary-option\"")))
                 .andExpect(content().string(containsString("data-testid=\"mvp-action-plain-language\"")))
                 .andExpect(content().string(containsString("data-testid=\"correction-results-toggle\"")))
                 .andExpect(content().string(containsString("id=\"main-content\"")))

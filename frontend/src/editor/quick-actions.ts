@@ -161,9 +161,6 @@ export function mountQuickActions(
   const directPlainLanguage = document.querySelector<HTMLButtonElement>(
     "[data-mvp-quick-action='plain-language']",
   );
-  const directSummarize = document.querySelector<HTMLButtonElement>(
-    "[data-mvp-quick-action='summarize']",
-  );
   const directSummaryOption = document.querySelector<HTMLSelectElement>(
     "[data-mvp-summary-option]",
   );
@@ -336,13 +333,13 @@ export function mountQuickActions(
     Object.values(quickActions).forEach((action) => {
       action.button.disabled = unavailable;
     });
-    [directPlainLanguage, directSummarize].forEach((button) => {
+    [directPlainLanguage].forEach((button) => {
       if (button) {
         button.disabled = unavailable || !hasText;
       }
     });
     if (directSummaryOption) {
-      directSummaryOption.disabled = unavailable;
+      directSummaryOption.disabled = unavailable || !hasText;
     }
 
     elements.runButton.disabled =
@@ -614,14 +611,14 @@ export function mountQuickActions(
   elements.customPromptInput.addEventListener("input", syncAvailability);
   elements.diffUndoButton.addEventListener("click", () => exitReview());
   directPlainLanguage?.addEventListener("click", () => void runQuickAction("plain-language"));
-  directSummarize?.addEventListener("click", () => {
-    if (directSummaryOption) {
-      elements.summarizeOptionSelect.value = directSummaryOption.value;
-    }
-    void runQuickAction("summarize");
-  });
   directSummaryOption?.addEventListener("change", () => {
+    if (!directSummaryOption.value) {
+      return;
+    }
     elements.summarizeOptionSelect.value = directSummaryOption.value;
+    void runQuickAction("summarize").finally(() => {
+      directSummaryOption.value = "";
+    });
   });
   acceptAllButton?.addEventListener("click", () => {
     if (!review) {

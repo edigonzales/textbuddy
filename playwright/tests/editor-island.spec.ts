@@ -151,8 +151,38 @@ test("starts with a wide editor and only the three MVP tools", async ({ page }) 
   );
   await expect(page.getByTestId("editor-shell")).toBeVisible();
   await expect(page.getByTestId("inspector-panel")).toBeHidden();
-  await expect(page.getByTestId("mvp-action-summarize")).toBeVisible();
+  await expect(page.getByTestId("mvp-summary-option")).toBeVisible();
+  await expect(page.getByTestId("mvp-action-summarize")).toHaveCount(0);
+  await expect(page.getByTestId("mvp-summary-option")).toHaveValue("");
+  await expect(page.getByTestId("mvp-summary-option")).toBeEnabled();
+  await expect(page.getByText("STRUKTUR", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("STIL", { exact: true })).toHaveCount(0);
   await expect(page.getByTestId("mvp-action-plain-language")).toBeVisible();
+  const editorInput = page.getByTestId("editor-input");
+  await expect(editorInput.locator("p")).toHaveCount(3);
+  await expect(editorInput).toContainText(
+    "Um die steuerliche Wettbewerbsfähigkeit des Kantons zu verbessern",
+  );
+  await expect(editorInput).toContainText("Vor diesem Hintergrund sieht die Steuerstrategie");
+  await expect(editorInput).toContainText("Die zur Umsetzung empfohlenen Massnahmen");
+  await expect(page.getByTestId("editor-character-count")).not.toHaveText("0");
+  await expect(page.getByTestId("editor-word-count")).not.toHaveText("0");
+  const transformRibbon = page.locator("[data-workspace-ribbon='transform']");
+  const ribbonTitles = transformRibbon.locator(".ribbon-group-title");
+  await expect(ribbonTitles).toHaveText(["Umstrukturieren", "Verbessern"]);
+  await expect(ribbonTitles.first()).toHaveCSS("font-size", "14px");
+  await expect(ribbonTitles.first()).toHaveCSS("font-weight", "400");
+  await expect(ribbonTitles.first()).toHaveCSS("text-transform", "none");
+  await expect(ribbonTitles.first()).toHaveCSS("color", "rgb(63, 75, 85)");
+  const firstRibbonGroupPosition = await transformRibbon
+    .locator(".ribbon-group-with-title")
+    .first()
+    .evaluate((group) => {
+      const actions = group.querySelector(".ribbon-action-row")?.getBoundingClientRect();
+      const title = group.querySelector(".ribbon-group-title")?.getBoundingClientRect();
+      return { actionBottom: actions?.bottom ?? 0, titleTop: title?.top ?? 0 };
+    });
+  expect(firstRibbonGroupPosition.titleTop).toBeGreaterThan(firstRibbonGroupPosition.actionBottom);
   await expect(page.getByTestId("quick-action-proofread")).toBeHidden();
   await expect(page.getByTestId("quick-action-bullet-points")).toBeHidden();
   await expect(page.getByTestId("quick-action-formality")).toBeHidden();
@@ -166,6 +196,23 @@ test("starts with a wide editor and only the three MVP tools", async ({ page }) 
   expect(widths.editor).toBeGreaterThan(widths.viewport * 0.75);
 });
 
+test("temporary start text can be used by a quick action", async ({ page }) => {
+  await stubCorrection(page);
+  let requestText = "";
+  await page.route("**/api/quick-actions/plain-language", async (route) => {
+    const payload = route.request().postDataJSON() as QuickActionRequestPayload;
+    requestText = payload.text;
+    await route.fulfill({ json: { text: `${payload.text} Zusatz.` } });
+  });
+  await page.goto("/");
+
+  await page.getByTestId("mvp-action-plain-language").click();
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+  expect(requestText).toContain(
+    "Um die steuerliche Wettbewerbsfähigkeit des Kantons zu verbessern",
+  );
+});
+
 test("typing updates counters and undo/redo remains one action", async ({ page }) => {
   await stubCorrection(page);
   await page.goto("/");
@@ -174,7 +221,9 @@ test("typing updates counters and undo/redo remains one action", async ({ page }
   await expect(page.getByTestId("editor-character-count")).toHaveText("10");
   await expect(page.getByTestId("editor-word-count")).toHaveText("2");
   await page.getByTestId("editor-undo").click();
-  await expect(page.getByTestId("editor-mirror")).toHaveValue("");
+  await expect(page.getByTestId("editor-mirror")).toHaveValue(
+    /Um die steuerliche Wettbewerbsfähigkeit des Kantons zu verbessern/,
+  );
   await page.getByTestId("editor-redo").click();
   await expect(page.getByTestId("editor-mirror")).toHaveValue("Hallo Welt");
 });
@@ -271,10 +320,10 @@ test("summary keeps option values, supports split review, reject-all and retry",
   await page.goto("/");
   await enterText(page, "Ein langer Ausgangstext.");
   await page.getByTestId("mvp-summary-option").selectOption("management_summary");
-  await page.getByTestId("mvp-action-summarize").click();
 
   await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
   expect(payloads[0]?.option).toBe("management_summary");
+  await expect(page.getByTestId("mvp-summary-option")).toHaveValue("");
   await page.getByRole("button", { name: "Zwei Spalten" }).click();
   await expect(page.getByTestId("review-split")).toBeVisible();
   await page.getByRole("button", { name: "Erneut ausführen" }).click();
@@ -379,6 +428,23 @@ test("the full editor accepts document drag and drop", async ({ page }) => {
 
 test.describe("mobile workspace", () => {
   test.use({ viewport: { width: 390, height: 844 } });
+
+  test("keeps transform ribbon titles centered", async ({ page }) => {
+    await stubCorrection(page);
+    await page.goto("/");
+
+    const transformRibbon = page.locator("[data-workspace-ribbon='transform']");
+    const firstGroup = transformRibbon.locator(".ribbon-group-with-title").first();
+    const title = firstGroup.locator(".ribbon-group-title");
+    const groupBox = await firstGroup.boundingBox();
+    const titleBox = await title.boundingBox();
+
+    expect(groupBox).not.toBeNull();
+    expect(titleBox).not.toBeNull();
+    const titleCenter = (titleBox?.x ?? 0) + (titleBox?.width ?? 0) / 2;
+    const groupCenter = (groupBox?.x ?? 0) + (groupBox?.width ?? 0) / 2;
+    expect(Math.abs(titleCenter - groupCenter)).toBeLessThanOrEqual(1);
+  });
 
   test("uses a focusable correction slideover without horizontal overflow", async ({ page }) => {
     await stubCorrection(page);
