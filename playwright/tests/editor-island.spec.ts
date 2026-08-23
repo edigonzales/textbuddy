@@ -41,6 +41,106 @@ async function enterText(page: Page, text: string): Promise<void> {
   await expect(page.getByTestId("editor-mirror")).toHaveValue(text);
 }
 
+test("local mode status lives beside the brand and supports hover, click, and keyboard access", async ({
+  page,
+}) => {
+  await stubCorrection(page);
+  await page.goto("/");
+
+  const trigger = page.getByTestId("local-mode-trigger");
+  const popover = page.getByTestId("local-mode-popover");
+
+  await expect(trigger).toBeVisible();
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  await expect(trigger).toHaveAttribute("aria-label", "Hinweis zum lokalen Modus anzeigen");
+  await expect(popover).toBeHidden();
+  await expect(trigger).toHaveCSS("color", "rgb(102, 77, 3)");
+
+  await trigger.hover();
+  await expect(popover).toBeVisible();
+  await expect(popover).toHaveCSS("background-color", "rgb(255, 243, 205)");
+  await expect(popover).toHaveCSS("border-left-color", "rgb(255, 193, 7)");
+
+  await page.mouse.move(900, 500);
+  await expect(popover).toBeHidden();
+
+  await trigger.click();
+  await expect(popover).toBeVisible();
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  await expect(trigger).toHaveAttribute("aria-label", "Hinweis zum lokalen Modus schliessen");
+  await page.mouse.move(900, 500);
+  await expect(popover).toBeVisible();
+
+  await trigger.click();
+  await expect(popover).toBeHidden();
+
+  await page.getByTestId("editor-input").focus();
+  await trigger.focus();
+  await expect(popover).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(popover).toBeHidden();
+  await expect(trigger).toBeFocused();
+
+  await trigger.click();
+  await expect(popover).toBeVisible();
+  await page.mouse.click(900, 500);
+  await expect(popover).toBeHidden();
+});
+
+test.describe("mobile local mode status", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("opens by tap without relying on hover", async ({ page }) => {
+    await stubCorrection(page);
+    await page.goto("/");
+
+    const trigger = page.getByTestId("local-mode-trigger");
+    const popover = page.getByTestId("local-mode-popover");
+
+    await expect(popover).toBeHidden();
+    await trigger.click();
+    await expect(popover).toBeVisible();
+    await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  });
+});
+
+test("workspace mode tabs use icons and the intended visual states", async ({ page }) => {
+  await stubCorrection(page);
+  await page.goto("/");
+
+  const transformTab = page.getByTestId("workspace-mode-transform");
+  const validateTab = page.getByTestId("workspace-mode-validate");
+
+  await expect(transformTab.locator("svg.workspace-mode-tab-icon")).toHaveCount(1);
+  await expect(validateTab.locator("svg.workspace-mode-tab-icon")).toHaveCount(1);
+  await expect(transformTab.locator("svg")).toHaveAttribute("aria-hidden", "true");
+  await expect(transformTab.locator("svg")).toHaveAttribute("focusable", "false");
+  await expect(validateTab.locator("svg")).toHaveAttribute("aria-hidden", "true");
+  await expect(validateTab.locator("svg")).toHaveAttribute("focusable", "false");
+
+  await expect(transformTab).toHaveCSS("border-style", "none");
+  await expect(transformTab).toHaveCSS("font-weight", "400");
+  await expect(transformTab).toHaveCSS("background-color", "rgb(236, 245, 252)");
+  await expect(transformTab).toHaveCSS("color", "rgb(39, 51, 61)");
+  await expect(transformTab.locator("svg")).toHaveCSS("color", "rgb(66, 153, 225)");
+
+  await validateTab.click();
+  await expect(transformTab).toHaveAttribute("aria-selected", "false");
+  await expect(validateTab).toHaveAttribute("aria-selected", "true");
+  await expect(transformTab).toHaveCSS("border-style", "none");
+  await expect(transformTab).toHaveCSS("background-color", "rgb(237, 242, 245)");
+  await expect(transformTab).toHaveCSS("color", "rgb(94, 109, 121)");
+  await expect(validateTab).toHaveCSS("border-style", "none");
+  await expect(validateTab).toHaveCSS("font-weight", "400");
+  await expect(validateTab).toHaveCSS("background-color", "rgb(236, 245, 252)");
+  await expect(validateTab).toHaveCSS("color", "rgb(39, 51, 61)");
+  await expect(validateTab.locator("svg")).toHaveCSS("color", "rgb(66, 153, 225)");
+
+  await transformTab.hover();
+  await expect(transformTab).toHaveCSS("background-color", "rgb(232, 241, 247)");
+  await expect(transformTab).toHaveCSS("border-style", "none");
+});
+
 test("starts with a wide editor and only the three MVP tools", async ({ page }) => {
   await stubCorrection(page);
   await page.goto("/");

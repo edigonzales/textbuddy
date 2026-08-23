@@ -26,7 +26,10 @@ class AuthDisabledMvcTest {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("data-auth-enabled=\"false\"")))
-                .andExpect(content().string(containsString("Lokaler Modus")));
+                .andExpect(content().string(containsString("Lokaler Modus")))
+                .andExpect(content().string(containsString("data-testid=\"local-mode-trigger\"")))
+                .andExpect(content().string(containsString("data-testid=\"local-mode-popover\"")))
+                .andExpect(content().string(containsString("OIDC ist deaktiviert")));
 
         mockMvc.perform(post("/api/text-correction")
                         .contentType(MediaType.APPLICATION_JSON)

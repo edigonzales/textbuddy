@@ -6,10 +6,51 @@
 <div class="app-shell">
     <header class="app-header" data-testid="shell-header">
         <div class="app-header-inner">
-            <span class="app-brand">${page.t("home.header.brand")}</span>
+            <div class="brand-cluster">
+                <span class="app-brand">${page.t("home.header.brand")}</span>
+                @if (!page.auth().enabled())
+                    <div class="local-mode-status" data-local-mode-status>
+                        <button
+                                type="button"
+                                class="local-mode-trigger"
+                                data-local-mode-trigger
+                                data-testid="local-mode-trigger"
+                                aria-controls="local-mode-popover"
+                                aria-expanded="false"
+                                aria-label="${page.t("auth.localMode.open")}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                                <circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.5"/>
+                                <path d="M8 7.25v4" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/>
+                                <circle cx="8" cy="4.75" r=".75" fill="currentColor"/>
+                            </svg>
+                        </button>
+                        <div
+                                id="local-mode-popover"
+                                class="local-mode-popover"
+                                data-local-mode-popover
+                                data-testid="local-mode-popover"
+                                role="status"
+                                aria-labelledby="local-mode-popover-title"
+                                aria-describedby="local-mode-popover-message"
+                                hidden>
+                            <strong id="local-mode-popover-title">${page.auth().statusTitle()}</strong>
+                            <p id="local-mode-popover-message">${page.auth().statusMessage()}</p>
+                        </div>
+                    </div>
+                @endif
+            </div>
             <nav class="workspace-mode-tabs" role="tablist" aria-label="${page.t("workspace.mode.ariaLabel")}" data-testid="workspace-mode-tabs">
-                <button type="button" class="workspace-mode-tab" role="tab" aria-selected="true" data-workspace-mode="transform" data-testid="workspace-mode-transform">${page.t("workspace.mode.transform")}</button>
+                <button type="button" class="workspace-mode-tab" role="tab" aria-selected="true" data-workspace-mode="transform" data-testid="workspace-mode-transform">
+                    <svg class="workspace-mode-tab-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                        <path d="M9.5 2.672a.5.5 0 1 0 1 0V.843a.5.5 0 0 0-1 0zm4.5.035A.5.5 0 0 0 13.293 2L12 3.293a.5.5 0 1 0 .707.707zM7.293 4A.5.5 0 1 0 8 3.293L6.707 2A.5.5 0 0 0 6 2.707zm-.621 2.5a.5.5 0 1 0 0-1H4.843a.5.5 0 1 0 0 1zm8.485 0a.5.5 0 1 0 0-1h-1.829a.5.5 0 0 0 0 1zM13.293 10A.5.5 0 1 0 14 9.293L12.707 8a.5.5 0 0 0-.707.707zM9.5 11.157a.5.5 0 1 0 1 0V9.328a.5.5 0 0 0-1 0zm1.854-5.097a.5.5 0 0 0 0-.706l-.708-.708a.5.5 0 0 0-.707 0L8.646 5.94a.5.5 0 0 0 0 .707l.708.708a.5.5 0 0 0 .707 0l1.293-1.293Zm-3 3a.5.5 0 0 0 0-.706l-.708-.708a.5.5 0 0 0-.707 0L.646 13.94a.5.5 0 0 0 0 .707l.708.708a.5.5 0 0 0 .707 0z"/>
+                    </svg>
+                    ${page.t("workspace.mode.transform")}
+                </button>
                 <button type="button" class="workspace-mode-tab" role="tab" aria-selected="false" tabindex="-1" data-workspace-mode="validate" data-testid="workspace-mode-validate">
+                    <svg class="workspace-mode-tab-icon" data-icon="file-earmark-check" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                        <path d="M10.854 7.854a.5.5 0 0 0-.708-.708L7.5 9.793 6.354 8.646a.5.5 0 1 0-.708.708l1.5 1.5a.5.5 0 0 0 .708 0z"/>
+                        <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
+                    </svg>
                     ${page.t("workspace.mode.validate")}
                     <span class="workspace-mode-badge" data-correction-mode-badge data-testid="correction-mode-badge" hidden>0</span>
                 </button>
@@ -28,15 +69,6 @@
                     <a class="inline-action" href="${page.auth().loginUrl()}" data-testid="auth-login-link">${page.t("auth.login.link")}</a>
                 </div>
             @endif
-            <nav class="locale-switcher" aria-label="${page.t("locale.switcher.ariaLabel")}" data-testid="locale-switcher">
-                @for (var language : page.supportedUiLanguages())
-                    @if (language.equals(page.uiLocaleLanguage()))
-                        <strong aria-current="true">${language.toUpperCase()}</strong>
-                    @else
-                        <a class="inline-action" href="/?lang=${language}" hreflang="${language}">${language.toUpperCase()}</a>
-                    @endif
-                @endfor
-            </nav>
             </div>
         </div>
     </header>
@@ -89,15 +121,6 @@
             </div>
         </div>
     </section>
-
-    @if (!page.auth().enabled())
-        <div class="local-mode-wrap">
-            <p class="local-mode-notice" data-testid="auth-status-pill">
-                <strong>${page.auth().statusTitle()}</strong>
-                <span>${page.auth().statusMessage()}</span>
-            </p>
-        </div>
-    @endif
 
     <main id="main-content" class="page-shell" tabindex="-1">
         <div

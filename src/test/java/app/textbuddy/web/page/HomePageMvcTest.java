@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
@@ -30,15 +31,19 @@ class HomePageMvcTest {
                 .andExpect(view().name("pages/home"))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(content().string(containsString("Textbuddy")))
-                .andExpect(content().string(containsString("data-testid=\"auth-status-pill\"")))
                 .andExpect(content().string(containsString("data-testid=\"skip-link\"")))
                 .andExpect(content().string(containsString("Lokaler Modus")))
+                .andExpect(content().string(containsString("data-testid=\"local-mode-trigger\"")))
+                .andExpect(content().string(containsString("data-testid=\"local-mode-popover\"")))
+                .andExpect(content().string(not(containsString("local-mode-wrap"))))
                 .andExpect(content().string(containsString("data-auth-enabled=\"false\"")))
                 .andExpect(content().string(containsString("data-authenticated=\"false\"")))
                 .andExpect(content().string(containsString("data-testid=\"editor-shell\"")))
                 .andExpect(content().string(containsString("data-testid=\"workspace-mode-tabs\"")))
                 .andExpect(content().string(containsString("data-testid=\"workspace-mode-transform\"")))
                 .andExpect(content().string(containsString("data-testid=\"workspace-mode-validate\"")))
+                .andExpect(content().string(containsString("data-icon=\"file-earmark-check\"")))
+                .andExpect(content().string(not(containsString("data-testid=\"locale-switcher\""))))
                 .andExpect(content().string(containsString("data-testid=\"workspace-ribbon\"")))
                 .andExpect(content().string(containsString("data-testid=\"mvp-action-summarize\"")))
                 .andExpect(content().string(containsString("data-testid=\"mvp-action-plain-language\"")))

@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -45,7 +46,8 @@ class AuthEnabledMvcTest {
                 .andExpect(content().string(containsString("data-auth-enabled=\"true\"")))
                 .andExpect(content().string(containsString("data-authenticated=\"false\"")))
                 .andExpect(content().string(containsString("data-testid=\"auth-login-link\"")))
-                .andExpect(content().string(containsString("href=\"/oauth2/authorization/test\"")));
+                .andExpect(content().string(containsString("href=\"/oauth2/authorization/test\"")))
+                .andExpect(content().string(not(containsString("data-testid=\"local-mode-trigger\""))));
     }
 
     @Test
@@ -79,7 +81,8 @@ class AuthEnabledMvcTest {
                 .andExpect(content().string(containsString("data-testid=\"auth-user\">demo@example.org</strong>")))
                 .andExpect(content().string(containsString("data-testid=\"auth-logout\"")))
                 .andExpect(content().string(containsString("name=\"_csrf\"")))
-                .andExpect(content().string(containsString("data-csrf-header=\"X-CSRF-TOKEN\"")));
+                .andExpect(content().string(containsString("data-csrf-header=\"X-CSRF-TOKEN\"")))
+                .andExpect(content().string(not(containsString("data-testid=\"local-mode-trigger\""))));
 
         mockMvc.perform(post("/api/text-correction")
                         .with(oauth2Login())

@@ -78,6 +78,13 @@ test("axe: statistics popover", async ({ page }) => {
   await expectNoBlockingViolations(page);
 });
 
+test("axe: local mode popover", async ({ page }) => {
+  await prepare(page);
+  await page.getByTestId("local-mode-trigger").click();
+  await expect(page.getByTestId("local-mode-popover")).toBeVisible();
+  await expectNoBlockingViolations(page);
+});
+
 test.describe("mobile accessibility", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
