@@ -9,7 +9,6 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 
 import java.util.List;
-import java.util.Locale;
 
 public final class HttpLanguageToolClient implements LanguageToolClient {
 
@@ -72,10 +71,6 @@ public final class HttpLanguageToolClient implements LanguageToolClient {
         };
 
         return new LanguageToolUnavailableException(message);
-    }
-
-    private String normalize(String value) {
-        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
     }
 
     private LanguageToolMatch mapMatch(LanguageToolMatchResponse match) {

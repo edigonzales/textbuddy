@@ -6,16 +6,12 @@ import {
   findCorrectionElements,
   findDocumentImportElements,
   findEditorElements,
-  findQuickActionElements,
-  findRewriteBubbleElements,
 } from "./dom";
 import { mountDocumentImport } from "./document-import";
-import { dispatchSelectionChanged, dispatchTextChanged } from "./events";
+import { dispatchTextChanged } from "./events";
 import { countWords, getPlainText, plainTextToHtml } from "./plain-text";
 import { mountQuickActions } from "./quick-actions";
-import { mountRewriteBubble } from "./rewrite-bubble";
 import { mountTextCorrectionBridge } from "./text-correction";
-import { isMvpToolVisible } from "./tool-catalog";
 import type { EditorElements, WorkspaceBusyChangedDetail } from "./types";
 import { t } from "./ui-i18n";
 
@@ -43,16 +39,6 @@ function syncTextState(elements: EditorElements, editor: Editor): void {
   });
 }
 
-function syncSelectionState(elements: EditorElements, editor: Editor): void {
-  const { empty, from, to } = editor.state.selection;
-
-  dispatchSelectionChanged(elements.root, {
-    from,
-    to,
-    empty,
-  });
-}
-
 export function mountEditorIsland(): void {
   const elements = findEditorElements();
   const correctionElements = findCorrectionElements();
@@ -62,8 +48,6 @@ export function mountEditorIsland(): void {
   }
 
   const documentImportElements = findDocumentImportElements(elements.root);
-  const rewriteBubbleElements = findRewriteBubbleElements(elements.root);
-  const quickActionElements = findQuickActionElements(elements.root);
   let workspaceBusy = false;
   const initialText = elements.mirror.value.trim() ? elements.mirror.value : TEMPORARY_START_TEXT;
 
@@ -93,15 +77,10 @@ export function mountEditorIsland(): void {
     },
     onCreate: ({ editor: activeEditor }) => {
       syncTextState(elements, activeEditor);
-      syncSelectionState(elements, activeEditor);
       syncUndoRedoState(elements, activeEditor, workspaceBusy);
     },
     onUpdate: ({ editor: activeEditor }) => {
       syncTextState(elements, activeEditor);
-      syncUndoRedoState(elements, activeEditor, workspaceBusy);
-    },
-    onSelectionUpdate: ({ editor: activeEditor }) => {
-      syncSelectionState(elements, activeEditor);
       syncUndoRedoState(elements, activeEditor, workspaceBusy);
     },
     onTransaction: ({ editor: activeEditor }) => {
@@ -136,14 +115,5 @@ export function mountEditorIsland(): void {
     mountTextCorrectionBridge(editor, elements.root, correctionElements);
   }
 
-  if (
-    rewriteBubbleElements &&
-    (isMvpToolVisible("word-synonym") || isMvpToolVisible("sentence-rewrite"))
-  ) {
-    mountRewriteBubble(editor, elements.root, elements, rewriteBubbleElements);
-  }
-
-  if (quickActionElements) {
-    mountQuickActions(editor, elements.root, quickActionElements);
-  }
+  mountQuickActions(editor, elements.root);
 }

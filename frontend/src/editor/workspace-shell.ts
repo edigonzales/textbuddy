@@ -65,8 +65,6 @@ export function mountWorkspaceShell(): void {
   const modeBadge = document.querySelector<HTMLElement>("[data-correction-mode-badge]");
   const ribbonStatus = document.querySelector<HTMLElement>("[data-correction-ribbon-status]");
   const retryButton = document.querySelector<HTMLButtonElement>("[data-correction-retry]");
-  const workspaceLanguage = document.querySelector<HTMLSelectElement>("[data-workspace-language]");
-  const correctionLanguage = root?.querySelector<HTMLSelectElement>("[data-correction-language]");
 
   if (
     !root ||
@@ -195,18 +193,6 @@ export function mountWorkspaceShell(): void {
     resolvedRoot.dispatchEvent(new CustomEvent("correction:retry", { bubbles: true }));
   });
 
-  workspaceLanguage?.addEventListener("change", () => {
-    if (correctionLanguage && correctionLanguage.value !== workspaceLanguage.value) {
-      correctionLanguage.value = workspaceLanguage.value;
-      correctionLanguage.dispatchEvent(new Event("change", { bubbles: true }));
-    }
-  });
-  correctionLanguage?.addEventListener("change", () => {
-    if (workspaceLanguage && workspaceLanguage.value !== correctionLanguage.value) {
-      workspaceLanguage.value = correctionLanguage.value;
-    }
-  });
-
   resolvedRoot.addEventListener("correction:state-changed", (event) => {
     const detail = (event as CustomEvent<CorrectionStateChangedDetail>).detail;
     resolvedRibbonStatus.textContent = detail.message;
@@ -265,7 +251,6 @@ export function mountWorkspaceShell(): void {
     }
   });
 
-  workspaceLanguage && correctionLanguage && (workspaceLanguage.value = correctionLanguage.value);
   updateCount(0);
   setMode("transform");
 }

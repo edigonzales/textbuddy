@@ -65,6 +65,7 @@ jobs:
           cache: npm
           cache-dependency-path: |
             frontend/package-lock.json
+            playwright/package-lock.json
 
       - name: Install OCR runtime
         run: |
@@ -73,16 +74,23 @@ jobs:
           TESSDATA_DIR="$(dirname "$(dpkg -L tesseract-ocr-eng | grep '/eng.traineddata$' | head -n 1)")"
           echo "TESSDATA_PREFIX=$TESSDATA_DIR" >> "$GITHUB_ENV"
 
-      - name: Verify local OCR
+      - name: Audit npm dependencies
+        run: |
+          npm audit --prefix frontend --audit-level=moderate
+          npm audit --prefix playwright --audit-level=moderate
+
+      - name: Build and test release artifacts
         env:
           TEXTBUDDY_REQUIRE_OCR_TESTS: 'true'
-        run: ./gradlew ocrTest
+        run: ./gradlew clean test verifyReleaseBundle installerZip -PreleaseVersion=${{ steps.meta.outputs.release_version }}
 
-      - name: Run release smoke tests
-        run: ./gradlew test --tests 'app.textbuddy.smoke.JarStartupSmokeTest' --tests 'app.textbuddy.smoke.JarEndToEndSmokeTest' --tests 'app.textbuddy.smoke.JarPerformanceSmokeTest' --tests 'app.textbuddy.smoke.InstallerStartScriptSmokeTest'
+      - name: Install browser test dependencies
+        run: |
+          npm ci --prefix playwright
+          npx --prefix playwright playwright install --with-deps chromium
 
-      - name: Build release artifacts
-        run: ./gradlew clean verifyReleaseBundle installerZip -PreleaseVersion=${{ steps.meta.outputs.release_version }}
+      - name: Run browser and accessibility tests
+        run: npm test --prefix playwright
 
       - name: Verify mandatory release files
         run: |
@@ -240,3 +248,4 @@ jobs:
             build/reports/**
             build/test-results/**
             build/release/**
+            playwright/test-results/**

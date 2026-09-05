@@ -6,24 +6,18 @@ import java.util.Optional;
 
 public enum SocialMediaPrompt {
 
-    BLUESKY("bluesky", "Formuliere den Text als kurzen, pointierten Bluesky-Post."),
-    INSTAGRAM("instagram", "Formuliere den Text als Instagram-Caption mit Hook und Hashtags."),
-    LINKEDIN("linkedin", "Formuliere den Text als professionellen LinkedIn-Post mit klarem Nutzen.");
+    BLUESKY("bluesky"),
+    INSTAGRAM("instagram"),
+    LINKEDIN("linkedin");
 
     private final String option;
-    private final String instruction;
 
-    SocialMediaPrompt(String option, String instruction) {
+    SocialMediaPrompt(String option) {
         this.option = option;
-        this.instruction = instruction;
     }
 
     public String option() {
         return option;
-    }
-
-    public String instruction() {
-        return instruction;
     }
 
     public static Optional<SocialMediaPrompt> fromOption(String value) {

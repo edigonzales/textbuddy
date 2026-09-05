@@ -2,8 +2,10 @@ package app.textbuddy.web.advisor;
 
 import app.textbuddy.advisor.AdvisorValidateRequest;
 import app.textbuddy.advisor.AdvisorValidationService;
+import app.textbuddy.config.TextbuddyProperties;
 import app.textbuddy.web.error.TraceIdSupport;
 import app.textbuddy.web.RequestInputValidator;
+import jakarta.annotation.PreDestroy;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,18 +28,26 @@ public class AdvisorValidationController {
 
     private static final Logger log = LoggerFactory.getLogger(AdvisorValidationController.class);
     private static final String DEFAULT_ERROR_MESSAGE = "Advisor-Validierung konnte nicht gestartet werden.";
-    private static final long STREAM_TIMEOUT_MILLIS = 120_000L;
-
     private final AdvisorValidationService advisorValidationService;
     private final RequestInputValidator inputValidator;
+    private final long streamTimeoutMillis;
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
     public AdvisorValidationController(
             AdvisorValidationService advisorValidationService,
-            RequestInputValidator inputValidator
+            RequestInputValidator inputValidator,
+            TextbuddyProperties properties
     ) {
         this.advisorValidationService = advisorValidationService;
         this.inputValidator = inputValidator;
+        this.streamTimeoutMillis = AdvisorValidationService.maximumValidationDuration(
+                properties.getLlm().normalizedTimeout()
+        ).toMillis();
+    }
+
+    @PreDestroy
+    void shutDownExecutor() {
+        executor.shutdownNow();
     }
 
     @PostMapping(path = "/validate", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
@@ -48,7 +58,7 @@ public class AdvisorValidationController {
         inputValidator.text(request == null ? null : request.text());
 
         String traceId = TraceIdSupport.resolve(httpServletRequest);
-        SseEmitter emitter = new SseEmitter(STREAM_TIMEOUT_MILLIS);
+        SseEmitter emitter = new SseEmitter(streamTimeoutMillis);
         AdvisorValidationSseEmitterWriter writer = new AdvisorValidationSseEmitterWriter(emitter, traceId);
         AtomicReference<Future<?>> task = new AtomicReference<>();
 

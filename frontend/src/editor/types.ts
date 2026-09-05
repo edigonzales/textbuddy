@@ -4,12 +4,6 @@ export interface EditorTextChangedDetail {
   words: number;
 }
 
-export interface EditorSelectionChangedDetail {
-  from: number;
-  to: number;
-  empty: boolean;
-}
-
 export interface EditorElements {
   root: HTMLElement;
   canvas: HTMLElement;
@@ -22,48 +16,8 @@ export interface EditorElements {
 }
 
 export interface DocumentImportElements {
-  panel: HTMLElement;
-  status: HTMLElement;
-  dropzone: HTMLElement;
-  button: HTMLButtonElement;
   input: HTMLInputElement;
-  ocrLanguageSelect: HTMLSelectElement;
   labels: string;
-}
-
-export interface QuickActionElements {
-  panel: HTMLElement;
-  status: HTMLElement;
-  activeLabel: HTMLElement;
-  runButton: HTMLButtonElement;
-  languageSelect: HTMLSelectElement;
-  plainLanguageButton: HTMLButtonElement;
-  bulletPointsButton: HTMLButtonElement;
-  proofreadButton: HTMLButtonElement;
-  summarizeButton: HTMLButtonElement;
-  summarizeOptionSelect: HTMLSelectElement;
-  formalityButton: HTMLButtonElement;
-  formalityOptionSelect: HTMLSelectElement;
-  socialMediaButton: HTMLButtonElement;
-  socialMediaOptionSelect: HTMLSelectElement;
-  mediumButton: HTMLButtonElement;
-  mediumOptionSelect: HTMLSelectElement;
-  characterSpeechButton: HTMLButtonElement;
-  characterSpeechOptionSelect: HTMLSelectElement;
-  customButton: HTMLButtonElement;
-  customPromptInput: HTMLTextAreaElement;
-  diffPanel: HTMLElement;
-  diffBefore: HTMLElement;
-  diffAfter: HTMLElement;
-}
-
-export interface RewriteBubbleElements {
-  bubble: HTMLElement;
-  primaryAction: HTMLButtonElement;
-  secondaryAction: HTMLButtonElement;
-  overlay: HTMLElement;
-  status: HTMLElement;
-  options: HTMLElement;
 }
 
 export interface CorrectionElements {
@@ -75,25 +29,6 @@ export interface CorrectionElements {
   dictionaryInput: HTMLInputElement;
   dictionaryList: HTMLElement;
   dictionaryEmpty: HTMLElement;
-}
-
-export interface AdvisorValidationElements {
-  panel: HTMLElement;
-  status: HTMLElement;
-  validateButton: HTMLButtonElement;
-  docCheckboxes: HTMLInputElement[];
-  resultCount: HTMLElement;
-  resultList: HTMLElement;
-  resultEmpty: HTMLElement;
-  detailPanel: HTMLElement;
-  detailTitle: HTMLElement;
-  detailReference: HTMLElement;
-  detailMatch: HTMLElement;
-  detailMessage: HTMLElement;
-  detailExcerpt: HTMLElement;
-  detailSuggestion: HTMLElement;
-  detailOpenButton: HTMLButtonElement;
-  detailLink: HTMLAnchorElement;
 }
 
 export interface CorrectionRange {
@@ -115,48 +50,11 @@ export interface TextCorrectionResponse {
   blocks: TextCorrectionBlock[];
 }
 
-export interface SentenceRewriteResponse {
-  sentence?: string;
-  options?: string[];
-  original?: string;
-  alternatives?: string[];
-}
-
-export interface WordSynonymResponse {
-  synonyms: string[];
-}
-
 export interface QuickActionResponse {
   text: string;
 }
 
-export interface AdvisorValidationEventPayload {
-  stableKey: string;
-  documentName: string;
-  documentTitle: string;
-  ruleId: string;
-  ruleTitle: string;
-  page: number;
-  pageLabel: string;
-  message: string;
-  matchedText: string;
-  excerpt: string;
-  suggestion: string;
-  referenceUrl: string;
-}
-
-export interface AdvisorValidationErrorPayload {
-  message: string;
-}
-
-export interface RewriteDiffToken {
-  text: string;
-  status: "unchanged" | "added" | "removed";
-}
-
 export interface RewriteDiffView {
-  before: RewriteDiffToken[];
-  after: RewriteDiffToken[];
   hasChanges: boolean;
   segments: RewriteDiffSegment[];
 }
@@ -167,7 +65,6 @@ export interface RewriteDiffHunk {
   key: string;
   removedText: string;
   addedText: string;
-  status: RewriteDiffHunkStatus;
 }
 
 export type RewriteDiffSegment =

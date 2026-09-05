@@ -6,11 +6,11 @@ Der Textbuddy-MVP verwendet eine breite, TextMate-artige Arbeitsfläche. Farben,
 
 Textbuddy startet bei jedem Aufruf im Modus **Überarbeiten**. In der normalen Oberfläche sind genau drei Werkzeuge freigeschaltet:
 
-- **Korrektur** prüft den Text automatisch und abschnittsweise.
+- **Korrektur** prüft den vollständigen Text nach einer kurzen Eingabepause mit genau einer abbrechbaren Anfrage.
 - **Verständlicher schreiben** bearbeitet den vollständigen Text.
 - **Zusammenfassen** bietet die Varianten ein Satz, drei Sätze, ein Absatz, eine Seite und Management Summary.
 
-Die vorhandenen Funktionen für Advisor, Synonyme, Satzvarianten, Aufzählungen, Proofread, Formalität, Social Media, Medium, Figurenrede und eigene Aktionen bleiben technisch erhalten. Ihre Frontend-Module, Typen, Services und HTTP-Schnittstellen werden nicht entfernt, sind im MVP aber nicht sichtbar oder per Tastatur erreichbar.
+Die vorhandenen Backend-Funktionen und HTTP-Schnittstellen für Advisor, Synonyme, Satzvarianten, Aufzählungen, Proofread, Formalität, Social Media, Medium, Figurenrede und eigene Aktionen bleiben bewusst erhalten. Zugehörige, nicht erreichbare Frontend-Module und versteckte DOM-Bereiche werden dagegen nicht mit ausgeliefert.
 
 ## Überarbeiten
 
@@ -39,6 +39,7 @@ Verfügbare Textsprachen sind automatische Erkennung, Deutsch (Schweiz), Franzö
 
 - Standardmässig erscheint ein Inline-Diff; eine Zweispaltenansicht ist umschaltbar.
 - Mehrere Änderungen können einzeln angenommen oder abgelehnt werden.
+- Bis zu insgesamt 10.000 Eingabezeichen wird ein Wort-Diff berechnet. Darüber zeigt Textbuddy einen einzigen Dokumentblock zum globalen Annehmen oder Ablehnen, damit die Oberfläche responsiv bleibt.
 - **Alle annehmen**, **Alle ablehnen**, **Erneut ausführen** und **Abbrechen** bearbeiten den gesamten Review-Ablauf.
 - Erst wenn alle Änderungen entschieden sind, wird das aufgelöste Ergebnis in einer einzigen rückgängig machbaren Editortransaktion übernommen.
 - Abbrechen, vollständiges Ablehnen, Fehler und ungültige leere Antworten lassen den Originaltext unverändert.
@@ -56,6 +57,8 @@ Die kompakte Werkzeugleiste am unteren Editorrand enthält:
 - Zeichen- und Wortzahl mit einem Popover für Silben, Sätze, Durchschnittswerte und Flesch-Lesbarkeit.
 
 Beim Import ersetzt der konvertierte Dokumentinhalt den bisherigen Editorinhalt. Unterstützte Eingaben sind PDF, DOCX, PPTX, XLSX, HTML, Markdown, AsciiDoc, TXT, PNG, JPG/JPEG und TIF/TIFF. Die OCR-Sprache folgt der Textsprache; bei automatischer Erkennung wird Deutsch verwendet. Die Standardgrenze beträgt 20 MB und kann im Betrieb konfiguriert werden.
+
+Der Editor ist absichtlich ein Plaintext-Editor: Import behält Text und Absatzumbrüche, aber keine Schrift-, Listen- oder sonstige Dokumentformatierung. Auch KI-Ergebnisse werden als Plaintext eingesetzt. Der DOCX-Export bildet diesen Text wortgetreu ab; Markdown-Zeichen erzeugen keine unbeabsichtigte Formatierung. Das Datum im Dateinamen folgt dem lokalen Datum des Browsers.
 
 ## Anbindungen, Daten und Grenzen
 

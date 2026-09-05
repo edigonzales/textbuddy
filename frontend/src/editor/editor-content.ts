@@ -23,7 +23,7 @@ function applyEditorContent(
   }).run();
 }
 
-function sanitizeImportedHtml(html: string): string {
+function sanitizeImportedHtml(html: string): Document {
   const parsedDocument = new DOMParser().parseFromString(html, "text/html");
 
   parsedDocument
@@ -46,8 +46,7 @@ function sanitizeImportedHtml(html: string): string {
     });
   });
 
-  const sanitized = parsedDocument.body.innerHTML.trim();
-  return sanitized || "<p></p>";
+  return parsedDocument;
 }
 
 export function setEditorPlainText(
@@ -58,10 +57,18 @@ export function setEditorPlainText(
   applyEditorContent(editor, plainTextToHtml(text), options);
 }
 
-export function setEditorHtml(
-  editor: Editor,
-  html: string,
-  options: SetEditorContentOptions = {},
-): void {
-  applyEditorContent(editor, sanitizeImportedHtml(html), options);
+export function importedHtmlToPlainText(html: string): string {
+  const parsedDocument = sanitizeImportedHtml(html);
+  const blocks = parsedDocument.body.querySelectorAll(
+    "address,article,aside,blockquote,div,dl,dt,dd,figcaption,figure,footer,form,h1,h2,h3,h4,h5,h6,header,hr,li,main,nav,ol,p,pre,section,table,tr,ul",
+  );
+
+  parsedDocument.body.querySelectorAll("br").forEach((element) => element.replaceWith("\n"));
+  blocks.forEach((element) => element.append("\n"));
+
+  return (parsedDocument.body.textContent ?? "")
+    .replace(/\u00a0/g, " ")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }

@@ -6,28 +6,19 @@ import java.util.Optional;
 
 public enum MediumPrompt {
 
-    EMAIL("email", "Formuliere den Text als klare E-Mail mit Betreff, Anrede und Abschluss."),
-    OFFICIAL_LETTER(
-            "official_letter",
-            "Formuliere den Text als offizielles Schreiben mit formeller Anrede und Abschluss."
-    ),
-    PRESENTATION("presentation", "Formuliere den Text als Präsentationsentwurf mit klarer Folienstruktur."),
-    REPORT("report", "Formuliere den Text als sachlichen Bericht mit strukturierter Einordnung.");
+    EMAIL("email"),
+    OFFICIAL_LETTER("official_letter"),
+    PRESENTATION("presentation"),
+    REPORT("report");
 
     private final String option;
-    private final String instruction;
 
-    MediumPrompt(String option, String instruction) {
+    MediumPrompt(String option) {
         this.option = option;
-        this.instruction = instruction;
     }
 
     public String option() {
         return option;
-    }
-
-    public String instruction() {
-        return instruction;
     }
 
     public static Optional<MediumPrompt> fromOption(String value) {

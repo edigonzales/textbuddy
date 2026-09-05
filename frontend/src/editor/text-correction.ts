@@ -2,10 +2,8 @@ import type { Editor } from "@tiptap/core";
 
 import { apiFetch } from "./api-fetch";
 import { isApiLocked } from "./auth";
-import {
-  plainTextRangeToDocumentRange,
-  setTextCorrections,
-} from "./correction-mark-extension";
+import { shouldTriggerCorrectionImmediately } from "./correction-scheduling";
+import { plainTextRangeToDocumentRange, setTextCorrections } from "./correction-mark-extension";
 import { extractErrorMessage } from "./http-error";
 import {
   createLocalDictionaryStore,
@@ -15,15 +13,9 @@ import {
 } from "./local-dictionary";
 import { getPlainText, plainTextToHtml } from "./plain-text";
 import { normalizeRequestedLanguage } from "./request-language";
-import {
-  diffTextCorrectionSegments,
-  segmentTextForCorrection,
-  shouldTriggerCorrectionImmediately,
-  type TextCorrectionSegment,
-} from "./text-correction-segments";
 import type {
-  CorrectionStateChangedDetail,
   CorrectionElements,
+  CorrectionStateChangedDetail,
   EditorTextChangedDetail,
   TextCorrectionBlock,
   TextCorrectionResponse,
@@ -38,43 +30,20 @@ const ERROR_MESSAGE = t("correction.status.error");
 const AUTH_REQUIRED_MESSAGE = t("correction.status.authRequired");
 const RUNNING_MESSAGE = t("correction.status.running");
 
-interface SegmentCorrectionState extends TextCorrectionSegment {
-  blocks: TextCorrectionBlock[];
-}
-
 function createProblemBadge(index: number): HTMLElement {
   const badge = document.createElement("span");
-
   badge.className = "problem-index";
-  badge.textContent = t("correction.problem.badge", {
-    index: index + 1,
-  });
-
+  badge.textContent = t("correction.problem.badge", { index: index + 1 });
   return badge;
 }
 
 function extractProblemText(original: string, block: TextCorrectionBlock): string {
-  const problemText = original.slice(block.offset, block.offset + block.length);
-  return problemText || t("correction.problem.emptyFragment");
+  return original.slice(block.offset, block.offset + block.length) ||
+    t("correction.problem.emptyFragment");
 }
 
 function cloneBlock(block: TextCorrectionBlock): TextCorrectionBlock {
-  return {
-    ...block,
-    replacements: [...block.replacements],
-  };
-}
-
-function createSegmentState(
-  segment: TextCorrectionSegment,
-  blocks: readonly TextCorrectionBlock[] = [],
-): SegmentCorrectionState {
-  return {
-    start: segment.start,
-    end: segment.end,
-    text: segment.text,
-    blocks: blocks.map(cloneBlock),
-  };
+  return { ...block, replacements: [...block.replacements] };
 }
 
 function isAbortError(error: unknown): boolean {
@@ -83,18 +52,14 @@ function isAbortError(error: unknown): boolean {
     : error instanceof Error && error.name === "AbortError";
 }
 
-function getSelectedLanguage(elements: CorrectionElements): string {
+function selectedLanguage(elements: CorrectionElements): string {
   return normalizeRequestedLanguage(elements.languageSelect.value);
 }
 
-function buildProblemCountMessage(count: number): string {
-  if (count === 0) {
-    return t("correction.status.noProblems");
-  }
-
-  return t("correction.status.problemCount", {
-    count,
-  });
+function problemCountMessage(count: number): string {
+  return count === 0
+    ? t("correction.status.noProblems")
+    : t("correction.status.problemCount", { count });
 }
 
 export function mountTextCorrectionBridge(
@@ -104,21 +69,23 @@ export function mountTextCorrectionBridge(
 ): void {
   let debounceHandle: number | undefined;
   let latestRequestId = 0;
+  let activeRequest: AbortController | null = null;
   let currentText = getPlainText(editor);
+  let currentBlocks: TextCorrectionBlock[] = [];
   let panelState: "idle" | "loading" | "success" | "error" = "idle";
   let panelMessage = IDLE_MESSAGE;
-  let segmentStates: SegmentCorrectionState[] = [];
   let dictionaryWords = new Set<string>();
   let visibleBlockCount = 0;
-
   const dictionaryStore = createLocalDictionaryStore();
-  const inFlightRequests = new Set<AbortController>();
 
   function isQuickActionRunning(): boolean {
     return root.dataset.quickActionRunning === "true";
   }
 
-  function setPanelState(state: "idle" | "loading" | "success" | "error", message: string): void {
+  function setPanelState(
+    state: "idle" | "loading" | "success" | "error",
+    message: string,
+  ): void {
     panelState = state;
     panelMessage = message;
     elements.panel.dataset.correctionState = state;
@@ -130,24 +97,18 @@ export function mountTextCorrectionBridge(
     root.dispatchEvent(
       new CustomEvent<CorrectionStateChangedDetail>("correction:state-changed", {
         bubbles: true,
-        detail: {
-          state,
-          message,
-          count: visibleBlockCount,
-        },
+        detail: { state, message, count: visibleBlockCount },
       }),
     );
   }
 
-  function abortInFlightRequests(): void {
-    inFlightRequests.forEach((controller) => {
-      controller.abort();
-    });
-    inFlightRequests.clear();
+  function abortActiveRequest(): void {
+    activeRequest?.abort();
+    activeRequest = null;
   }
 
   function clearCorrections(): void {
-    segmentStates = [];
+    currentBlocks = [];
     visibleBlockCount = 0;
     setTextCorrections(editor, []);
     elements.list.replaceChildren();
@@ -155,30 +116,46 @@ export function mountTextCorrectionBridge(
 
   function focusProblem(block: TextCorrectionBlock): void {
     const range = plainTextRangeToDocumentRange(editor.state.doc, block.offset, block.length);
-
-    if (!range) {
-      return;
+    if (range) {
+      editor.chain().focus().setTextSelection(range).run();
     }
-
-    editor.chain().focus().setTextSelection(range).run();
   }
 
   function applySuggestion(block: TextCorrectionBlock, replacement: string): void {
     const activeText = getPlainText(editor);
-
     if (block.offset < 0 || block.offset + block.length > activeText.length) {
       return;
     }
-
-    const nextText =
-      activeText.slice(0, block.offset) +
-      replacement +
+    const nextText = activeText.slice(0, block.offset) + replacement +
       activeText.slice(block.offset + block.length);
-
-    editor.commands.setContent(plainTextToHtml(nextText), {
-      emitUpdate: true,
-    });
+    editor.commands.setContent(plainTextToHtml(nextText), { emitUpdate: true });
     editor.commands.focus();
+  }
+
+  function addDictionaryWord(candidate: string): void {
+    const normalizedWord = normalizeDictionaryWord(candidate);
+    if (!isDictionaryWord(normalizedWord) || dictionaryWords.has(normalizedWord)) {
+      elements.dictionaryInput.value = "";
+      elements.dictionaryInput.setCustomValidity("");
+      return;
+    }
+
+    dictionaryWords = new Set([...dictionaryWords, normalizedWord]);
+    elements.dictionaryInput.value = "";
+    elements.dictionaryInput.setCustomValidity("");
+    renderDictionaryWords();
+    refreshRenderedState();
+    void dictionaryStore.save([...dictionaryWords]);
+  }
+
+  function removeDictionaryWord(word: string): void {
+    if (!dictionaryWords.delete(word)) {
+      return;
+    }
+    dictionaryWords = new Set(dictionaryWords);
+    renderDictionaryWords();
+    refreshRenderedState();
+    void dictionaryStore.save([...dictionaryWords]);
   }
 
   function createProblemItem(
@@ -192,46 +169,34 @@ export function mountTextCorrectionBridge(
     const title = document.createElement("p");
     const detail = document.createElement("p");
     const suggestions = document.createElement("div");
-    const dictionaryButton = document.createElement("button");
     const problemText = extractProblemText(original, block);
 
     item.className = "problem-item";
     item.dataset.testid = "correction-problem-item";
     item.dataset.correctionItemIndex = String(index);
     item.setAttribute("role", "listitem");
-
     header.type = "button";
     header.className = "problem-item-head problem-focus-button";
     header.dataset.correctionFocusIndex = String(index);
-    header.setAttribute(
-      "aria-label",
-      `${t("correction.problem.badge", { index: index + 1 })}: ${problemText}`,
-    );
-
+    header.setAttribute("aria-label", `${t("correction.problem.badge", { index: index + 1 })}: ${problemText}`);
     header.append(createProblemBadge(index));
-
     fragment.className = "problem-fragment";
     fragment.textContent = problemText;
     header.append(fragment);
-
     title.className = "problem-message";
     title.textContent = block.shortMessage || block.message || t("correction.problem.defaultTitle");
-
     detail.className = "problem-detail";
     detail.textContent = block.message || t("correction.problem.defaultDetail");
-
     suggestions.className = "problem-suggestions";
 
     if (block.replacements.length === 0) {
       const emptyState = document.createElement("span");
-
       emptyState.className = "problem-empty";
       emptyState.textContent = t("correction.problem.noSuggestion");
       suggestions.append(emptyState);
     } else {
       block.replacements.slice(0, 3).forEach((replacement) => {
         const button = document.createElement("button");
-
         button.type = "button";
         button.className = "suggestion-button";
         button.dataset.testid = "correction-suggestion";
@@ -245,6 +210,7 @@ export function mountTextCorrectionBridge(
     }
 
     if (isDictionaryWord(problemText)) {
+      const dictionaryButton = document.createElement("button");
       dictionaryButton.type = "button";
       dictionaryButton.className = "dictionary-inline-button";
       dictionaryButton.dataset.testid = "dictionary-add-problem";
@@ -256,24 +222,13 @@ export function mountTextCorrectionBridge(
       suggestions.append(dictionaryButton);
     }
 
-    header.addEventListener("click", () => {
-      focusProblem(block);
-    });
-
+    header.addEventListener("click", () => focusProblem(block));
     item.append(header, title, detail, suggestions);
-
     return item;
   }
 
-  function buildVisibleBlocks(original: string): TextCorrectionBlock[] {
-    const mergedBlocks = segmentStates.flatMap((segmentState) =>
-      segmentState.blocks.map((block) => ({
-        ...cloneBlock(block),
-        offset: segmentState.start + block.offset,
-      })),
-    );
-
-    return filterCorrectionBlocksByDictionary(original, mergedBlocks, dictionaryWords);
+  function visibleBlocks(original: string): TextCorrectionBlock[] {
+    return filterCorrectionBlocksByDictionary(original, currentBlocks, dictionaryWords);
   }
 
   function renderProblems(
@@ -281,398 +236,185 @@ export function mountTextCorrectionBridge(
     state: "idle" | "loading" | "success" | "error",
     message?: string,
   ): void {
-    const blocks = buildVisibleBlocks(original);
+    const blocks = visibleBlocks(original);
     visibleBlockCount = blocks.length;
-
-    setTextCorrections(
-      editor,
-      blocks.map((block) => ({
-        offset: block.offset,
-        length: block.length,
-      })),
+    setTextCorrections(editor, blocks.map(({ offset, length }) => ({ offset, length })));
+    elements.list.replaceChildren(
+      ...blocks.map((block, index) => createProblemItem(original, block, index)),
     );
-
-    if (blocks.length === 0) {
-      elements.list.replaceChildren();
-    } else {
-      elements.list.replaceChildren(
-        ...blocks.map((block, index) => createProblemItem(original, block, index)),
-      );
-    }
-
-    if (state === "success") {
-      setPanelState("success", buildProblemCountMessage(blocks.length));
-      return;
-    }
-
-    setPanelState(state, message ?? panelMessage);
+    setPanelState(
+      state,
+      state === "success" ? problemCountMessage(blocks.length) : (message ?? panelMessage),
+    );
   }
 
   function renderDictionaryWords(): void {
     const words = [...dictionaryWords].sort((left, right) => left.localeCompare(right));
-
-    if (words.length === 0) {
-      elements.dictionaryList.replaceChildren();
-      elements.dictionaryEmpty.hidden = false;
-      return;
-    }
-
-    const items = words.map((word) => {
-      const item = document.createElement("li");
-      const label = document.createElement("span");
-      const removeButton = document.createElement("button");
-
-      item.className = "dictionary-word";
-      item.dataset.testid = "dictionary-word-item";
-
-      label.className = "dictionary-word-label";
-      label.textContent = word;
-
-      removeButton.type = "button";
-      removeButton.className = "dictionary-word-remove";
-      removeButton.dataset.testid = "dictionary-word-remove";
-      removeButton.textContent = t("correction.dictionary.remove");
-      removeButton.addEventListener("click", () => {
-        removeDictionaryWord(word);
-      });
-
-      item.append(label, removeButton);
-      return item;
-    });
-
-    elements.dictionaryEmpty.hidden = true;
-    elements.dictionaryList.replaceChildren(...items);
+    elements.dictionaryEmpty.hidden = words.length > 0;
+    elements.dictionaryList.replaceChildren(
+      ...words.map((word) => {
+        const item = document.createElement("li");
+        const label = document.createElement("span");
+        const removeButton = document.createElement("button");
+        item.className = "dictionary-word";
+        item.dataset.testid = "dictionary-word-item";
+        label.className = "dictionary-word-label";
+        label.textContent = word;
+        removeButton.type = "button";
+        removeButton.className = "dictionary-word-remove";
+        removeButton.dataset.testid = "dictionary-word-remove";
+        removeButton.textContent = t("correction.dictionary.remove");
+        removeButton.addEventListener("click", () => removeDictionaryWord(word));
+        item.append(label, removeButton);
+        return item;
+      }),
+    );
   }
 
   function refreshRenderedState(): void {
     if (isApiLocked(root)) {
       clearCorrections();
       setPanelState("error", AUTH_REQUIRED_MESSAGE);
-      return;
-    }
-
-    if (!currentText.trim()) {
+    } else if (!currentText.trim()) {
       clearCorrections();
       setPanelState("idle", IDLE_MESSAGE);
-      return;
-    }
-
-    renderProblems(
-      currentText,
-      panelState,
-      panelState === "success" ? undefined : panelMessage,
-    );
-  }
-
-  async function persistDictionary(): Promise<void> {
-    await dictionaryStore.save([...dictionaryWords]);
-  }
-
-  function addDictionaryWord(candidate: string): void {
-    const normalizedWord = normalizeDictionaryWord(candidate);
-
-    if (!isDictionaryWord(normalizedWord) || dictionaryWords.has(normalizedWord)) {
-      elements.dictionaryInput.value = "";
-      elements.dictionaryInput.setCustomValidity("");
-      return;
-    }
-
-    dictionaryWords = new Set([...dictionaryWords, normalizedWord]);
-    elements.dictionaryInput.value = "";
-    elements.dictionaryInput.setCustomValidity("");
-    renderDictionaryWords();
-    refreshRenderedState();
-    void persistDictionary();
-  }
-
-  function removeDictionaryWord(word: string): void {
-    if (!dictionaryWords.has(word)) {
-      return;
-    }
-
-    const nextWords = new Set(dictionaryWords);
-
-    nextWords.delete(word);
-    dictionaryWords = nextWords;
-    renderDictionaryWords();
-    refreshRenderedState();
-    void persistDictionary();
-  }
-
-  function reuseSegmentStates(
-    previousStates: readonly SegmentCorrectionState[],
-    nextSegments: readonly TextCorrectionSegment[],
-    unchangedPrefixCount: number,
-    unchangedSuffixCount: number,
-  ): SegmentCorrectionState[] {
-    const reusedStates: SegmentCorrectionState[] = [];
-
-    reusedStates.push(
-      ...nextSegments
-        .slice(0, unchangedPrefixCount)
-        .map((segment, index) => createSegmentState(segment, previousStates[index]?.blocks)),
-    );
-
-    reusedStates.push(
-      ...nextSegments
-        .slice(unchangedPrefixCount, nextSegments.length - unchangedSuffixCount)
-        .map((segment) => createSegmentState(segment)),
-    );
-
-    reusedStates.push(
-      ...nextSegments
-        .slice(nextSegments.length - unchangedSuffixCount)
-        .map((segment, index) =>
-          createSegmentState(
-            segment,
-            previousStates[previousStates.length - unchangedSuffixCount + index]?.blocks,
-          ),
-        ),
-    );
-
-    return reusedStates;
-  }
-
-  async function fetchSegmentCorrections(
-    segmentState: SegmentCorrectionState,
-    language: string,
-  ): Promise<SegmentCorrectionState> {
-    if (!segmentState.text.trim()) {
-      return createSegmentState(segmentState);
-    }
-
-    const controller = new AbortController();
-
-    inFlightRequests.add(controller);
-
-    try {
-      const response = await apiFetch("/api/text-correction", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          text: segmentState.text,
-          language,
-        }),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          await extractErrorMessage(
-            response,
-            `Text correction request failed with status ${response.status}`,
-          ),
-        );
-      }
-
-      const payload = (await response.json()) as TextCorrectionResponse;
-
-      return createSegmentState(segmentState, payload.blocks ?? []);
-    } finally {
-      inFlightRequests.delete(controller);
+    } else {
+      renderProblems(currentText, panelState, panelState === "success" ? undefined : panelMessage);
     }
   }
 
   async function requestCorrections(
-    changedStartIndex: number,
-    changedSegments: readonly SegmentCorrectionState[],
     requestId: number,
     originalText: string,
     language: string,
   ): Promise<void> {
+    const controller = new AbortController();
+    activeRequest = controller;
     try {
-      const updatedSegments = await Promise.all(
-        changedSegments.map((segment) => fetchSegmentCorrections(segment, language)),
-      );
+      const response = await apiFetch("/api/text-correction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: originalText, language }),
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        throw new Error(await extractErrorMessage(response, ERROR_MESSAGE));
+      }
 
+      const payload = (await response.json()) as TextCorrectionResponse;
       if (
         requestId !== latestRequestId ||
         getPlainText(editor) !== originalText ||
-        getSelectedLanguage(elements) !== language
+        selectedLanguage(elements) !== language
       ) {
         return;
       }
-
-      const nextStates = [...segmentStates];
-
-      updatedSegments.forEach((segment, index) => {
-        nextStates[changedStartIndex + index] = segment;
-      });
-
-      segmentStates = nextStates;
+      currentBlocks = (payload.blocks ?? []).map(cloneBlock);
       renderProblems(originalText, "success");
     } catch (error) {
       if (isAbortError(error) || requestId !== latestRequestId) {
         return;
       }
-
+      currentBlocks = [];
       renderProblems(
         originalText,
         "error",
-        error instanceof Error && error.message.trim().length > 0
-          ? error.message
-          : ERROR_MESSAGE,
+        error instanceof Error && error.message.trim() ? error.message : ERROR_MESSAGE,
       );
+    } finally {
+      if (activeRequest === controller) {
+        activeRequest = null;
+      }
     }
   }
 
   function scheduleCorrection(
     previousText: string,
     nextText: string,
-    options: {
-      forceFullCheck?: boolean;
-      immediate?: boolean;
-    } = {},
+    options: { forceFullCheck?: boolean; immediate?: boolean } = {},
   ): void {
     if (!options.forceFullCheck && previousText === nextText) {
       return;
     }
 
     latestRequestId += 1;
-
     if (typeof debounceHandle === "number") {
       window.clearTimeout(debounceHandle);
       debounceHandle = undefined;
     }
-
-    abortInFlightRequests();
+    abortActiveRequest();
+    currentText = nextText;
+    clearCorrections();
 
     if (isApiLocked(root)) {
-      currentText = nextText;
-      clearCorrections();
       setPanelState("error", AUTH_REQUIRED_MESSAGE);
       return;
     }
-
     if (!nextText.trim()) {
-      currentText = nextText;
-      clearCorrections();
       setPanelState("idle", IDLE_MESSAGE);
       return;
     }
 
-    const nextSegments = segmentTextForCorrection(nextText);
-    const diff = diffTextCorrectionSegments(
-      options.forceFullCheck ? [] : segmentStates,
-      nextSegments,
-    );
-
-    segmentStates = reuseSegmentStates(
-      options.forceFullCheck ? [] : segmentStates,
-      diff.nextSegments,
-      diff.unchangedPrefixCount,
-      diff.unchangedSuffixCount,
-    );
-
-    currentText = nextText;
-
-    if (diff.changedNextSegments.length === 0) {
-      renderProblems(nextText, "success");
-      return;
-    }
-
     const requestId = latestRequestId;
-    const changedStartIndex = diff.unchangedPrefixCount;
-    const changedEndIndex = changedStartIndex + diff.changedNextSegments.length;
-    const changedStates = segmentStates.slice(changedStartIndex, changedEndIndex);
-    const shouldRunImmediately =
-      options.immediate ??
-      options.forceFullCheck ??
+    const language = selectedLanguage(elements);
+    const immediate = options.immediate ?? options.forceFullCheck ??
       shouldTriggerCorrectionImmediately(previousText, nextText);
+    renderProblems(nextText, "loading", immediate ? LOADING_MESSAGE : DEBOUNCE_MESSAGE);
 
-    renderProblems(
-      nextText,
-      "loading",
-      shouldRunImmediately ? LOADING_MESSAGE : DEBOUNCE_MESSAGE,
-    );
-
-    const executeCorrection = () => {
-      void requestCorrections(
-        changedStartIndex,
-        changedStates,
-        requestId,
-        nextText,
-        getSelectedLanguage(elements),
-      );
+    const execute = () => {
+      debounceHandle = undefined;
+      void requestCorrections(requestId, nextText, language);
     };
-
-    if (shouldRunImmediately) {
-      executeCorrection();
-      return;
+    if (immediate) {
+      execute();
+    } else {
+      debounceHandle = window.setTimeout(execute, CORRECTION_DEBOUNCE_MS);
     }
-
-    debounceHandle = window.setTimeout(executeCorrection, CORRECTION_DEBOUNCE_MS);
   }
 
   elements.dictionaryForm.addEventListener("submit", (event) => {
     event.preventDefault();
     addDictionaryWord(elements.dictionaryInput.value);
   });
-
   elements.dictionaryInput.addEventListener("input", () => {
     elements.dictionaryInput.setCustomValidity("");
   });
-
   elements.languageSelect.addEventListener("change", () => {
-    scheduleCorrection("", currentText, {
-      forceFullCheck: true,
-      immediate: true,
-    });
+    scheduleCorrection("", currentText, { forceFullCheck: true, immediate: true });
   });
-
   root.addEventListener("correction:retry", () => {
-    scheduleCorrection("", currentText, {
-      forceFullCheck: true,
-      immediate: true,
-    });
+    scheduleCorrection("", currentText, { forceFullCheck: true, immediate: true });
   });
-
   root.addEventListener("click", (event) => {
     const target = event.target;
-
-    if (!(target instanceof Element)) {
-      return;
+    const mark = target instanceof Element
+      ? target.closest<HTMLElement>("[data-correction-index]")
+      : null;
+    if (mark) {
+      root.dispatchEvent(
+        new CustomEvent<{ index: number }>("workspace:open-correction", {
+          bubbles: true,
+          detail: { index: Number.parseInt(mark.dataset.correctionIndex ?? "0", 10) || 0 },
+        }),
+      );
     }
-
-    const mark = target.closest<HTMLElement>("[data-correction-index]");
-
-    if (!mark) {
-      return;
-    }
-
-    root.dispatchEvent(
-      new CustomEvent<{ index: number }>("workspace:open-correction", {
-        bubbles: true,
-        detail: {
-          index: Number.parseInt(mark.dataset.correctionIndex ?? "0", 10) || 0,
-        },
-      }),
-    );
   });
-
   root.addEventListener("editor:text-changed", (event) => {
-    const detail = (event as CustomEvent<EditorTextChangedDetail>).detail;
+    const nextText = (event as CustomEvent<EditorTextChangedDetail>).detail.text;
     const previousText = currentText;
-
-    currentText = detail.text;
-
+    currentText = nextText;
     if (isQuickActionRunning()) {
       latestRequestId += 1;
-
       if (typeof debounceHandle === "number") {
         window.clearTimeout(debounceHandle);
         debounceHandle = undefined;
       }
-
-      abortInFlightRequests();
+      abortActiveRequest();
       clearCorrections();
       setPanelState("idle", RUNNING_MESSAGE);
       return;
     }
-
-    scheduleCorrection(previousText, detail.text);
+    scheduleCorrection(previousText, nextText);
   });
 
   void dictionaryStore.load().then((words) => {
@@ -680,7 +422,6 @@ export function mountTextCorrectionBridge(
     renderDictionaryWords();
     refreshRenderedState();
   });
-
   renderDictionaryWords();
   setPanelState("idle", isApiLocked(root) ? AUTH_REQUIRED_MESSAGE : IDLE_MESSAGE);
 }

@@ -13,7 +13,7 @@ Textbuddy strebt WCAG 2.2 AA an, erhebt aber ohne vollständige manuelle Prüfun
 - Diff-Blöcke können einzeln oder global angenommen und abgelehnt werden. Moduswechsel und weitere mutierende Aktionen sind während Verarbeitung und Review deaktiviert.
 - Status-, Erfolgs- und Fehlermeldungen werden über Live-Regions angekündigt.
 
-Nicht freigeschaltete Werkzeuge liegen in verborgenen, inerten Compatibility-Bereichen. Dadurch bleiben ihre technischen DOM-Verträge erhalten, ohne dass die Einstiege sichtbar oder fokussierbar sind.
+Nicht freigeschaltete Werkzeuge werden im Frontend gar nicht gerendert. Damit entstehen weder unsichtbare Fokusziele noch parallele DOM-Verträge für dieselbe Funktion.
 
 ## Automatische Abdeckung
 
@@ -25,7 +25,7 @@ Die Browser-Suite prüft mit Playwright und `axe-core`:
 - das Statistik-Popover,
 - die mobile Ribbon- und Slideover-Nutzung.
 
-Unit- und Browser-Tests decken ausserdem Fokus-Rückgabe, Escape, fehlenden horizontalen Überlauf, verborgene Nicht-MVP-Werkzeuge und die dynamische Ergebnisleiste ab.
+Unit- und Browser-Tests decken ausserdem Fokus-Rückgabe, Escape, fehlenden horizontalen Überlauf, die Abwesenheit nicht freigeschalteter Werkzeuge und die dynamische Ergebnisleiste ab.
 
 ## Manuelle Abnahme pro Release
 

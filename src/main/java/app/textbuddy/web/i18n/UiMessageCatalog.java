@@ -21,10 +21,6 @@ public class UiMessageCatalog {
                 : WebI18nConfiguration.DEFAULT_UI_LOCALE;
     }
 
-    public List<String> supportedUiLanguages() {
-        return SUPPORTED_UI_LANGUAGES;
-    }
-
     public Map<String, String> resolve(Locale requestedLocale) {
         Locale locale = normalizeUiLocale(requestedLocale);
         ResourceBundle bundle = ResourceBundle.getBundle(

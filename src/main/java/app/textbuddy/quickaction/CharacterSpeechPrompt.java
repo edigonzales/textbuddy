@@ -6,23 +6,17 @@ import java.util.Optional;
 
 public enum CharacterSpeechPrompt {
 
-    DIRECT_SPEECH("direct_speech", "Formuliere den Text als direkte Rede mit wörtlichen Zitaten."),
-    INDIRECT_SPEECH("indirect_speech", "Formuliere den Text als indirekte Rede mit berichteter Aussage.");
+    DIRECT_SPEECH("direct_speech"),
+    INDIRECT_SPEECH("indirect_speech");
 
     private final String option;
-    private final String instruction;
 
-    CharacterSpeechPrompt(String option, String instruction) {
+    CharacterSpeechPrompt(String option) {
         this.option = option;
-        this.instruction = instruction;
     }
 
     public String option() {
         return option;
-    }
-
-    public String instruction() {
-        return instruction;
     }
 
     public static Optional<CharacterSpeechPrompt> fromOption(String value) {

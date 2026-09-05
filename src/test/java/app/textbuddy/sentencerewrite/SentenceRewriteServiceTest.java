@@ -11,7 +11,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-class DefaultSentenceRewriteServiceTest {
+class SentenceRewriteServiceTest {
 
     @Test
     void mapsAndNormalizesLlmAlternatives() {
@@ -23,7 +23,7 @@ class DefaultSentenceRewriteServiceTest {
                 "Originalsatz.",
                 "Praeziser formuliert."
         ));
-        DefaultSentenceRewriteService service = new DefaultSentenceRewriteService(llmClient);
+        SentenceRewriteService service = new SentenceRewriteService(llmClient);
 
         SentenceRewriteResponse response = service.rewrite(new SentenceRewriteRequest(
                 "Originalsatz.",
@@ -40,7 +40,7 @@ class DefaultSentenceRewriteServiceTest {
     @Test
     void skipsBlankSentencesWithoutCallingLlm() {
         TextbuddyLlmClient llmClient = mock(TextbuddyLlmClient.class);
-        DefaultSentenceRewriteService service = new DefaultSentenceRewriteService(llmClient);
+        SentenceRewriteService service = new SentenceRewriteService(llmClient);
 
         SentenceRewriteResponse response = service.rewrite(new SentenceRewriteRequest("   ", "Kontext"));
 
@@ -54,7 +54,7 @@ class DefaultSentenceRewriteServiceTest {
         TextbuddyLlmClient llmClient = mock(TextbuddyLlmClient.class);
         when(llmClient.rewriteSentence("Originalsatz.", "Absatz mit weiterem Kontext."))
                 .thenReturn(List.of("Alternative."));
-        DefaultSentenceRewriteService service = new DefaultSentenceRewriteService(llmClient);
+        SentenceRewriteService service = new SentenceRewriteService(llmClient);
 
         SentenceRewriteResponse response = service.rewrite(
                 new SentenceRewriteRequest("Originalsatz.", "Absatz mit weiterem Kontext.")

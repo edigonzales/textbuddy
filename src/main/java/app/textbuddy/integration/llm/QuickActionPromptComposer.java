@@ -34,7 +34,7 @@ public final class QuickActionPromptComposer {
                 promptCatalog.render(PLAIN_LANGUAGE_OPENAI_TEMPLATE, Map.of(
                         "completeness", promptCatalog.get(PLAIN_LANGUAGE_REWRITE_COMPLETE),
                         "rules", promptCatalog.get(PLAIN_LANGUAGE_RULES),
-                        "text", normalize(text)
+                        "text", valueOrEmpty(text)
                 ))
         );
     }
@@ -100,7 +100,7 @@ public final class QuickActionPromptComposer {
                         promptCatalog.render(sourceKey, variables),
                         renderLanguageAndOutputShell(language)
                 ),
-                promptCatalog.render(COMMON_TEXT_USER, Map.of("text", normalize(text)))
+                promptCatalog.render(COMMON_TEXT_USER, Map.of("text", valueOrEmpty(text)))
         );
     }
 
@@ -186,5 +186,9 @@ public final class QuickActionPromptComposer {
 
     private String normalize(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private String valueOrEmpty(String value) {
+        return value == null ? "" : value;
     }
 }

@@ -6,23 +6,17 @@ import java.util.Optional;
 
 public enum FormalityPrompt {
 
-    FORMAL("formal", "Formuliere den Text formeller und professioneller."),
-    INFORMAL("informal", "Formuliere den Text lockerer und nahbarer.");
+    FORMAL("formal"),
+    INFORMAL("informal");
 
     private final String option;
-    private final String instruction;
 
-    FormalityPrompt(String option, String instruction) {
+    FormalityPrompt(String option) {
         this.option = option;
-        this.instruction = instruction;
     }
 
     public String option() {
         return option;
-    }
-
-    public String instruction() {
-        return instruction;
     }
 
     public static Optional<FormalityPrompt> fromOption(String value) {

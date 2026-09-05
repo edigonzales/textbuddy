@@ -23,10 +23,6 @@ public class DocumentImportFormatCatalog {
         this.formats = resolveFormats(properties.getDocument());
     }
 
-    public List<DocumentImportFormat> listFormats() {
-        return formats;
-    }
-
     public List<String> labels() {
         return formats.stream()
                 .map(DocumentImportFormat::label)

@@ -1,5 +1,6 @@
 package app.textbuddy.quickaction;
 
+import app.textbuddy.integration.llm.LlmProviderException;
 import app.textbuddy.integration.llm.TextbuddyLlmClient;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -33,8 +34,11 @@ public final class QuickActionService {
         }
 
         validate(action, normalized);
-        String rewritten = normalize(llmClient.rewrite(action, normalized, currentUser));
-        return new QuickActionResponse(rewritten.isBlank() ? normalized.text() : rewritten);
+        String rewritten = Objects.requireNonNullElse(llmClient.rewrite(action, normalized, currentUser), "");
+        if (rewritten.isBlank()) {
+            throw new LlmProviderException("LLM-Provider lieferte keinen Antworttext.");
+        }
+        return new QuickActionResponse(rewritten);
     }
 
     private void validate(QuickActionType action, QuickActionRequest request) {
@@ -77,7 +81,7 @@ public final class QuickActionService {
 
     private QuickActionRequest normalize(QuickActionRequest request) {
         return new QuickActionRequest(
-                normalize(request == null ? null : request.text()),
+                Objects.requireNonNullElse(request == null ? null : request.text(), ""),
                 normalize(request == null ? null : request.language()),
                 normalize(request == null ? null : request.option()),
                 normalize(request == null ? null : request.prompt())

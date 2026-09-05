@@ -4,12 +4,12 @@ Dieses Verzeichnis enthält die Browser- und UI-Tests für sichtbare Textbuddy-I
 
 ## Abdeckung
 
-Der Suite-Stand umfasst 37 Tests:
+Die Suite deckt folgende Verhaltensbereiche ab:
 
-- `editor-island.spec.ts`: 29 funktionale E2E-Flows für Editor, Hidden Mirror, Undo/Redo, Statistik, Korrektur, lokale Wörterbuchlogik, Import, Advisor, Rewrite Bubble und Quick Actions.
-- `editor-island.a11y.spec.ts`: 8 Accessibility- und Keyboard-Flows für Idle, Quick-Action-Konfiguration, Streaming + Diff, Advisor Viewer, Mobile Layout, Upload-Button, Rewrite Escape und Viewer Escape.
+- `editor-island.spec.ts`: Editor und Hidden Mirror, Undo/Redo, Statistik, Korrektur, lokales Wörterbuch, Plaintext-Import, Dokumentexport sowie die sichtbaren Volltext-Aktionen mit Diff-Review.
+- `editor-island.a11y.spec.ts`: Accessibility und Tastaturbedienung für Editor, Korrekturleiste, Diff-Ansichten, Statistik-Popover, mobile Darstellung und Upload.
 
-Die Tests bilden die neue Editor-plus-Inspector-Struktur ab. Panels für `Korrektur`, `Aktionen`, `Advisor`, `Import` und `Statistik` werden dabei über die sichtbare Tab-Leiste geöffnet; API-Hooks und `data-testid` bleiben die primären Selektoren.
+Die Tests bilden die sichtbare Oberfläche mit den Modi **Überarbeiten** und **Prüfen** ab. API-Hooks und `data-testid` sind die primären Selektoren; nicht freigeschaltete Werkzeuge müssen im DOM fehlen.
 
 ## Ausführen
 

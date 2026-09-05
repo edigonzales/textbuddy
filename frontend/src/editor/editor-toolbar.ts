@@ -9,7 +9,6 @@ export function mountEditorToolbar(): void {
   const uploadButton = root?.querySelector<HTMLButtonElement>("[data-editor-action='upload']");
   const statsButton = root?.querySelector<HTMLButtonElement>("[data-editor-action='stats']");
   const statsPopover = root?.querySelector<HTMLElement>("[data-stats-popover]");
-  const statsPanel = root?.querySelector<HTMLElement>("[data-text-stats-panel]");
   const toolbarStatus = root?.querySelector<HTMLElement>("[data-editor-toolbar-status]");
   const mirror = root?.querySelector<HTMLTextAreaElement>("[data-editor-mirror]");
 
@@ -20,7 +19,6 @@ export function mountEditorToolbar(): void {
     !uploadButton ||
     !statsButton ||
     !statsPopover ||
-    !statsPanel ||
     !toolbarStatus ||
     !mirror
   ) {
@@ -37,10 +35,6 @@ export function mountEditorToolbar(): void {
   const resolvedMirror = mirror;
 
   let busy = false;
-
-  resolvedStatsPopover.append(statsPanel);
-  statsPanel.removeAttribute("inert");
-  statsPanel.hidden = false;
 
   function announce(state: "success" | "error", message: string): void {
     resolvedToolbarStatus.dataset.state = state;

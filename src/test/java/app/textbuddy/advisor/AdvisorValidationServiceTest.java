@@ -3,6 +3,7 @@ package app.textbuddy.advisor;
 import app.textbuddy.integration.llm.TextbuddyLlmClient;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +13,13 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class DefaultAdvisorValidationServiceTest {
+class AdvisorValidationServiceTest {
+
+    @Test
+    void streamBudgetCoversAllProviderBatchesAndMargin() {
+        assertThat(AdvisorValidationService.maximumValidationDuration(Duration.ofSeconds(30)))
+                .isEqualTo(Duration.ofSeconds(220));
+    }
 
     @Test
     void validateSplitsSelectedRulesIntoSmallBatchesAndStreamsMatches() {
@@ -50,7 +57,7 @@ class DefaultAdvisorValidationServiceTest {
                     ))
                     .toList();
         });
-        DefaultAdvisorValidationService service = new DefaultAdvisorValidationService(catalog, llmClient, 2);
+        AdvisorValidationService service = new AdvisorValidationService(catalog, llmClient, 2);
         RecordingHandler handler = new RecordingHandler();
 
         service.validate(
@@ -88,7 +95,7 @@ class DefaultAdvisorValidationServiceTest {
             requestedBatches.add(ruleChecks.stream().map(AdvisorRuleCheck::ruleId).toList());
             return List.of();
         });
-        DefaultAdvisorValidationService service = new DefaultAdvisorValidationService(
+        AdvisorValidationService service = new AdvisorValidationService(
                 catalog(document("doc-a", "Dokument A", 1, List.of(rule("rule-1", 3, List.of("downloaden"))))),
                 llmClient,
                 2
@@ -119,7 +126,7 @@ class DefaultAdvisorValidationServiceTest {
             requestedBatchSizes.add(ruleChecks.size());
             return List.of();
         });
-        DefaultAdvisorValidationService service = new DefaultAdvisorValidationService(catalog, llmClient, 3);
+        AdvisorValidationService service = new AdvisorValidationService(catalog, llmClient, 3);
         RecordingHandler handler = new RecordingHandler();
 
         service.validate(new AdvisorValidateRequest("Text", List.of("doc-a")), handler);

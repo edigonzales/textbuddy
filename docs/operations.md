@@ -47,7 +47,7 @@ Stub-Modi dienen lokaler Entwicklung und reproduzierbaren Tests, nicht fachliche
 | `textbuddy.languagetool.timeout` | `10s` | Timeout im HTTP-Modus |
 | `textbuddy.document.timeout` | `45s` | Timeout der Dokumentverarbeitung |
 
-Textbuddy wiederholt fehlgeschlagene Provider-Aufrufe nicht automatisch. Retries, falls fachlich gewünscht, müssen bewusst ausserhalb der Anwendung mit Idempotenz- und Kostenbetrachtung entworfen werden.
+Textbuddy wiederholt fehlgeschlagene Provider- oder Netzwerkaufrufe nicht automatisch. Retries, falls fachlich gewünscht, müssen bewusst ausserhalb der Anwendung mit Idempotenz- und Kostenbetrachtung entworfen werden. Nur lokale OCR darf bei einem sprachbezogenen OCR-Fehler einmal mit der Standardsprache wiederholen.
 
 ## Reverse Proxy
 
@@ -62,7 +62,7 @@ Der Proxy sollte:
 
 ## Monitoring und Logs
 
-`GET /actuator/health` ist der einzige veröffentlichte Actuator-Endpoint. Er liefert absichtlich weder Komponenten noch interne Details. Für Liveness genügt HTTP 200; Readiness externer Provider wird nicht durch Probe-Aufrufe simuliert.
+`GET /actuator/health` ist der einzige veröffentlichte Actuator-Endpoint. Er liefert absichtlich weder Komponenten noch interne Details und verlangt im zentralen, OIDC-geschützten Betrieb ebenfalls eine Anmeldung. Für Liveness genügt HTTP 200; Readiness externer Provider wird nicht durch Probe-Aufrufe simuliert.
 
 Jede Anfrage erhält eine `X-Trace-ID`. Eine gültige eingehende ID darf maximal 64 Zeichen aus Buchstaben, Ziffern, Punkt, Unterstrich oder Bindestrich enthalten; andere Werte werden ersetzt. Provider-Antwortkörper und Secrets erscheinen nicht in kontrollierten Fehlern.
 
@@ -85,4 +85,4 @@ npx --prefix playwright playwright install chromium
 npm test --prefix playwright
 ```
 
-Vor einem Release zusätzlich manuell prüfen: Anmeldung/Abmeldung am echten OIDC-Provider, Proxy-Header und Redirect-URI, LLM-Datenschutzfreigabe, OCR auf der Zielplattform, Upload- und Rate Limits sowie PDF-Anzeige im Browser.
+Vor einem Release zusätzlich manuell prüfen: Anmeldung/Abmeldung am echten OIDC-Provider, Proxy-Header und Redirect-URI, LLM-Datenschutzfreigabe, OCR auf der Zielplattform sowie Upload- und Rate Limits.

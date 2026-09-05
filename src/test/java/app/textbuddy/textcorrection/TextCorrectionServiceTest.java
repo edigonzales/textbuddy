@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class DefaultTextCorrectionServiceTest {
+class TextCorrectionServiceTest {
 
     @Test
     void mapsLanguageToolMatchesToCorrectionBlocks() {
@@ -32,7 +32,7 @@ class DefaultTextCorrectionServiceTest {
                         List.of("ignored")
                 )
         );
-        DefaultTextCorrectionService service = new DefaultTextCorrectionService(client);
+        TextCorrectionService service = new TextCorrectionService(client);
 
         CorrectionResponse response = service.correct(new CorrectionRequest("This is teh text.", "en-US"));
 
@@ -56,7 +56,7 @@ class DefaultTextCorrectionServiceTest {
             capturedLanguage.set(language);
             return List.of();
         };
-        DefaultTextCorrectionService service = new DefaultTextCorrectionService(client);
+        TextCorrectionService service = new TextCorrectionService(client);
 
         service.correct(new CorrectionRequest("This is teh text.", "   "));
 
@@ -70,7 +70,7 @@ class DefaultTextCorrectionServiceTest {
             called.set(true);
             return List.of();
         };
-        DefaultTextCorrectionService service = new DefaultTextCorrectionService(client);
+        TextCorrectionService service = new TextCorrectionService(client);
 
         CorrectionResponse response = service.correct(new CorrectionRequest("   ", "en-US"));
 

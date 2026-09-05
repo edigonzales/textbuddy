@@ -35,7 +35,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation("org.languagetool:languagetool-core:${languageToolVersion}") {
         exclude group: 'com.sun.xml.bind', module: 'jaxb-core'
         exclude group: 'com.sun.xml.bind', module: 'jaxb-impl'

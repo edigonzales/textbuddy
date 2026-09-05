@@ -2,8 +2,9 @@ package app.textbuddy.integration.llm;
 
 import app.textbuddy.config.TextbuddyProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +56,8 @@ public final class OpenAiCompatibleChatClient {
             }
 
             return content;
+        } catch (JacksonException exception) {
+            throw new LlmProviderException("LLM-Antwort konnte nicht gelesen werden.", exception);
         } catch (IOException exception) {
             throw new LlmProviderException("LLM-Antwort konnte nicht gelesen werden.", exception);
         } catch (InterruptedException exception) {
@@ -68,6 +71,8 @@ public final class OpenAiCompatibleChatClient {
 
         try {
             return parseEmbeddedJson(response);
+        } catch (JacksonException exception) {
+            throw new LlmProviderException("LLM-Antwort enthielt kein gültiges JSON.", exception);
         } catch (IOException exception) {
             throw new LlmProviderException("LLM-Antwort enthielt kein gültiges JSON.", exception);
         }
@@ -122,22 +127,22 @@ public final class OpenAiCompatibleChatClient {
             return "";
         }
 
-        if (contentNode.isTextual()) {
-            return contentNode.asText("");
+        if (contentNode.isString()) {
+            return contentNode.asString("");
         }
 
         if (contentNode.isArray()) {
             StringBuilder builder = new StringBuilder();
 
             for (JsonNode element : contentNode) {
-                if (element.isTextual()) {
-                    builder.append(element.asText(""));
+                if (element.isString()) {
+                    builder.append(element.asString(""));
                     continue;
                 }
 
                 JsonNode textNode = element.path("text");
-                if (textNode.isTextual()) {
-                    builder.append(textNode.asText(""));
+                if (textNode.isString()) {
+                    builder.append(textNode.asString(""));
                 }
             }
 
@@ -206,7 +211,7 @@ public final class OpenAiCompatibleChatClient {
     private String toJson(ChatCompletionRequest payload) {
         try {
             return objectMapper.writeValueAsString(payload);
-        } catch (IOException exception) {
+        } catch (JacksonException exception) {
             throw new IllegalStateException("LLM-Request konnte nicht serialisiert werden.", exception);
         }
     }

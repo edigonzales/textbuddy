@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class DefaultDocumentConversionServiceTest {
+class DocumentConversionServiceTest {
 
     @Test
     void acceptsSupportedFileTypesByExtension() {
@@ -21,7 +21,7 @@ class DefaultDocumentConversionServiceTest {
             called.set(true);
             return "<h1>Import</h1><p>Dokument</p>";
         };
-        DefaultDocumentConversionService service = createService(doclingClient);
+        DocumentConversionService service = createService(doclingClient);
 
         DocumentConversionResponse response = service.convert(new DocumentUpload(
                 "brief.docx",
@@ -40,7 +40,7 @@ class DefaultDocumentConversionServiceTest {
             called.set(true);
             return "<p>ignored</p>";
         };
-        DefaultDocumentConversionService service = createService(doclingClient);
+        DocumentConversionService service = createService(doclingClient);
 
         assertThatThrownBy(() -> service.convert(new DocumentUpload(
                 "payload.exe",
@@ -56,7 +56,7 @@ class DefaultDocumentConversionServiceTest {
     @Test
     void rejectsEmptyUploads() {
         DoclingClient doclingClient = (upload, ocrLanguage) -> "<p>ignored</p>";
-        DefaultDocumentConversionService service = createService(doclingClient);
+        DocumentConversionService service = createService(doclingClient);
 
         assertThatThrownBy(() -> service.convert(new DocumentUpload(
                 "leer.txt",
@@ -74,7 +74,7 @@ class DefaultDocumentConversionServiceTest {
             capturedLanguage.set(ocrLanguage);
             return "<p>Import</p>";
         };
-        DefaultDocumentConversionService service = createService(doclingClient);
+        DocumentConversionService service = createService(doclingClient);
 
         service.convert(new DocumentUpload(
                 "scan.png",
@@ -95,7 +95,7 @@ class DefaultDocumentConversionServiceTest {
         TextbuddyProperties properties = new TextbuddyProperties();
         properties.getDocument().setMode(TextbuddyProperties.Document.Mode.STUB);
         properties.getDocument().setMaxUploadSize(DataSize.ofBytes(4));
-        DefaultDocumentConversionService service = new DefaultDocumentConversionService(
+        DocumentConversionService service = new DocumentConversionService(
                 doclingClient,
                 new DocumentImportFormatCatalog(properties),
                 properties,
@@ -113,11 +113,11 @@ class DefaultDocumentConversionServiceTest {
         assertThat(called).isFalse();
     }
 
-    private DefaultDocumentConversionService createService(DoclingClient doclingClient) {
+    private DocumentConversionService createService(DoclingClient doclingClient) {
         TextbuddyProperties properties = new TextbuddyProperties();
         properties.getDocument().setMode(TextbuddyProperties.Document.Mode.STUB);
 
-        return new DefaultDocumentConversionService(
+        return new DocumentConversionService(
                 doclingClient,
                 new DocumentImportFormatCatalog(properties),
                 properties,

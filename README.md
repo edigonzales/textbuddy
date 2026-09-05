@@ -1,6 +1,8 @@
 # Textbuddy
 
-Textbuddy ist eine serverbasierte Schreibassistenz für Korrekturen, Umformulierungen, statische Schreibregeln und Dokumentimport. Das Backend ist eine Spring-Boot-MVC-Anwendung; der Editor ist eine kleine TypeScript-/Tiptap-Insel in serverseitig gerendertem JTE-HTML.
+Textbuddy ist eine serverbasierte Schreibassistenz mit drei bewusst sichtbaren Werkzeugen: Textkorrektur, verständlicher schreiben und zusammenfassen. Das Backend enthält zusätzlich die bestehenden, derzeit nicht exponierten Fachfunktionen und den Dokumentimport. Die Anwendung besteht aus Spring Boot MVC und einer kleinen TypeScript-/Tiptap-Insel in serverseitig gerendertem JTE-HTML.
+
+Der Editor verwendet Plaintext als verbindliches Inhaltsmodell. Importierte Formatierungen werden auf Text und Absatzumbrüche reduziert; KI-Ergebnisse und DOCX-Exporte interpretieren Zeichen wie `#`, `*` oder `1.` nicht als Formatierungsanweisung.
 
 ## Voraussetzungen
 

@@ -70,6 +70,30 @@ class AuthEnabledMvcTest {
     }
 
     @Test
+    void unknownRoutesRequireAuthentication() throws Exception {
+        mockMvc.perform(get("/not-a-public-route"))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(get("/actuator/health"))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(get("/not-a-public-route").with(oauth2Login()))
+                .andExpect(status().isNotFound());
+
+        mockMvc.perform(get("/actuator/health").with(oauth2Login()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void staticAssetsRemainPublic() throws Exception {
+        mockMvc.perform(get("/styles/app.css"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/editor/editor-island.js"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void authenticatedUsersSeeAccountStateAndCanCallApis() throws Exception {
         mockMvc.perform(get("/")
                         .with(oauth2Login().attributes(attributes -> {

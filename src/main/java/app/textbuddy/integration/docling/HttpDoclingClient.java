@@ -4,7 +4,7 @@ import app.textbuddy.document.DocumentConversionFailedException;
 import app.textbuddy.document.DocumentImportServiceUnavailableException;
 import app.textbuddy.document.DocumentImportTimeoutException;
 import app.textbuddy.document.DocumentUpload;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -146,19 +146,19 @@ public final class HttpDoclingClient implements DoclingClient {
             throw new DocumentConversionFailedException("Docling hat keine Antwort geliefert.");
         }
 
-        String directDocumentHtml = response.path("document").path("html_content").asText("");
+        String directDocumentHtml = response.path("document").path("html_content").asString("");
 
         if (!directDocumentHtml.isBlank()) {
             return directDocumentHtml;
         }
 
-        String firstDocumentHtml = response.path("documents").path(0).path("html_content").asText("");
+        String firstDocumentHtml = response.path("documents").path(0).path("html_content").asString("");
 
         if (!firstDocumentHtml.isBlank()) {
             return firstDocumentHtml;
         }
 
-        String nestedDocumentHtml = response.path("results").path(0).path("document").path("html_content").asText("");
+        String nestedDocumentHtml = response.path("results").path(0).path("document").path("html_content").asString("");
 
         if (!nestedDocumentHtml.isBlank()) {
             return nestedDocumentHtml;

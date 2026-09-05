@@ -4,13 +4,14 @@ import app.textbuddy.integration.llm.OpenAiCompatibleChatClient;
 import app.textbuddy.integration.llm.TextbuddyLlmClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.boot.jackson.autoconfigure.JacksonAutoConfiguration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class LlmConfigurationTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-            .withUserConfiguration(JacksonConfiguration.class, LlmConfiguration.class);
+            .withUserConfiguration(JacksonAutoConfiguration.class, LlmConfiguration.class);
 
     @Test
     void failsFastWhenProviderModeIsMissingRequiredConfiguration() {

@@ -38,8 +38,10 @@ jobs:
           TESSDATA_DIR="$(dirname "$(dpkg -L tesseract-ocr-eng | grep '/eng.traineddata$' | head -n 1)")"
           echo "TESSDATA_PREFIX=$TESSDATA_DIR" >> "$GITHUB_ENV"
 
-      - name: Audit frontend dependencies
-        run: npm audit --prefix frontend --audit-level=high
+      - name: Audit npm dependencies
+        run: |
+          npm audit --prefix frontend --audit-level=moderate
+          npm audit --prefix playwright --audit-level=moderate
 
       - name: Build and test
         env:

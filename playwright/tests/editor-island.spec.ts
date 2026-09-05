@@ -150,7 +150,7 @@ test("starts with a wide editor and only the three MVP tools", async ({ page }) 
     "true",
   );
   await expect(page.getByTestId("editor-shell")).toBeVisible();
-  await expect(page.getByTestId("inspector-panel")).toBeHidden();
+  await expect(page.getByTestId("correction-rail")).toBeHidden();
   await expect(page.getByTestId("mvp-summary-option")).toBeVisible();
   await expect(page.getByTestId("mvp-action-summarize")).toHaveCount(0);
   await expect(page.getByTestId("mvp-summary-option")).toHaveValue("");
@@ -183,11 +183,11 @@ test("starts with a wide editor and only the three MVP tools", async ({ page }) 
       return { actionBottom: actions?.bottom ?? 0, titleTop: title?.top ?? 0 };
     });
   expect(firstRibbonGroupPosition.titleTop).toBeGreaterThan(firstRibbonGroupPosition.actionBottom);
-  await expect(page.getByTestId("quick-action-proofread")).toBeHidden();
-  await expect(page.getByTestId("quick-action-bullet-points")).toBeHidden();
-  await expect(page.getByTestId("quick-action-formality")).toBeHidden();
-  await expect(page.getByTestId("advisor-panel")).toBeHidden();
-  await expect(page.getByTestId("rewrite-bubble")).toBeHidden();
+  await expect(page.getByTestId("quick-action-proofread")).toHaveCount(0);
+  await expect(page.getByTestId("quick-action-bullet-points")).toHaveCount(0);
+  await expect(page.getByTestId("quick-action-formality")).toHaveCount(0);
+  await expect(page.getByTestId("advisor-panel")).toHaveCount(0);
+  await expect(page.getByTestId("rewrite-bubble")).toHaveCount(0);
 
   const widths = await page.evaluate(() => ({
     viewport: document.documentElement.clientWidth,
@@ -236,10 +236,10 @@ test("correction stays compact in transform mode and rail opens only in validate
   await enterText(page, "Das ist teh Text.");
 
   await expect(page.getByTestId("correction-mode-badge")).toHaveText("1");
-  await expect(page.getByTestId("inspector-panel")).toBeHidden();
+  await expect(page.getByTestId("correction-rail")).toBeHidden();
 
   await page.getByTestId("workspace-mode-validate").click();
-  await expect(page.getByTestId("inspector-panel")).toBeVisible();
+  await expect(page.getByTestId("correction-rail")).toBeVisible();
   await expect(page.getByTestId("correction-results-toggle")).toHaveAttribute(
     "aria-expanded",
     "true",
@@ -247,18 +247,18 @@ test("correction stays compact in transform mode and rail opens only in validate
   await expect(page.getByTestId("correction-retry")).toBeHidden();
 
   await page.getByRole("button", { name: "Korrekturergebnisse schliessen" }).click();
-  await expect(page.getByTestId("inspector-panel")).toBeHidden();
+  await expect(page.getByTestId("correction-rail")).toBeHidden();
   await page.getByTestId("workspace-mode-transform").click();
   await page.getByTestId("workspace-mode-validate").click();
-  await expect(page.getByTestId("inspector-panel")).toBeVisible();
+  await expect(page.getByTestId("correction-rail")).toBeVisible();
   await page.getByTestId("correction-results-toggle").click();
-  await expect(page.getByTestId("inspector-panel")).toBeHidden();
+  await expect(page.getByTestId("correction-rail")).toBeHidden();
   await page.getByTestId("correction-results-toggle").click();
-  await expect(page.getByTestId("inspector-panel")).toBeVisible();
+  await expect(page.getByTestId("correction-rail")).toBeVisible();
 
   await page.getByRole("button", { name: "the", exact: true }).click();
   await expect(page.getByTestId("editor-mirror")).toHaveValue("Das ist the Text.");
-  await expect(page.getByTestId("inspector-panel")).toBeHidden();
+  await expect(page.getByTestId("correction-rail")).toBeHidden();
   await expect(page.getByTestId("correction-results-toggle")).toBeDisabled();
 });
 
@@ -274,6 +274,56 @@ test("clicking a correction mark switches mode and focuses its finding", async (
     "true",
   );
   await expect(page.getByRole("button", { name: /Problem 1: teh/ })).toBeFocused();
+});
+
+test("correction sends one request for a 50000-character document", async ({ page }) => {
+  const payloads: CorrectionRequestPayload[] = [];
+  await page.route("**/api/text-correction", async (route) => {
+    const payload = route.request().postDataJSON() as CorrectionRequestPayload;
+    payloads.push(payload);
+    await route.fulfill({ json: correctionResponse(payload.text) });
+  });
+  await page.goto("/");
+
+  const text = `${"a".repeat(49_999)}.`;
+  await enterText(page, text);
+  await expect.poll(() => payloads.length).toBe(1);
+  await page.waitForTimeout(450);
+
+  expect(payloads).toHaveLength(1);
+  expect(payloads[0]?.text).toBe(text);
+});
+
+test("correction aborts an older request and ignores its late response", async ({ page }) => {
+  let calls = 0;
+  let releaseFirst: (() => void) | undefined;
+  await page.route("**/api/text-correction", async (route) => {
+    calls += 1;
+    const payload = route.request().postDataJSON() as CorrectionRequestPayload;
+    if (calls === 1) {
+      await new Promise<void>((resolve) => {
+        releaseFirst = resolve;
+      });
+      try {
+        await route.fulfill({ json: correctionResponse(payload.text) });
+      } catch {
+        // The browser already cancelled the obsolete request.
+      }
+      return;
+    }
+    await route.fulfill({ json: correctionResponse(payload.text) });
+  });
+  await page.goto("/");
+
+  await enterText(page, "Das ist teh alt.");
+  await expect.poll(() => calls).toBe(1);
+  await enterText(page, "Das ist sauber neu.");
+  await expect.poll(() => calls).toBe(2);
+  await expect(page.getByTestId("correction-results-toggle")).toBeDisabled();
+
+  releaseFirst?.();
+  await expect(page.getByTestId("correction-results-toggle")).toBeDisabled();
+  await expect(page.locator("[data-correction-index]")).toHaveCount(0);
 });
 
 test("plain-language review preserves the original and commits as one undoable transaction", async ({
@@ -328,14 +378,8 @@ test("plain-language review preserves the original and commits as one undoable t
     page.locator("[data-review-inline] [data-diff-decision='accepted']").first(),
   ).toHaveCSS("border-top-width", "0px");
   await expect(
-    page.locator("[data-review-inline] [data-diff-decision='accepted']").first().locator("svg"),
-  ).toHaveCount(1);
-  await expect(
     page.locator("[data-review-inline] [data-diff-decision='rejected']").first(),
   ).toHaveCSS("background-color", "rgb(237, 242, 245)");
-  await expect(
-    page.locator("[data-review-inline] [data-diff-decision='rejected']").first().locator("svg"),
-  ).toHaveCount(1);
 
   await page.locator("[data-review-inline] [data-diff-decision='accepted']").first().click();
   await page.getByRole("button", { name: "Zwei Spalten" }).click();
@@ -444,7 +488,11 @@ test("upload uses the shared text language for OCR and imports into the full edi
   let requestUrl = "";
   await page.route("**/api/convert/doc**", async (route) => {
     requestUrl = route.request().url();
-    await route.fulfill({ json: { html: "<h2>Import Titel</h2><p>Importierter Text.</p>" } });
+    await route.fulfill({
+      json: {
+        html: "<h2># Import <em>Titel</em></h2><script>nicht übernehmen</script><p>* Importierter Text.</p>",
+      },
+    });
   });
   await page.goto("/");
   await page.getByTestId("workspace-mode-validate").click();
@@ -457,8 +505,9 @@ test("upload uses the shared text language for OCR and imports into the full edi
     buffer: Buffer.from("dummy"),
   });
 
-  await expect(page.getByTestId("editor-input")).toContainText("Import Titel");
-  await expect(page.getByTestId("editor-mirror")).toHaveValue(/Importierter Text/);
+  await expect(page.getByTestId("editor-mirror")).toHaveValue(
+    "# Import Titel\n* Importierter Text.",
+  );
   expect(requestUrl).toContain("ocrLanguage=fr");
 });
 
@@ -507,10 +556,10 @@ test.describe("mobile workspace", () => {
     await enterText(page, "Das ist teh Text.");
     await page.getByTestId("workspace-mode-validate").click();
 
-    await expect(page.getByTestId("inspector-panel")).toBeVisible();
+    await expect(page.getByTestId("correction-rail")).toBeVisible();
     await expect(page.locator("body")).toHaveAttribute("data-correction-slideover-open", "true");
     await page.keyboard.press("Escape");
-    await expect(page.getByTestId("inspector-panel")).toBeHidden();
+    await expect(page.getByTestId("correction-rail")).toBeHidden();
     const hasOverflow = await page.evaluate(
       () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
     );

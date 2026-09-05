@@ -52,7 +52,7 @@ test("axe: correction rail", async ({ page }) => {
   await page.getByTestId("editor-input").fill("Das ist teh Text.");
   await expect(page.getByTestId("correction-mode-badge")).toHaveText("1");
   await page.getByTestId("workspace-mode-validate").click();
-  await expect(page.getByTestId("inspector-panel")).toBeVisible();
+  await expect(page.getByTestId("correction-rail")).toBeVisible();
   await expectNoBlockingViolations(page);
 });
 
@@ -93,7 +93,7 @@ test.describe("mobile accessibility", () => {
     await page.getByTestId("editor-input").fill("Das ist teh Text.");
     await expect(page.getByTestId("correction-mode-badge")).toHaveText("1");
     await page.getByTestId("workspace-mode-validate").click();
-    await expect(page.getByTestId("inspector-panel")).toBeVisible();
+    await expect(page.getByTestId("correction-rail")).toBeVisible();
     await expectNoBlockingViolations(page);
   });
 });

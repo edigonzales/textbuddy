@@ -7,13 +7,8 @@ import { setEditorPlainText } from "./editor-content";
 import { extractErrorMessage } from "./http-error";
 import { getPlainText } from "./plain-text";
 import { normalizeRequestedLanguage } from "./request-language";
-import {
-  createRewriteDiff,
-  resolveRewriteDiff,
-  rewriteDiffHunks,
-} from "./rewrite-diff";
+import { createRewriteDiff, resolveRewriteDiff, rewriteDiffHunks } from "./rewrite-diff";
 import type {
-  QuickActionElements,
   QuickActionResponse,
   RewriteDiffHunk,
   RewriteDiffHunkStatus,
@@ -22,126 +17,86 @@ import type {
 } from "./types";
 import { t } from "./ui-i18n";
 
-const IDLE_MESSAGE = "";
-const AUTH_REQUIRED_MESSAGE = t("quickAction.status.authRequired");
-const CUSTOM_PROMPT_MAX_LENGTH = 2_000;
-const DISALLOWED_CUSTOM_PROMPT_CHARACTERS = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/;
-
-type QuickActionKey =
-  | "plain-language"
-  | "bullet-points"
-  | "proofread"
-  | "summarize"
-  | "formality"
-  | "social-media"
-  | "medium"
-  | "character-speech"
-  | "custom";
+type QuickAction = "plain-language" | "summarize";
+type ReviewMode = "inline" | "split";
 
 interface QuickActionRequestBody {
   text: string;
   language: string;
   option?: string;
-  prompt?: string;
-}
-
-interface QuickActionDefinition {
-  button: HTMLButtonElement;
-  endpoint: string;
-  runningMessage: string;
-  successMessage: string;
-  errorMessage: string;
-  buildRequestBody?: (text: string) => QuickActionRequestBody;
 }
 
 interface ReviewState {
-  action: QuickActionKey;
+  action: QuickAction;
+  request: QuickActionRequestBody;
   original: string;
-  rewritten: string;
   segments: RewriteDiffSegment[];
   statuses: Record<string, RewriteDiffHunkStatus>;
 }
 
-interface ActiveRequestState {
-  action: QuickActionKey;
-  original: string;
-  controller: AbortController;
+interface Controls {
+  plainLanguage: HTMLButtonElement;
+  summary: HTMLSelectElement;
+  language: HTMLSelectElement;
+  editorPanel: HTMLElement;
+  editorView: HTMLElement;
+  reviewView: HTMLElement;
+  reviewTitle: HTMLElement;
+  reviewProgress: HTMLElement;
+  reviewInline: HTMLElement;
+  reviewSplit: HTMLElement;
+  reviewSplitBefore: HTMLElement;
+  reviewSplitAfter: HTMLElement;
+  noChanges: HTMLElement;
+  acceptAll: HTMLButtonElement;
+  rejectAll: HTMLButtonElement;
+  retry: HTMLButtonElement;
+  inlineMode: HTMLButtonElement;
+  splitMode: HTMLButtonElement;
 }
 
-const ACTION_LABELS: Record<QuickActionKey, string> = {
-  "plain-language": t("quickAction.action.plainLanguage"),
-  "bullet-points": t("quickAction.action.bulletPoints"),
-  proofread: t("quickAction.action.proofread"),
-  summarize: t("quickAction.action.summarize"),
-  formality: t("quickAction.action.formality"),
-  "social-media": t("quickAction.action.socialMedia"),
-  medium: t("quickAction.action.medium"),
-  "character-speech": t("quickAction.action.characterSpeech"),
-  custom: t("quickAction.action.custom"),
-};
+const ACTIONS = {
+  "plain-language": {
+    label: t("quickAction.action.plainLanguage"),
+    endpoint: "/api/quick-actions/plain-language",
+    running: t("quickAction.running.plainLanguage"),
+    success: t("quickAction.success.plainLanguage"),
+    error: t("quickAction.error.plainLanguage"),
+  },
+  summarize: {
+    label: t("quickAction.action.summarize"),
+    endpoint: "/api/quick-actions/summarize",
+    running: t("quickAction.running.summarize"),
+    success: t("quickAction.success.summarize"),
+    error: t("quickAction.error.summarize"),
+  },
+} as const;
 
-function normalizeCustomPrompt(value: string): string {
-  return value
-    .replace(/\r\n/g, "\n")
-    .replace(/\r/g, "\n")
-    .split("\n")
-    .map((line) => line.trim())
-    .join("\n")
-    .trim();
-}
+function findControls(root: HTMLElement): Controls | null {
+  const query = <T extends Element>(selector: string): T | null =>
+    document.querySelector<T>(selector) ?? root.querySelector<T>(selector);
+  const controls = {
+    plainLanguage: query<HTMLButtonElement>("[data-mvp-quick-action='plain-language']"),
+    summary: query<HTMLSelectElement>("[data-mvp-summary-option]"),
+    language: query<HTMLSelectElement>("[data-workspace-language]"),
+    editorPanel: query<HTMLElement>("[data-editor-shell]"),
+    editorView: query<HTMLElement>("[data-editor-view]"),
+    reviewView: query<HTMLElement>("[data-review-view]"),
+    reviewTitle: query<HTMLElement>("[data-review-title]"),
+    reviewProgress: query<HTMLElement>("[data-review-progress]"),
+    reviewInline: query<HTMLElement>("[data-review-inline]"),
+    reviewSplit: query<HTMLElement>("[data-review-split]"),
+    reviewSplitBefore: query<HTMLElement>("[data-review-split-before]"),
+    reviewSplitAfter: query<HTMLElement>("[data-review-split-after]"),
+    noChanges: query<HTMLElement>("[data-review-no-changes]"),
+    acceptAll: query<HTMLButtonElement>("[data-review-accept-all]"),
+    rejectAll: query<HTMLButtonElement>("[data-review-reject-all]"),
+    retry: query<HTMLButtonElement>("[data-review-retry]"),
+    inlineMode: query<HTMLButtonElement>("[data-review-mode='inline']"),
+    splitMode: query<HTMLButtonElement>("[data-review-mode='split']"),
+  };
 
-function hasValidCustomPrompt(value: string): boolean {
-  const normalized = normalizeCustomPrompt(value);
-
-  return (
-    normalized.length > 0 &&
-    normalized.length <= CUSTOM_PROMPT_MAX_LENGTH &&
-    !DISALLOWED_CUSTOM_PROMPT_CHARACTERS.test(normalized)
-  );
-}
-
-type ReviewIconName = "check" | "x";
-
-function appendSvgElement(
-  svg: SVGSVGElement,
-  name: string,
-  attributes: Record<string, string>,
-): void {
-  const element = document.createElementNS("http://www.w3.org/2000/svg", name);
-  Object.entries(attributes).forEach(([attribute, value]) => {
-    element.setAttribute(attribute, value);
-  });
-  svg.append(element);
-}
-
-function createReviewIcon(name: ReviewIconName): SVGSVGElement {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("class", "diff-decision-icon");
-  svg.setAttribute("width", "16");
-  svg.setAttribute("height", "16");
-  svg.setAttribute("viewBox", "0 0 16 16");
-  svg.setAttribute("fill", "none");
-  svg.setAttribute("aria-hidden", "true");
-  svg.setAttribute("focusable", "false");
-
-  if (name === "check") {
-    appendSvgElement(svg, "path", {
-      d: "m2.75 8.25 3.25 3.25 7.25-7.5",
-      stroke: "currentColor",
-      "stroke-linecap": "round",
-      "stroke-linejoin": "round",
-      "stroke-width": "1.75",
-    });
-  } else {
-    appendSvgElement(svg, "path", {
-      d: "m3.25 3.25 9.5 9.5m0-9.5-9.5 9.5",
-      stroke: "currentColor",
-      "stroke-linecap": "round",
-      "stroke-width": "1.75",
-    });
-  }
-
-  return svg;
+  return Object.values(controls).every(Boolean) ? controls as Controls : null;
 }
 
 function isAbortError(error: unknown): boolean {
@@ -150,163 +105,25 @@ function isAbortError(error: unknown): boolean {
     : error instanceof Error && error.name === "AbortError";
 }
 
-function createTextSpan(text: string, className = ""): HTMLSpanElement {
+function textSpan(text: string, className = ""): HTMLSpanElement {
   const span = document.createElement("span");
   span.textContent = text;
   span.className = className;
   return span;
 }
 
-function createDecisionButton(
-  label: string,
-  decision: "accepted" | "rejected",
-  hunk: RewriteDiffHunk,
-  onDecision: (key: string, status: RewriteDiffHunkStatus) => void,
-): HTMLButtonElement {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = `diff-decision diff-decision-${decision}`;
-  button.dataset.diffDecision = decision;
-  button.dataset.diffHunkKey = hunk.key;
-  button.setAttribute("aria-label", label);
-  button.title = label;
-  button.append(createReviewIcon(decision === "accepted" ? "check" : "x"));
-  button.addEventListener("click", () => onDecision(hunk.key, decision));
-  return button;
-}
+export function mountQuickActions(editor: Editor, root: HTMLElement): void {
+  const foundControls = findControls(root);
+  if (!foundControls) {
+    return;
+  }
+  const controls = foundControls;
 
-export function mountQuickActions(
-  editor: Editor,
-  root: HTMLElement,
-  elements: QuickActionElements,
-): void {
-  let activeRequest: ActiveRequestState | null = null;
+  let activeRequest: AbortController | null = null;
   let review: ReviewState | null = null;
-  let selectedAction: QuickActionKey = "plain-language";
-  let viewMode: "inline" | "split" = "inline";
-  let suppressExternalReset = false;
-
-  const editorPanel = root.querySelector<HTMLElement>("[data-editor-shell]");
-  const editorView = root.querySelector<HTMLElement>("[data-editor-view]");
-  const reviewView = root.querySelector<HTMLElement>("[data-review-view]");
-  const reviewTitle = root.querySelector<HTMLElement>("[data-review-title]");
-  const reviewProgress = root.querySelector<HTMLElement>("[data-review-progress]");
-  const reviewInline = root.querySelector<HTMLElement>("[data-review-inline]");
-  const reviewSplit = root.querySelector<HTMLElement>("[data-review-split]");
-  const reviewSplitBefore = root.querySelector<HTMLElement>("[data-review-split-before]");
-  const reviewSplitAfter = root.querySelector<HTMLElement>("[data-review-split-after]");
-  const reviewNoChanges = root.querySelector<HTMLElement>("[data-review-no-changes]");
-  const acceptAllButton = root.querySelector<HTMLButtonElement>("[data-review-accept-all]");
-  const rejectAllButton = root.querySelector<HTMLButtonElement>("[data-review-reject-all]");
-  const retryButton = root.querySelector<HTMLButtonElement>("[data-review-retry]");
-  const inlineButton = root.querySelector<HTMLButtonElement>("[data-review-mode='inline']");
-  const splitButton = root.querySelector<HTMLButtonElement>("[data-review-mode='split']");
-  const workspaceStatus = document.querySelector<HTMLElement>("[data-workspace-status]");
-  const directPlainLanguage = document.querySelector<HTMLButtonElement>(
-    "[data-mvp-quick-action='plain-language']",
-  );
-  const directSummaryOption = document.querySelector<HTMLSelectElement>(
-    "[data-mvp-summary-option]",
-  );
-
-  const getSelectedLanguage = (): string =>
-    normalizeRequestedLanguage(elements.languageSelect.value);
-
-  const quickActions: Record<QuickActionKey, QuickActionDefinition> = {
-    "plain-language": {
-      button: elements.plainLanguageButton,
-      endpoint: "/api/quick-actions/plain-language",
-      runningMessage: t("quickAction.running.plainLanguage"),
-      successMessage: t("quickAction.success.plainLanguage"),
-      errorMessage: t("quickAction.error.plainLanguage"),
-    },
-    "bullet-points": {
-      button: elements.bulletPointsButton,
-      endpoint: "/api/quick-actions/bullet-points",
-      runningMessage: t("quickAction.running.bulletPoints"),
-      successMessage: t("quickAction.success.bulletPoints"),
-      errorMessage: t("quickAction.error.bulletPoints"),
-    },
-    proofread: {
-      button: elements.proofreadButton,
-      endpoint: "/api/quick-actions/proofread",
-      runningMessage: t("quickAction.running.proofread"),
-      successMessage: t("quickAction.success.proofread"),
-      errorMessage: t("quickAction.error.proofread"),
-    },
-    summarize: {
-      button: elements.summarizeButton,
-      endpoint: "/api/quick-actions/summarize",
-      runningMessage: t("quickAction.running.summarize"),
-      successMessage: t("quickAction.success.summarize"),
-      errorMessage: t("quickAction.error.summarize"),
-      buildRequestBody: (text) => ({
-        text,
-        language: getSelectedLanguage(),
-        option: elements.summarizeOptionSelect.value,
-      }),
-    },
-    formality: {
-      button: elements.formalityButton,
-      endpoint: "/api/quick-actions/formality",
-      runningMessage: t("quickAction.running.formality"),
-      successMessage: t("quickAction.success.formality"),
-      errorMessage: t("quickAction.error.formality"),
-      buildRequestBody: (text) => ({
-        text,
-        language: getSelectedLanguage(),
-        option: elements.formalityOptionSelect.value,
-      }),
-    },
-    "social-media": {
-      button: elements.socialMediaButton,
-      endpoint: "/api/quick-actions/social-media",
-      runningMessage: t("quickAction.running.socialMedia"),
-      successMessage: t("quickAction.success.socialMedia"),
-      errorMessage: t("quickAction.error.socialMedia"),
-      buildRequestBody: (text) => ({
-        text,
-        language: getSelectedLanguage(),
-        option: elements.socialMediaOptionSelect.value,
-      }),
-    },
-    medium: {
-      button: elements.mediumButton,
-      endpoint: "/api/quick-actions/medium",
-      runningMessage: t("quickAction.running.medium"),
-      successMessage: t("quickAction.success.medium"),
-      errorMessage: t("quickAction.error.medium"),
-      buildRequestBody: (text) => ({
-        text,
-        language: getSelectedLanguage(),
-        option: elements.mediumOptionSelect.value,
-      }),
-    },
-    "character-speech": {
-      button: elements.characterSpeechButton,
-      endpoint: "/api/quick-actions/character-speech",
-      runningMessage: t("quickAction.running.characterSpeech"),
-      successMessage: t("quickAction.success.characterSpeech"),
-      errorMessage: t("quickAction.error.characterSpeech"),
-      buildRequestBody: (text) => ({
-        text,
-        language: getSelectedLanguage(),
-        option: elements.characterSpeechOptionSelect.value,
-      }),
-    },
-    custom: {
-      button: elements.customButton,
-      endpoint: "/api/quick-actions/custom",
-      runningMessage: t("quickAction.running.custom"),
-      successMessage: t("quickAction.success.custom"),
-      errorMessage: t("quickAction.error.custom"),
-      buildRequestBody: (text) => ({
-        text,
-        language: getSelectedLanguage(),
-        prompt: normalizeCustomPrompt(elements.customPromptInput.value),
-      }),
-    },
-  };
+  let reviewMode: ReviewMode = "inline";
+  let suppressTextChange = false;
+  const workspaceStatus = root.querySelector<HTMLElement>("[data-workspace-status]");
 
   function dispatchBusy(busy: boolean, view: WorkspaceBusyChangedDetail["view"]): void {
     root.dispatchEvent(
@@ -318,10 +135,7 @@ export function mountQuickActions(
   }
 
   function setStatus(state: "idle" | "running" | "success" | "error", message: string): void {
-    elements.panel.dataset.quickActionState = state;
-    elements.status.textContent = message;
-    elements.status.setAttribute("role", state === "error" ? "alert" : "status");
-
+    root.dataset.quickActionState = state;
     if (workspaceStatus) {
       workspaceStatus.dataset.state = state;
       workspaceStatus.textContent = message;
@@ -330,19 +144,19 @@ export function mountQuickActions(
     }
   }
 
-  function setWorkspaceView(view: "editor" | "diff-review"): void {
+  function setWorkspaceView(view: WorkspaceBusyChangedDetail["view"]): void {
     root.dataset.workspaceView = view;
-
-    if (editorPanel) {
-      editorPanel.dataset.workspaceView = view;
-    }
-    if (editorView) {
-      editorView.hidden = view !== "editor";
-    }
-    if (reviewView) {
-      reviewView.hidden = view !== "diff-review";
-    }
+    controls.editorPanel.dataset.workspaceView = view;
+    controls.editorView.hidden = view !== "editor";
+    controls.reviewView.hidden = view !== "diff-review";
     dispatchBusy(view === "diff-review", view);
+  }
+
+  function syncAvailability(): void {
+    const unavailable = isApiLocked(root) || activeRequest !== null || review !== null;
+    const hasText = getPlainText(editor).trim().length > 0;
+    controls.plainLanguage.disabled = unavailable || !hasText;
+    controls.summary.disabled = unavailable || !hasText;
   }
 
   function setRunning(running: boolean): void {
@@ -352,194 +166,118 @@ export function mountQuickActions(
     syncAvailability();
   }
 
-  function setSelectedAction(actionKey: QuickActionKey): void {
-    selectedAction = actionKey;
-    elements.panel.dataset.quickActionSelectedAction = actionKey;
-    elements.activeLabel.textContent = ACTION_LABELS[actionKey];
-
-    Object.entries(quickActions).forEach(([key, definition]) => {
-      const active = key === actionKey;
-      definition.button.dataset.activeAction = active ? "true" : "false";
-      definition.button.setAttribute("aria-pressed", active ? "true" : "false");
-    });
-
-    elements.panel.querySelectorAll<HTMLElement>("[data-quick-action-config]").forEach((panel) => {
-      panel.hidden = panel.dataset.quickActionConfig !== actionKey;
-    });
-    syncAvailability();
+  function decisionButton(
+    hunk: RewriteDiffHunk,
+    decision: "accepted" | "rejected",
+  ): HTMLButtonElement {
+    const button = document.createElement("button");
+    const label = t(decision === "accepted" ? "review.accept" : "review.reject");
+    button.type = "button";
+    button.className = `diff-decision diff-decision-${decision}`;
+    button.dataset.diffDecision = decision;
+    button.dataset.diffHunkKey = hunk.key;
+    button.setAttribute("aria-label", label);
+    button.title = label;
+    button.textContent = decision === "accepted" ? "✓" : "×";
+    button.addEventListener("click", () => decide(hunk.key, decision));
+    return button;
   }
 
-  function syncAvailability(): void {
-    const locked = isApiLocked(root);
-    const hasText = getPlainText(editor).trim().length > 0;
-    const unavailable = locked || activeRequest !== null || review !== null;
-
-    Object.values(quickActions).forEach((action) => {
-      action.button.disabled = unavailable;
-    });
-    [directPlainLanguage].forEach((button) => {
-      if (button) {
-        button.disabled = unavailable || !hasText;
-      }
-    });
-    if (directSummaryOption) {
-      directSummaryOption.disabled = unavailable || !hasText;
-    }
-
-    elements.runButton.disabled =
-      unavailable ||
-      !hasText ||
-      (selectedAction === "custom" && !hasValidCustomPrompt(elements.customPromptInput.value));
-    elements.runButton.textContent = activeRequest
-      ? t("quickAction.status.running")
-      : t("quickAction.run");
-  }
-
-  function onDecision(key: string, status: RewriteDiffHunkStatus): void {
-    if (!review) {
-      return;
-    }
-
-    review.statuses[key] = status;
-    renderReview();
-
-    const pending = rewriteDiffHunks(review.segments).some(
-      (hunk) => !review || !review.statuses[hunk.key] || review.statuses[hunk.key] === "pending",
-    );
-
-    if (!pending) {
-      commitReview();
-    }
-  }
-
-  function appendInlineHunk(container: HTMLElement, hunk: RewriteDiffHunk): void {
+  function appendInline(container: HTMLElement, hunk: RewriteDiffHunk): void {
     const status = review?.statuses[hunk.key] ?? "pending";
     const wrapper = document.createElement("span");
     wrapper.className = "diff-hunk-inline";
     wrapper.dataset.diffStatus = status;
 
     if (status === "accepted") {
-      wrapper.append(createTextSpan(hunk.addedText, "diff-added"));
+      wrapper.append(textSpan(hunk.addedText, "diff-added"));
     } else if (status === "rejected") {
-      wrapper.append(createTextSpan(hunk.removedText, "diff-rejected"));
+      wrapper.append(textSpan(hunk.removedText, "diff-rejected"));
     } else {
       if (hunk.removedText) {
-        wrapper.append(createTextSpan(hunk.removedText, "diff-removed"));
+        wrapper.append(textSpan(hunk.removedText, "diff-removed"));
       }
       if (hunk.removedText && hunk.addedText) {
-        wrapper.append(createTextSpan(" → ", "diff-arrow"));
+        wrapper.append(textSpan(" → ", "diff-arrow"));
       }
       if (hunk.addedText) {
-        wrapper.append(createTextSpan(hunk.addedText, "diff-added"));
+        wrapper.append(textSpan(hunk.addedText, "diff-added"));
       }
       const actions = document.createElement("span");
       actions.className = "diff-hunk-actions";
-      actions.append(
-        createDecisionButton(t("review.accept"), "accepted", hunk, onDecision),
-        createDecisionButton(t("review.reject"), "rejected", hunk, onDecision),
-      );
+      actions.append(decisionButton(hunk, "accepted"), decisionButton(hunk, "rejected"));
       wrapper.append(actions);
     }
     container.append(wrapper);
   }
 
-  function appendSplitSegment(
+  function appendSplit(
     before: HTMLElement,
     after: HTMLElement,
     segment: RewriteDiffSegment,
   ): void {
     if (segment.kind === "text") {
-      before.append(createTextSpan(segment.value));
-      after.append(createTextSpan(segment.value));
+      before.append(textSpan(segment.value));
+      after.append(textSpan(segment.value));
       return;
     }
 
-    const status = review?.statuses[segment.hunk.key] ?? "pending";
-    before.append(
-      createTextSpan(
-        segment.hunk.removedText,
-        status === "accepted" ? "diff-rejected" : status === "pending" ? "diff-removed" : "",
-      ),
-    );
-    after.append(
-      createTextSpan(
-        segment.hunk.addedText,
-        status === "rejected" ? "diff-rejected" : "diff-added",
-      ),
-    );
-
+    const { hunk } = segment;
+    const status = review?.statuses[hunk.key] ?? "pending";
+    before.append(textSpan(
+      hunk.removedText,
+      status === "accepted" ? "diff-rejected" : status === "pending" ? "diff-removed" : "",
+    ));
+    after.append(textSpan(
+      hunk.addedText,
+      status === "rejected" ? "diff-rejected" : "diff-added",
+    ));
     if (status === "pending") {
       const beforeActions = document.createElement("span");
       const afterActions = document.createElement("span");
       beforeActions.className = "diff-hunk-actions";
       afterActions.className = "diff-hunk-actions";
-      beforeActions.append(
-        createDecisionButton(t("review.reject"), "rejected", segment.hunk, onDecision),
-      );
-      afterActions.append(
-        createDecisionButton(t("review.accept"), "accepted", segment.hunk, onDecision),
-      );
+      beforeActions.append(decisionButton(hunk, "rejected"));
+      afterActions.append(decisionButton(hunk, "accepted"));
       before.append(beforeActions);
       after.append(afterActions);
     }
   }
 
   function renderReview(): void {
-    if (!review || !reviewInline || !reviewSplit || !reviewSplitBefore || !reviewSplitAfter) {
+    if (!review) {
       return;
     }
-
     const hunks = rewriteDiffHunks(review.segments);
-    const resolved = hunks.filter(
-      (hunk) => (review?.statuses[hunk.key] ?? "pending") !== "pending",
-    ).length;
-
-    if (reviewTitle) {
-      reviewTitle.textContent = t("review.title", { action: ACTION_LABELS[review.action] });
-    }
-    if (reviewProgress) {
-      reviewProgress.textContent = t("review.progress", { resolved, total: hunks.length });
-    }
-
-    reviewInline.replaceChildren();
-    reviewSplitBefore.replaceChildren();
-    reviewSplitAfter.replaceChildren();
+    const resolved = hunks.filter((hunk) => review?.statuses[hunk.key] !== "pending").length;
+    controls.reviewTitle.textContent = t("review.title", { action: ACTIONS[review.action].label });
+    controls.reviewProgress.textContent = t("review.progress", { resolved, total: hunks.length });
+    controls.reviewInline.replaceChildren();
+    controls.reviewSplitBefore.replaceChildren();
+    controls.reviewSplitAfter.replaceChildren();
 
     review.segments.forEach((segment) => {
       if (segment.kind === "text") {
-        reviewInline.append(createTextSpan(segment.value));
+        controls.reviewInline.append(textSpan(segment.value));
       } else {
-        appendInlineHunk(reviewInline, segment.hunk);
+        appendInline(controls.reviewInline, segment.hunk);
       }
-      appendSplitSegment(reviewSplitBefore, reviewSplitAfter, segment);
+      appendSplit(controls.reviewSplitBefore, controls.reviewSplitAfter, segment);
     });
 
-    reviewInline.hidden = viewMode !== "inline" || hunks.length === 0;
-    reviewSplit.hidden = viewMode !== "split" || hunks.length === 0;
-    if (reviewNoChanges) {
-      reviewNoChanges.hidden = hunks.length > 0;
-    }
-    [acceptAllButton, inlineButton, splitButton].forEach((button) => {
-      if (button) {
-        button.hidden = hunks.length === 0;
-      }
-    });
-    if (rejectAllButton) {
-      // This is also the exit action for a review that produced no changes.
-      rejectAllButton.hidden = false;
-    }
-    inlineButton?.setAttribute("aria-pressed", viewMode === "inline" ? "true" : "false");
-    splitButton?.setAttribute("aria-pressed", viewMode === "split" ? "true" : "false");
-
-    // Keep the legacy before/after contracts populated for compatibility tests.
-    const legacyDiff = createRewriteDiff(review.original, review.rewritten);
-    elements.diffBefore.textContent = legacyDiff.before.map((token) => token.text).join("");
-    elements.diffAfter.textContent = legacyDiff.after.map((token) => token.text).join("");
+    controls.reviewInline.hidden = reviewMode !== "inline" || hunks.length === 0;
+    controls.reviewSplit.hidden = reviewMode !== "split" || hunks.length === 0;
+    controls.noChanges.hidden = hunks.length > 0;
+    controls.acceptAll.hidden = hunks.length === 0;
+    controls.inlineMode.hidden = hunks.length === 0;
+    controls.splitMode.hidden = hunks.length === 0;
+    controls.rejectAll.hidden = false;
+    controls.inlineMode.setAttribute("aria-pressed", reviewMode === "inline" ? "true" : "false");
+    controls.splitMode.setAttribute("aria-pressed", reviewMode === "split" ? "true" : "false");
   }
 
-  function exitReview(message = IDLE_MESSAGE): void {
+  function exitReview(message = ""): void {
     review = null;
-    elements.diffPanel.hidden = true;
     setWorkspaceView("editor");
     editor.setEditable(true);
     setStatus(message ? "success" : "idle", message);
@@ -551,95 +289,105 @@ export function mountQuickActions(
     if (!review) {
       return;
     }
-
     const resolvedText = resolveRewriteDiff(review.segments, review.statuses);
-    const successMessage = quickActions[review.action].successMessage;
-
-    suppressExternalReset = true;
+    const original = review.original;
+    const success = ACTIONS[review.action].success;
+    suppressTextChange = true;
     try {
-      if (resolvedText !== review.original) {
+      if (resolvedText !== original) {
         editor.view.dispatch(closeHistory(editor.state.tr));
         setEditorPlainText(editor, resolvedText, { emitUpdate: true });
       }
     } finally {
-      suppressExternalReset = false;
+      suppressTextChange = false;
     }
-    exitReview(successMessage);
+    exitReview(success);
   }
 
-  async function runQuickAction(actionKey: QuickActionKey): Promise<void> {
-    const originalText = getPlainText(editor);
-    const action = quickActions[actionKey];
+  function decide(key: string, status: RewriteDiffHunkStatus): void {
+    if (!review) {
+      return;
+    }
+    review.statuses[key] = status;
+    const pending = rewriteDiffHunks(review.segments).some(
+      (hunk) => review?.statuses[hunk.key] === "pending",
+    );
+    if (pending) {
+      renderReview();
+    } else {
+      commitReview();
+    }
+  }
 
+  function requestBody(action: QuickAction, original: string): QuickActionRequestBody {
+    return {
+      text: original,
+      language: normalizeRequestedLanguage(controls.language.value),
+      ...(action === "summarize" ? { option: controls.summary.value } : {}),
+    };
+  }
+
+  async function runAction(
+    action: QuickAction,
+    retryRequest?: QuickActionRequestBody,
+  ): Promise<void> {
+    const original = retryRequest?.text ?? getPlainText(editor);
     if (isApiLocked(root)) {
-      setStatus("error", AUTH_REQUIRED_MESSAGE);
+      setStatus("error", t("quickAction.status.authRequired"));
       syncAvailability();
       return;
     }
-    if (!originalText.trim() || activeRequest || review) {
+    if (!original.trim() || activeRequest || review) {
       syncAvailability();
-      return;
-    }
-    if (actionKey === "custom" && !hasValidCustomPrompt(elements.customPromptInput.value)) {
-      setStatus("error", t("quickAction.error.customPromptRequired"));
       return;
     }
 
-    selectedAction = actionKey;
+    const definition = ACTIONS[action];
+    const body = retryRequest ?? requestBody(action, original);
     const controller = new AbortController();
-    const requestBody = action.buildRequestBody
-      ? action.buildRequestBody(originalText)
-      : { text: originalText, language: getSelectedLanguage() };
-
-    activeRequest = { action: actionKey, original: originalText, controller };
+    activeRequest = controller;
     setRunning(true);
-    setStatus("running", action.runningMessage);
+    setStatus("running", definition.running);
 
     try {
-      const response = await apiFetch(action.endpoint, {
+      const response = await apiFetch(definition.endpoint, {
         method: "POST",
         headers: { Accept: "application/json", "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(body),
         signal: controller.signal,
       });
-
       if (!response.ok) {
-        throw new Error(await extractErrorMessage(response, action.errorMessage));
+        throw new Error(await extractErrorMessage(response, definition.error));
       }
-
       const payload = (await response.json()) as QuickActionResponse;
-      if (activeRequest?.controller !== controller) {
+      if (activeRequest !== controller) {
         return;
       }
-
-      const rewritten = payload.text;
-      if (typeof rewritten !== "string" || (!rewritten.trim() && originalText.trim())) {
-        throw new Error(action.errorMessage);
+      if (typeof payload.text !== "string" || (!payload.text.trim() && original.trim())) {
+        throw new Error(definition.error);
       }
 
-      const diff = createRewriteDiff(originalText, rewritten);
+      const diff = createRewriteDiff(original, payload.text);
       review = {
-        action: actionKey,
-        original: originalText,
-        rewritten,
+        action,
+        request: body,
+        original,
         segments: diff.segments,
         statuses: Object.fromEntries(
           rewriteDiffHunks(diff.segments).map((hunk) => [hunk.key, "pending"]),
         ),
       };
       activeRequest = null;
-      viewMode = "inline";
-      elements.diffPanel.hidden = false;
+      reviewMode = "inline";
       setWorkspaceView("diff-review");
       setRunning(false);
-      setStatus("success", action.successMessage);
+      setStatus("success", definition.success);
       renderReview();
-      (diff.hasChanges ? acceptAllButton : retryButton)?.focus();
+      (diff.hasChanges ? controls.acceptAll : controls.retry).focus();
     } catch (error) {
-      if (isAbortError(error) || activeRequest?.controller !== controller) {
+      if (isAbortError(error) || activeRequest !== controller) {
         return;
       }
-
       activeRequest = null;
       setRunning(false);
       setStatus(
@@ -652,54 +400,48 @@ export function mountQuickActions(
     }
   }
 
-  Object.entries(quickActions).forEach(([key, definition]) => {
-    definition.button.addEventListener("click", () => setSelectedAction(key as QuickActionKey));
-  });
-  elements.runButton.addEventListener("click", () => void runQuickAction(selectedAction));
-  elements.customPromptInput.addEventListener("input", syncAvailability);
-  directPlainLanguage?.addEventListener("click", () => void runQuickAction("plain-language"));
-  directSummaryOption?.addEventListener("change", () => {
-    if (!directSummaryOption.value) {
-      return;
+  controls.plainLanguage.addEventListener("click", () => void runAction("plain-language"));
+  controls.summary.addEventListener("change", () => {
+    if (controls.summary.value) {
+      void runAction("summarize").finally(() => {
+        controls.summary.value = "";
+      });
     }
-    elements.summarizeOptionSelect.value = directSummaryOption.value;
-    void runQuickAction("summarize").finally(() => {
-      directSummaryOption.value = "";
-    });
   });
-  acceptAllButton?.addEventListener("click", () => {
-    if (!review) {
-      return;
+  controls.acceptAll.addEventListener("click", () => {
+    if (review) {
+      rewriteDiffHunks(review.segments).forEach((hunk) => {
+        review!.statuses[hunk.key] = "accepted";
+      });
+      commitReview();
     }
-    rewriteDiffHunks(review.segments).forEach((hunk) => {
-      review!.statuses[hunk.key] = "accepted";
-    });
-    commitReview();
   });
-  rejectAllButton?.addEventListener("click", () => exitReview());
-  retryButton?.addEventListener("click", () => {
-    const action = review?.action;
+  controls.rejectAll.addEventListener("click", () => exitReview());
+  controls.retry.addEventListener("click", () => {
+    const previous = review;
     exitReview();
-    if (action) {
-      void runQuickAction(action);
+    if (previous) {
+      void runAction(previous.action, previous.request);
     }
   });
-  inlineButton?.addEventListener("click", () => {
-    viewMode = "inline";
+  controls.inlineMode.addEventListener("click", () => {
+    reviewMode = "inline";
     renderReview();
   });
-  splitButton?.addEventListener("click", () => {
-    viewMode = "split";
+  controls.splitMode.addEventListener("click", () => {
+    reviewMode = "split";
     renderReview();
   });
   root.addEventListener("editor:text-changed", () => {
-    if (!suppressExternalReset) {
+    if (!suppressTextChange) {
       syncAvailability();
     }
   });
 
-  setSelectedAction("plain-language");
   setWorkspaceView("editor");
-  setStatus(isApiLocked(root) ? "error" : "idle", isApiLocked(root) ? AUTH_REQUIRED_MESSAGE : "");
+  setStatus(
+    isApiLocked(root) ? "error" : "idle",
+    isApiLocked(root) ? t("quickAction.status.authRequired") : "",
+  );
   syncAvailability();
 }

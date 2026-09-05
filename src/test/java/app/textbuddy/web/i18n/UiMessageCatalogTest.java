@@ -15,7 +15,8 @@ class UiMessageCatalogTest {
 
     @Test
     void exposesOnlyActuallyTranslatedLanguages() {
-        assertThat(catalog.supportedUiLanguages()).containsExactly("de", "en");
+        assertThat(catalog.normalizeUiLocale(Locale.GERMAN)).isEqualTo(Locale.GERMAN);
+        assertThat(catalog.normalizeUiLocale(Locale.ENGLISH)).isEqualTo(Locale.ENGLISH);
         assertThat(catalog.normalizeUiLocale(Locale.FRENCH)).isEqualTo(Locale.GERMAN);
     }
 

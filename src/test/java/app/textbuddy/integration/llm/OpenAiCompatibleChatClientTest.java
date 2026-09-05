@@ -1,8 +1,8 @@
 package app.textbuddy.integration.llm;
 
 import app.textbuddy.config.TextbuddyProperties;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
@@ -40,10 +40,10 @@ class OpenAiCompatibleChatClientTest {
             assertThat(exchange.getRequestHeaders().getFirst("Authorization")).isEqualTo("Bearer test-token");
 
             JsonNode request = readRequestJson(exchange);
-            assertThat(request.path("model").asText()).isEqualTo("test-model");
+            assertThat(request.path("model").asString()).isEqualTo("test-model");
             assertThat(request.path("stream").asBoolean()).isFalse();
-            assertThat(request.path("messages").path(0).path("role").asText()).isEqualTo("system");
-            assertThat(request.path("messages").path(1).path("role").asText()).isEqualTo("user");
+            assertThat(request.path("messages").path(0).path("role").asString()).isEqualTo("system");
+            assertThat(request.path("messages").path(1).path("role").asString()).isEqualTo("user");
             writeJson(exchange, 200, "{\"choices\":[{\"message\":{\"content\":\"Antworttext\"}}]}");
         });
 
@@ -61,7 +61,7 @@ class OpenAiCompatibleChatClientTest {
 
         JsonNode response = newClient().completeJson("System", "User");
 
-        assertThat(response.path("synonyms").path(0).asText()).isEqualTo("rasch");
+        assertThat(response.path("synonyms").path(0).asString()).isEqualTo("rasch");
         assertThat(requestCount).hasValue(1);
     }
 

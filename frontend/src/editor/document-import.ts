@@ -1,53 +1,27 @@
 import type { Editor } from "@tiptap/core";
 
 import { apiFetch } from "./api-fetch";
-
 import { isApiLocked } from "./auth";
-import { setEditorHtml } from "./editor-content";
+import { importedHtmlToPlainText, setEditorPlainText } from "./editor-content";
 import { extractErrorMessage } from "./http-error";
 import { mapTextLanguageToOcr } from "./import-language";
 import type { DocumentImportElements } from "./types";
 import { t } from "./ui-i18n";
 
-const IDLE_MESSAGE = "";
 const DEFAULT_ERROR_MESSAGE = t("import.status.defaultError");
-const AUTH_REQUIRED_MESSAGE = t("import.status.authRequired");
 
 interface DocumentConversionResponse {
   html: string;
 }
 
-function extractAcceptTokens(accept: string): string[] {
+function isSupportedFile(file: File, accept: string): boolean {
+  const filename = file.name.trim().toLowerCase();
+  const contentType = file.type.trim().toLowerCase();
   return accept
     .split(",")
     .map((value) => value.trim().toLowerCase())
-    .filter((value) => value.length > 0);
-}
-
-function fileMatchesToken(file: File, token: string): boolean {
-  const filename = file.name.trim().toLowerCase();
-  const contentType = file.type.trim().toLowerCase();
-
-  if (token.startsWith(".")) {
-    return filename.endsWith(token);
-  }
-
-  if (token.endsWith("/*")) {
-    const prefix = token.slice(0, token.length - 1);
-    return contentType.startsWith(prefix);
-  }
-
-  return contentType === token;
-}
-
-function isSupportedFile(file: File, accept: string): boolean {
-  const tokens = extractAcceptTokens(accept);
-
-  if (tokens.length === 0) {
-    return true;
-  }
-
-  return tokens.some((token) => fileMatchesToken(file, token));
+    .filter(Boolean)
+    .some((token) => token.startsWith(".") ? filename.endsWith(token) : contentType === token);
 }
 
 export function mountDocumentImport(
@@ -56,51 +30,36 @@ export function mountDocumentImport(
   elements: DocumentImportElements,
 ): void {
   let activeRequest: AbortController | null = null;
-  const toolbarUploadButton = root.querySelector<HTMLButtonElement>("[data-editor-action='upload']");
-  const externalDropTarget = root.querySelector<HTMLElement>("[data-editor-import-drop-target]");
-  const workspaceStatus = document.querySelector<HTMLElement>("[data-workspace-status]");
+  const foundUploadButton = root.querySelector<HTMLButtonElement>("[data-editor-action='upload']");
+  const foundDropTarget = root.querySelector<HTMLElement>("[data-editor-import-drop-target]");
+  const workspaceStatus = root.querySelector<HTMLElement>("[data-workspace-status]");
 
-  function setPanelState(
-    state: "idle" | "loading" | "success" | "error",
-    message: string,
-  ): void {
-    elements.panel.dataset.documentImportState = state;
-    elements.panel.setAttribute("aria-busy", state === "loading" ? "true" : "false");
-    elements.status.setAttribute("role", state === "error" ? "alert" : "status");
-    elements.status.setAttribute("aria-live", state === "error" ? "assertive" : "polite");
-    elements.status.setAttribute("aria-atomic", "true");
-    elements.status.textContent = message;
-    if (workspaceStatus && message) {
+  if (!foundUploadButton || !foundDropTarget) {
+    return;
+  }
+  const uploadButton = foundUploadButton;
+  const dropTarget = foundDropTarget;
+
+  function setState(state: "idle" | "loading" | "success" | "error", message: string): void {
+    root.dataset.documentImportState = state;
+    if (workspaceStatus) {
       workspaceStatus.dataset.state = state;
       workspaceStatus.textContent = message;
-      workspaceStatus.hidden = false;
+      workspaceStatus.hidden = message.length === 0;
       workspaceStatus.setAttribute("role", state === "error" ? "alert" : "status");
     }
     root.dispatchEvent(
-      new CustomEvent("document-import:state", {
-        bubbles: true,
-        detail: { state, message },
-      }),
+      new CustomEvent("document-import:state", { bubbles: true, detail: { state, message } }),
     );
   }
 
   function setBusy(busy: boolean): void {
-    const authLocked = isApiLocked(root);
-
-    elements.button.disabled = busy || authLocked;
-    elements.input.disabled = busy || authLocked;
-    elements.ocrLanguageSelect.disabled = busy || authLocked;
-    elements.button.setAttribute("aria-disabled", elements.button.disabled ? "true" : "false");
-    elements.input.setAttribute("aria-disabled", elements.input.disabled ? "true" : "false");
-    elements.ocrLanguageSelect.setAttribute(
-      "aria-disabled",
-      elements.ocrLanguageSelect.disabled ? "true" : "false",
-    );
-    elements.dropzone.dataset.busy = busy ? "true" : "false";
-    elements.dropzone.dataset.authLocked = authLocked ? "true" : "false";
-    elements.dropzone.setAttribute("aria-busy", busy ? "true" : "false");
-    elements.dropzone.setAttribute("aria-disabled", busy || authLocked ? "true" : "false");
-    toolbarUploadButton?.toggleAttribute("disabled", busy || authLocked);
+    const disabled = busy || isApiLocked(root);
+    elements.input.disabled = disabled;
+    uploadButton.disabled = disabled;
+    dropTarget.dataset.busy = busy ? "true" : "false";
+    dropTarget.dataset.authLocked = isApiLocked(root) ? "true" : "false";
+    dropTarget.setAttribute("aria-busy", busy ? "true" : "false");
     root.dataset.documentImportRunning = busy ? "true" : "false";
     editor.setEditable(!busy && root.dataset.quickActionRunning !== "true");
     root.dispatchEvent(
@@ -111,203 +70,95 @@ export function mountDocumentImport(
     );
   }
 
-  function openFilePicker(): void {
-    if (elements.input.disabled) {
-      return;
-    }
-
-    elements.input.click();
-  }
-
   async function importFile(file: File): Promise<void> {
     activeRequest?.abort();
-
     if (!isSupportedFile(file, elements.input.accept)) {
-      setPanelState(
-        "error",
-        t("import.status.unsupportedFormat", {
-          formats: elements.labels,
-        }),
-      );
+      setState("error", t("import.status.unsupportedFormat", { formats: elements.labels }));
       elements.input.value = "";
       return;
     }
 
     const controller = new AbortController();
     const formData = new FormData();
-    const selectedTextLanguage =
-      root.querySelector<HTMLSelectElement>("[data-correction-language]")?.value ??
-      elements.ocrLanguageSelect.value;
-    const ocrLanguage = mapTextLanguageToOcr(selectedTextLanguage);
-    elements.ocrLanguageSelect.value = ocrLanguage;
-    const ocrLabel =
-      elements.ocrLanguageSelect.selectedOptions.item(0)?.textContent?.trim() ?? ocrLanguage;
-
+    const textLanguage = document.querySelector<HTMLSelectElement>("[data-workspace-language]")?.value ?? "auto";
+    const ocrLanguage = mapTextLanguageToOcr(textLanguage);
     formData.append("file", file);
     activeRequest = controller;
     setBusy(true);
-    setPanelState(
-      "loading",
-      t("import.status.loading", {
-        fileName: file.name,
-        ocrLabel,
-      }),
-    );
+    setState("loading", t("import.status.loading", {
+      fileName: file.name,
+      ocrLabel: ocrLanguage.toUpperCase(),
+    }));
 
     try {
       const response = await apiFetch(
         `/api/convert/doc?ocrLanguage=${encodeURIComponent(ocrLanguage)}`,
-        {
-          method: "POST",
-          body: formData,
-          signal: controller.signal,
-        },
+        { method: "POST", body: formData, signal: controller.signal },
       );
-
       if (!response.ok) {
         throw new Error(await extractErrorMessage(response, DEFAULT_ERROR_MESSAGE));
       }
 
       const payload = (await response.json()) as DocumentConversionResponse;
-
-      setEditorHtml(editor, payload.html ?? "");
-      editor.commands.focus("start");
-      setPanelState("success", t("import.status.success", { fileName: file.name }));
-    } catch (error) {
-      if (controller.signal.aborted) {
+      if (activeRequest !== controller) {
         return;
       }
-
-      const message =
-        error instanceof Error && error.message.trim().length > 0
-          ? error.message
-          : DEFAULT_ERROR_MESSAGE;
-      setPanelState("error", message);
+      setEditorPlainText(editor, importedHtmlToPlainText(payload.html ?? ""));
+      editor.commands.focus("start");
+      setState("success", t("import.status.success", { fileName: file.name }));
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        setState(
+          "error",
+          error instanceof Error && error.message.trim() ? error.message : DEFAULT_ERROR_MESSAGE,
+        );
+      }
     } finally {
       if (activeRequest === controller) {
         activeRequest = null;
+        setBusy(false);
+        dropTarget.dataset.dragging = "false";
+        elements.input.value = "";
       }
-
-      setBusy(false);
-      elements.dropzone.dataset.dragging = "false";
-      elements.input.value = "";
     }
   }
 
-  elements.button.addEventListener("click", () => {
-    openFilePicker();
-  });
-  toolbarUploadButton?.addEventListener("click", openFilePicker);
-
-  elements.dropzone.addEventListener("click", (event) => {
-    const target = event.target;
-
-    if (
-      target === elements.input ||
-      (target instanceof Element &&
-        target.closest("button,select,option,textarea,input,a,label"))
-    ) {
-      return;
+  uploadButton.addEventListener("click", () => {
+    if (!elements.input.disabled) {
+      elements.input.click();
     }
-
-    openFilePicker();
   });
-
   elements.input.addEventListener("change", () => {
-    const [file] = Array.from(elements.input.files ?? []);
-
-    if (!file) {
-      return;
+    const file = elements.input.files?.item(0);
+    if (file) {
+      void importFile(file);
     }
-
-    void importFile(file);
   });
-
-  elements.dropzone.addEventListener("dragenter", (event) => {
+  dropTarget.addEventListener("dragenter", (event) => {
     event.preventDefault();
-
-    if (elements.input.disabled) {
-      return;
+    if (!elements.input.disabled) {
+      dropTarget.dataset.dragging = "true";
     }
-
-    elements.dropzone.dataset.dragging = "true";
   });
-
-  elements.dropzone.addEventListener("dragover", (event) => {
-    event.preventDefault();
-
-    if (elements.input.disabled) {
-      return;
-    }
-
-    elements.dropzone.dataset.dragging = "true";
-  });
-
-  elements.dropzone.addEventListener("dragleave", (event) => {
+  dropTarget.addEventListener("dragover", (event) => event.preventDefault());
+  dropTarget.addEventListener("dragleave", (event) => {
     const nextTarget = event.relatedTarget;
-
-    if (nextTarget instanceof Node && elements.dropzone.contains(nextTarget)) {
-      return;
+    if (!(nextTarget instanceof Node) || !dropTarget.contains(nextTarget)) {
+      dropTarget.dataset.dragging = "false";
     }
-
-    elements.dropzone.dataset.dragging = "false";
   });
-
-  elements.dropzone.addEventListener("drop", (event) => {
+  dropTarget.addEventListener("drop", (event) => {
     event.preventDefault();
-    elements.dropzone.dataset.dragging = "false";
-
-    if (elements.input.disabled) {
-      return;
+    dropTarget.dataset.dragging = "false";
+    const file = event.dataTransfer?.files.item(0);
+    if (file && !elements.input.disabled) {
+      void importFile(file);
     }
-
-    const [file] = Array.from(event.dataTransfer?.files ?? []);
-
-    if (!file) {
-      return;
-    }
-
-    void importFile(file);
   });
-
-  if (externalDropTarget) {
-    externalDropTarget.addEventListener("dragenter", (event) => {
-      event.preventDefault();
-      if (!elements.input.disabled) {
-        externalDropTarget.dataset.dragging = "true";
-      }
-    });
-    externalDropTarget.addEventListener("dragover", (event) => {
-      event.preventDefault();
-      if (!elements.input.disabled) {
-        externalDropTarget.dataset.dragging = "true";
-      }
-    });
-    externalDropTarget.addEventListener("dragleave", (event) => {
-      const nextTarget = event.relatedTarget;
-      if (!(nextTarget instanceof Node) || !externalDropTarget.contains(nextTarget)) {
-        externalDropTarget.dataset.dragging = "false";
-      }
-    });
-    externalDropTarget.addEventListener("drop", (event) => {
-      event.preventDefault();
-      externalDropTarget.dataset.dragging = "false";
-      if (elements.input.disabled) {
-        return;
-      }
-      const [file] = Array.from(event.dataTransfer?.files ?? []);
-      if (file) {
-        void importFile(file);
-      }
-    });
-  }
 
   setBusy(false);
-
-  if (isApiLocked(root)) {
-    setPanelState("error", AUTH_REQUIRED_MESSAGE);
-    return;
-  }
-
-  setPanelState("idle", IDLE_MESSAGE);
+  setState(
+    isApiLocked(root) ? "error" : "idle",
+    isApiLocked(root) ? t("import.status.authRequired") : "",
+  );
 }

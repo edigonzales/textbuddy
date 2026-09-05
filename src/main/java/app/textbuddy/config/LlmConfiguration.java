@@ -7,7 +7,7 @@ import app.textbuddy.integration.llm.PromptCatalog;
 import app.textbuddy.integration.llm.QuickActionPromptComposer;
 import app.textbuddy.integration.llm.StructuredPromptComposer;
 import app.textbuddy.integration.llm.TextbuddyLlmClient;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;

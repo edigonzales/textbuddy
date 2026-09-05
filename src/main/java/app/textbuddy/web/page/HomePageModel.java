@@ -1,20 +1,15 @@
 package app.textbuddy.web.page;
 
-import app.textbuddy.advisor.AdvisorDocsResponseItem;
-
 import java.util.List;
 import java.util.Map;
 
 public record HomePageModel(
         String title,
-        String subtitle,
         HomeAuthModel auth,
-        List<AdvisorDocsResponseItem> advisorDocs,
         List<String> documentImportFormats,
         String documentImportAccept,
         String uiLocaleLanguage,
         String uiLocaleTag,
-        List<String> supportedUiLanguages,
         String uiMessagesJson,
         String csrfParameterName,
         String csrfHeaderName,

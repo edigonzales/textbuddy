@@ -10,7 +10,7 @@ import app.textbuddy.quickaction.QuickActionRequest;
 import app.textbuddy.quickaction.QuickActionType;
 import app.textbuddy.quickaction.SocialMediaPrompt;
 import app.textbuddy.quickaction.SummarizePrompt;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -116,8 +116,8 @@ public final class OpenAiTextbuddyLlmClient implements TextbuddyLlmClient {
                 List<String> values = new ArrayList<>();
 
                 for (JsonNode item : candidate) {
-                    if (item != null && item.isTextual()) {
-                        String value = normalize(item.asText(""));
+                    if (item != null && item.isString()) {
+                        String value = normalize(item.asString(""));
 
                         if (!value.isBlank()) {
                             values.add(value);
@@ -133,7 +133,7 @@ public final class OpenAiTextbuddyLlmClient implements TextbuddyLlmClient {
     }
 
     private String text(JsonNode node, String field) {
-        return normalize(node.path(field).asText(""));
+        return normalize(node.path(field).asString(""));
     }
 
     private String normalize(String value) {
