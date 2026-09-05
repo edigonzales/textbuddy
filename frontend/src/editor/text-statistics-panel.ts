@@ -1,5 +1,9 @@
 import type { EditorTextChangedDetail } from "./types";
-import { calculateTextStatistics, describeFleschScoreKey } from "./text-statistics";
+import {
+  calculateTextStatistics,
+  describeFleschScoreKey,
+  supportsGermanFlesch,
+} from "./text-statistics";
 import { t } from "./ui-i18n";
 
 interface TextStatisticsElements {
@@ -10,6 +14,7 @@ interface TextStatisticsElements {
   sentences: HTMLElement;
   averageSentenceLength: HTMLElement;
   averageSyllablesPerWord: HTMLElement;
+  fleschSection: HTMLElement;
   flesch: HTMLElement;
   fleschLabel: HTMLElement;
   fleschFill: HTMLElement;
@@ -40,6 +45,7 @@ function findElements(): TextStatisticsElements | null {
   const averageSyllablesPerWord = panel.querySelector<HTMLElement>(
     "[data-text-stats='avg-syllables-per-word']",
   );
+  const fleschSection = panel.querySelector<HTMLElement>("[data-text-stats-flesch]");
   const flesch = panel.querySelector<HTMLElement>("[data-text-stats='flesch']");
   const fleschLabel = panel.querySelector<HTMLElement>("[data-text-stats-flesch-label]");
   const fleschFill = panel.querySelector<HTMLElement>("[data-text-stats-flesch-fill]");
@@ -51,6 +57,7 @@ function findElements(): TextStatisticsElements | null {
     !sentences ||
     !averageSentenceLength ||
     !averageSyllablesPerWord ||
+    !fleschSection ||
     !flesch ||
     !fleschLabel ||
     !fleschFill
@@ -66,6 +73,7 @@ function findElements(): TextStatisticsElements | null {
     sentences,
     averageSentenceLength,
     averageSyllablesPerWord,
+    fleschSection,
     flesch,
     fleschLabel,
     fleschFill,
@@ -75,13 +83,15 @@ function findElements(): TextStatisticsElements | null {
 export function mountTextStatisticsPanel(): void {
   const root = document.querySelector<HTMLElement>("#editor-island-root");
   const mirror = document.querySelector<HTMLTextAreaElement>("[data-editor-mirror]");
+  const language = document.querySelector<HTMLSelectElement>("[data-workspace-language]");
   const elements = findElements();
 
-  if (!root || !mirror || !elements) {
+  if (!root || !mirror || !language || !elements) {
     return;
   }
 
   const resolvedElements = elements;
+  const resolvedLanguage = language;
 
   function render(text: string): void {
     const stats = calculateTextStatistics(text);
@@ -93,6 +103,7 @@ export function mountTextStatisticsPanel(): void {
     resolvedElements.sentences.textContent = String(stats.sentences);
     resolvedElements.averageSentenceLength.textContent = formatDecimal(stats.averageSentenceLength, 1);
     resolvedElements.averageSyllablesPerWord.textContent = formatDecimal(stats.averageSyllablesPerWord, 2);
+    resolvedElements.fleschSection.hidden = !supportsGermanFlesch(resolvedLanguage.value);
     resolvedElements.flesch.textContent = formatDecimal(stats.fleschScore, 1);
     resolvedElements.fleschLabel.textContent = t(
       describeFleschScoreKey(stats.fleschScore, stats.words > 0),
@@ -104,6 +115,7 @@ export function mountTextStatisticsPanel(): void {
     const detail = (event as CustomEvent<EditorTextChangedDetail>).detail;
     render(detail.text);
   });
+  resolvedLanguage.addEventListener("change", () => render(mirror.value));
 
   render(mirror.value);
 }

@@ -29,6 +29,12 @@ async function prepare(page: Page): Promise<void> {
   await page.goto("/");
 }
 
+async function selectTextLanguage(page: Page, language: string): Promise<void> {
+  await page.getByTestId("workspace-mode-validate").click();
+  await page.getByTestId("workspace-language").selectOption(language);
+  await page.getByTestId("workspace-mode-transform").click();
+}
+
 async function expectNoBlockingViolations(page: Page): Promise<void> {
   const results = await new AxeBuilder({ page }).analyze();
   const blocking = results.violations.filter(
@@ -62,6 +68,7 @@ test("axe: inline and split diff review", async ({ page }) => {
     await route.fulfill({ json: { text: "Das neue Haus ist gross." } });
   });
   await page.getByTestId("editor-input").fill("Das alte Haus ist klein.");
+  await selectTextLanguage(page, "de-CH");
   await page.getByTestId("mvp-action-plain-language").click();
   await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
   await expectNoBlockingViolations(page);
@@ -73,6 +80,8 @@ test("axe: inline and split diff review", async ({ page }) => {
 test("axe: statistics popover", async ({ page }) => {
   await prepare(page);
   await page.getByTestId("editor-input").fill("Mal Tal. Ball Fall.");
+  await page.getByTestId("workspace-mode-validate").click();
+  await page.getByTestId("workspace-language").selectOption("de-CH");
   await page.getByTestId("editor-stats-toggle").click();
   await expect(page.getByTestId("stats-popover")).toBeVisible();
   await expectNoBlockingViolations(page);

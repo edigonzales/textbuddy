@@ -8,6 +8,7 @@ import { extractErrorMessage } from "./http-error";
 import { getPlainText } from "./plain-text";
 import { normalizeRequestedLanguage } from "./request-language";
 import { createRewriteDiff, resolveRewriteDiff, rewriteDiffHunks } from "./rewrite-diff";
+import { calculateTextStatistics, supportsGermanFlesch } from "./text-statistics";
 import type {
   QuickActionResponse,
   RewriteDiffHunk,
@@ -30,8 +31,15 @@ interface ReviewState {
   action: QuickAction;
   request: QuickActionRequestBody;
   original: string;
+  readability: ReadabilityComparison | null;
   segments: RewriteDiffSegment[];
   statuses: Record<string, RewriteDiffHunkStatus>;
+}
+
+interface ReadabilityComparison {
+  before: number;
+  after: number;
+  difference: number;
 }
 
 interface Controls {
@@ -43,6 +51,10 @@ interface Controls {
   reviewView: HTMLElement;
   reviewTitle: HTMLElement;
   reviewProgress: HTMLElement;
+  reviewReadability: HTMLElement;
+  reviewReadabilityBefore: HTMLElement;
+  reviewReadabilityAfter: HTMLElement;
+  reviewReadabilityDifference: HTMLElement;
   reviewInline: HTMLElement;
   reviewSplit: HTMLElement;
   reviewSplitBefore: HTMLElement;
@@ -84,6 +96,10 @@ function findControls(root: HTMLElement): Controls | null {
     reviewView: query<HTMLElement>("[data-review-view]"),
     reviewTitle: query<HTMLElement>("[data-review-title]"),
     reviewProgress: query<HTMLElement>("[data-review-progress]"),
+    reviewReadability: query<HTMLElement>("[data-review-readability]"),
+    reviewReadabilityBefore: query<HTMLElement>("[data-review-readability-before]"),
+    reviewReadabilityAfter: query<HTMLElement>("[data-review-readability-after]"),
+    reviewReadabilityDifference: query<HTMLElement>("[data-review-readability-difference]"),
     reviewInline: query<HTMLElement>("[data-review-inline]"),
     reviewSplit: query<HTMLElement>("[data-review-split]"),
     reviewSplitBefore: query<HTMLElement>("[data-review-split-before]"),
@@ -110,6 +126,38 @@ function textSpan(text: string, className = ""): HTMLSpanElement {
   span.textContent = text;
   span.className = className;
   return span;
+}
+
+function createReadabilityComparison(
+  action: QuickAction,
+  language: string,
+  original: string,
+  rewritten: string,
+): ReadabilityComparison | null {
+  if (action !== "plain-language" || !supportsGermanFlesch(language)) {
+    return null;
+  }
+
+  const before = calculateTextStatistics(original);
+  const after = calculateTextStatistics(rewritten);
+  if (before.words === 0 || after.words === 0) {
+    return null;
+  }
+
+  const difference = Math.round((after.fleschScore - before.fleschScore) * 10) / 10;
+  return {
+    before: before.fleschScore,
+    after: after.fleschScore,
+    difference: Object.is(difference, -0) ? 0 : difference,
+  };
+}
+
+function formatDifference(value: number): string {
+  if (value === 0) {
+    return "±0.0";
+  }
+
+  return `${value > 0 ? "+" : "−"}${Math.abs(value).toFixed(1)}`;
 }
 
 export function mountQuickActions(editor: Editor, root: HTMLElement): void {
@@ -252,6 +300,12 @@ export function mountQuickActions(editor: Editor, root: HTMLElement): void {
     const resolved = hunks.filter((hunk) => review?.statuses[hunk.key] !== "pending").length;
     controls.reviewTitle.textContent = t("review.title", { action: ACTIONS[review.action].label });
     controls.reviewProgress.textContent = t("review.progress", { resolved, total: hunks.length });
+    controls.reviewReadability.hidden = review.readability === null;
+    if (review.readability) {
+      controls.reviewReadabilityBefore.textContent = review.readability.before.toFixed(1);
+      controls.reviewReadabilityAfter.textContent = review.readability.after.toFixed(1);
+      controls.reviewReadabilityDifference.textContent = `(${formatDifference(review.readability.difference)})`;
+    }
     controls.reviewInline.replaceChildren();
     controls.reviewSplitBefore.replaceChildren();
     controls.reviewSplitAfter.replaceChildren();
@@ -372,6 +426,7 @@ export function mountQuickActions(editor: Editor, root: HTMLElement): void {
         action,
         request: body,
         original,
+        readability: createReadabilityComparison(action, body.language, original, payload.text),
         segments: diff.segments,
         statuses: Object.fromEntries(
           rewriteDiffHunks(diff.segments).map((hunk) => [hunk.key, "pending"]),

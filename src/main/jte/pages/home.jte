@@ -173,7 +173,7 @@
                                     <div class="text-stats-item"><dt>${page.t("stats.avgSentenceLength")}</dt><dd data-text-stats="avg-sentence-length" data-testid="text-stats-avg-sentence-length">0.0</dd></div>
                                     <div class="text-stats-item"><dt>${page.t("stats.avgSyllablesPerWord")}</dt><dd data-text-stats="avg-syllables-per-word" data-testid="text-stats-avg-syllables-per-word">0.0</dd></div>
                                 </dl>
-                                <div class="text-stats-flesch">
+                                <div class="text-stats-flesch" data-text-stats-flesch hidden>
                                     <div class="text-stats-flesch-head"><span>${page.t("stats.flesch.label")}</span><strong data-text-stats="flesch" data-testid="text-stats-flesch">0.0</strong></div>
                                     <div class="text-stats-flesch-bar" role="img" aria-label="${page.t("stats.flesch.ariaLabel")}"><span data-text-stats-flesch-fill></span></div>
                                     <p class="text-stats-flesch-label" data-text-stats-flesch-label data-testid="text-stats-flesch-label">${page.t("stats.flesch.none")}</p>
@@ -236,6 +236,15 @@
                                 </button>
                             </div>
                         </header>
+                        <div class="review-readability" data-review-readability data-testid="review-readability" role="group" aria-label="${page.t("review.readability.label")}" hidden>
+                            <span class="review-readability-label">${page.t("review.readability.label")}</span>
+                            <span class="review-readability-values">
+                                <span class="sr-only">${page.t("review.readability.before")}: </span><strong data-review-readability-before data-testid="review-readability-before">0.0</strong>
+                                <span aria-hidden="true">→</span>
+                                <span class="sr-only">${page.t("review.readability.after")}: </span><strong data-review-readability-after data-testid="review-readability-after">0.0</strong>
+                                <span class="sr-only">${page.t("review.readability.difference")}: </span><span data-review-readability-difference data-testid="review-readability-difference">(±0.0)</span>
+                            </span>
+                        </div>
                         <p class="review-no-changes" data-review-no-changes hidden>${page.t("review.noChanges")}</p>
                         <div class="diff-inline" data-review-inline data-testid="review-inline"></div>
                         <div class="diff-split" data-review-split data-testid="review-split" hidden>

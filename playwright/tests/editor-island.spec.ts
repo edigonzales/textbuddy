@@ -41,6 +41,12 @@ async function enterText(page: Page, text: string): Promise<void> {
   await expect(page.getByTestId("editor-mirror")).toHaveValue(text);
 }
 
+async function selectTextLanguage(page: Page, language: string): Promise<void> {
+  await page.getByTestId("workspace-mode-validate").click();
+  await page.getByTestId("workspace-language").selectOption(language);
+  await page.getByTestId("workspace-mode-transform").click();
+}
+
 test("local mode status lives beside the brand and supports hover, click, and keyboard access", async ({
   page,
 }) => {
@@ -339,6 +345,7 @@ test("plain-language review preserves the original and commits as one undoable t
   });
   await page.goto("/");
   await enterText(page, "Das alte Haus ist klein.");
+  await selectTextLanguage(page, "de-CH");
 
   await page.getByTestId("mvp-action-plain-language").click();
   await expect(page.getByTestId("editor-mirror")).toHaveValue("Das alte Haus ist klein.");
@@ -346,6 +353,13 @@ test("plain-language review preserves the original and commits as one undoable t
   release?.();
 
   await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+  await expect(page.getByTestId("review-readability")).toBeVisible();
+  await expect(page.getByTestId("review-readability")).toContainText(
+    "Flesch-Lesbarkeit (Deutsch)",
+  );
+  await expect(page.getByTestId("review-readability-before")).toHaveText("104.8");
+  await expect(page.getByTestId("review-readability-after")).toHaveText("116.5");
+  await expect(page.getByTestId("review-readability-difference")).toHaveText("(+11.7)");
   await expect(page.getByTestId("editor-input")).toBeHidden();
   await expect(page.getByTestId("editor-mirror")).toHaveValue("Das alte Haus ist klein.");
   await expect(page.getByRole("button", { name: "Abbrechen" })).toHaveCount(0);
@@ -382,7 +396,11 @@ test("plain-language review preserves the original and commits as one undoable t
   ).toHaveCSS("background-color", "rgb(237, 242, 245)");
 
   await page.locator("[data-review-inline] [data-diff-decision='accepted']").first().click();
+  await expect(page.getByTestId("review-readability-before")).toHaveText("104.8");
+  await expect(page.getByTestId("review-readability-after")).toHaveText("116.5");
+  await expect(page.getByTestId("review-readability-difference")).toHaveText("(+11.7)");
   await page.getByRole("button", { name: "Zwei Spalten" }).click();
+  await expect(page.getByTestId("review-readability-difference")).toHaveText("(+11.7)");
   await expect(page.locator("[data-review-split-before] .diff-rejected").first()).toHaveCSS(
     "background-color",
     "rgb(232, 237, 240)",
@@ -404,9 +422,11 @@ test("summary keeps option values, supports split review, reject-all and retry",
   });
   await page.goto("/");
   await enterText(page, "Ein langer Ausgangstext.");
+  await selectTextLanguage(page, "de-CH");
   await page.getByTestId("mvp-summary-option").selectOption("management_summary");
 
   await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+  await expect(page.getByTestId("review-readability")).toBeHidden();
   expect(payloads[0]?.option).toBe("management_summary");
   await expect(page.getByTestId("mvp-summary-option")).toHaveValue("");
   await expect(page.getByRole("button", { name: "Alle ablehnen" })).toHaveCSS(
@@ -445,15 +465,61 @@ test("unchanged and failed transformations never alter the editor", async ({ pag
   });
   await page.goto("/");
   await enterText(page, "Unverändert.");
+  await selectTextLanguage(page, "de-CH");
 
   await page.getByTestId("mvp-action-plain-language").click();
   await expect(page.getByText("Keine Änderungen gefunden")).toBeVisible();
+  await expect(page.getByTestId("review-readability-before")).toHaveText("-55.0");
+  await expect(page.getByTestId("review-readability-after")).toHaveText("-55.0");
+  await expect(page.getByTestId("review-readability-difference")).toHaveText("(±0.0)");
   await page.getByRole("button", { name: "Alle ablehnen" }).click();
   await page.getByTestId("mvp-action-plain-language").click();
   await expect(page.getByTestId("workspace-status")).toContainText(
     "Transformation fehlgeschlagen",
   );
   await expect(page.getByTestId("editor-mirror")).toHaveValue("Unverändert.");
+});
+
+test("plain-language retry recalculates readability from the new result", async ({ page }) => {
+  await stubCorrection(page);
+  let calls = 0;
+  await page.route("**/api/quick-actions/plain-language", async (route) => {
+    calls += 1;
+    await route.fulfill({
+      json: { text: calls === 1 ? "Das neue Haus ist gross." : "Das Haus ist gross." },
+    });
+  });
+  await page.goto("/");
+  await enterText(page, "Das alte Haus ist klein.");
+  await selectTextLanguage(page, "de-CH");
+
+  await page.getByTestId("mvp-action-plain-language").click();
+  await expect(page.getByTestId("review-readability-after")).toHaveText("116.5");
+  await page.getByRole("button", { name: "Erneut ausführen" }).click();
+
+  await expect.poll(() => calls).toBe(2);
+  await expect(page.getByTestId("review-readability-before")).toHaveText("104.8");
+  await expect(page.getByTestId("review-readability-after")).toHaveText("117.5");
+  await expect(page.getByTestId("review-readability-difference")).toHaveText("(+12.7)");
+});
+
+test("plain-language readability stays hidden for automatic and non-German languages", async ({
+  page,
+}) => {
+  await stubCorrection(page);
+  await page.route("**/api/quick-actions/plain-language", async (route) => {
+    await route.fulfill({ json: { text: "Das neue Haus ist gross." } });
+  });
+  await page.goto("/");
+  await enterText(page, "Das alte Haus ist klein.");
+
+  await page.getByTestId("mvp-action-plain-language").click();
+  await expect(page.getByTestId("review-readability")).toBeHidden();
+  await page.getByRole("button", { name: "Alle ablehnen" }).click();
+
+  await selectTextLanguage(page, "fr");
+  await page.getByTestId("mvp-action-plain-language").click();
+  await expect(page.getByTestId("review-readability")).toBeHidden();
 });
 
 test("toolbar copies, downloads DOCX and opens the live statistics popover", async ({
@@ -465,13 +531,22 @@ test("toolbar copies, downloads DOCX and opens the live statistics popover", asy
   await page.goto("/");
   await enterText(page, "Mal Tal. Ball Fall.");
 
+  await page.getByTestId("workspace-mode-validate").click();
   await page.getByTestId("editor-copy").click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(
     "Mal Tal. Ball Fall.",
   );
+  const fleschSection = page.locator("[data-text-stats-flesch]");
   await page.getByTestId("editor-stats-toggle").click();
   await expect(page.getByTestId("stats-popover")).toBeVisible();
+  await expect(fleschSection).toHaveAttribute("hidden", "");
+  await page.getByTestId("workspace-language").selectOption("de-CH");
+  await expect(fleschSection).not.toHaveAttribute("hidden", "");
+  await expect(page.getByTestId("text-stats-flesch")).toBeVisible();
   await expect(page.getByTestId("text-stats-flesch")).toHaveText("119.5");
+  await expect(page.getByTestId("text-stats-flesch-label")).toHaveText("Sehr leicht lesbar");
+  await page.getByTestId("workspace-language").selectOption("fr");
+  await expect(fleschSection).toHaveAttribute("hidden", "");
   await page.keyboard.press("Escape");
   await expect(page.getByTestId("stats-popover")).toBeHidden();
 

@@ -46,6 +46,8 @@ Verfügbare Textsprachen sind automatische Erkennung, Deutsch (Schweiz), Franzö
 
 Bei einem unveränderten Resultat erscheint **Keine Änderungen gefunden**. Nach einer Übernahme startet die automatische Korrektur erneut.
 
+Ist als Textsprache ausdrücklich **Deutsch (Schweiz)** gewählt, zeigt **Verständlicher schreiben** zusätzlich die Amstad-Flesch-Lesbarkeit des Originals und des vollständigen Vorschlags samt Differenz. Der Vergleich bleibt während einzelner Diff-Entscheidungen unverändert. Er bewertet nur die formale Lesbarkeit, nicht CEFR, Inhalt oder allgemeine Verständlichkeit.
+
 ## Werkzeugleiste und Dokumente
 
 Die kompakte Werkzeugleiste am unteren Editorrand enthält:
@@ -54,7 +56,7 @@ Die kompakte Werkzeugleiste am unteren Editorrand enthält:
 - Upload sowie Drag-and-drop auf die ganze Editorfläche,
 - Kopieren in die Zwischenablage,
 - clientseitigen DOCX-Download als `textbuddy-YYYY-MM-DD.docx`,
-- Zeichen- und Wortzahl mit einem Popover für Silben, Sätze, Durchschnittswerte und Flesch-Lesbarkeit.
+- Zeichen- und Wortzahl mit einem Popover für Silben, Sätze und Durchschnittswerte. Die deutsche Amstad-Flesch-Lesbarkeit erscheint nur bei ausdrücklich gewähltem **Deutsch (Schweiz)**; bei automatischer oder einer anderen Sprachwahl wird sie ausgeblendet.
 
 Beim Import ersetzt der konvertierte Dokumentinhalt den bisherigen Editorinhalt. Unterstützte Eingaben sind PDF, DOCX, PPTX, XLSX, HTML, Markdown, AsciiDoc, TXT, PNG, JPG/JPEG und TIF/TIFF. Die OCR-Sprache folgt der Textsprache; bei automatischer Erkennung wird Deutsch verwendet. Die Standardgrenze beträgt 20 MB und kann im Betrieb konfiguriert werden.
 

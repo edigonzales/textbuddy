@@ -11,6 +11,7 @@ export interface TextStatistics {
 const WORD_REGEX = /\p{L}+(?:['’-]\p{L}+)*/gu;
 const WORD_STRIP_REGEX = /[^\p{L}'’-]+/gu;
 const VOWEL_GROUP_REGEX = /[aeiouyäöüy]+/gu;
+const GERMAN_FLESCH_LANGUAGE = "de-ch";
 
 function normalizeText(value: string): string {
   return value.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
@@ -21,6 +22,10 @@ export function splitWords(text: string): string[] {
   const words = normalized.match(WORD_REGEX);
 
   return words ? words : [];
+}
+
+export function supportsGermanFlesch(language: string | null | undefined): boolean {
+  return (language ?? "").trim().toLowerCase() === GERMAN_FLESCH_LANGUAGE;
 }
 
 export function countSyllablesInWord(word: string): number {

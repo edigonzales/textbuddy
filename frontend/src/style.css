@@ -599,6 +599,30 @@ body[data-correction-slideover-open="true"] {
   font-size: 0.875rem;
 }
 
+#editor-island-root .review-readability {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  flex-wrap: wrap;
+  margin: 0.75rem 0;
+  padding: 0.625rem 0.75rem;
+  border-left: 3px solid var(--textbuddy-color-primary);
+  background: var(--textbuddy-color-active-bg);
+}
+
+#editor-island-root .review-readability-label {
+  color: var(--textbuddy-neutral-muted);
+}
+
+#editor-island-root .review-readability-values {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.375rem;
+  color: var(--textbuddy-neutral-emphasis);
+  font-variant-numeric: tabular-nums;
+}
+
 #editor-island-root .diff-review-actions {
   display: flex;
   align-items: center;

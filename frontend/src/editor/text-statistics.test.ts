@@ -6,6 +6,7 @@ import {
   countSyllablesInWord,
   describeFleschScoreKey,
   splitWords,
+  supportsGermanFlesch,
 } from "./text-statistics";
 
 test("splitWords extracts unicode words", () => {
@@ -20,6 +21,15 @@ test("splitWords extracts unicode words", () => {
 test("countSyllablesInWord counts vowel groups including umlauts", () => {
   assert.equal(countSyllablesInWord("Überprüfung"), 4);
   assert.equal(countSyllablesInWord("Rhythmus"), 2);
+});
+
+test("supportsGermanFlesch only enables the explicit German selection", () => {
+  assert.equal(supportsGermanFlesch("de-CH"), true);
+  assert.equal(supportsGermanFlesch("auto"), false);
+  assert.equal(supportsGermanFlesch("fr"), false);
+  assert.equal(supportsGermanFlesch("it"), false);
+  assert.equal(supportsGermanFlesch("en-US"), false);
+  assert.equal(supportsGermanFlesch("en-GB"), false);
 });
 
 test("calculateTextStatistics computes counters and Flesch score", () => {

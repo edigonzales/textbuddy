@@ -10,7 +10,7 @@ Textbuddy strebt WCAG 2.2 AA an, erhebt aber ohne vollständige manuelle Prüfun
 - Korrekturmarkierungen sind fokussierbar. Ihre Aktivierung wechselt zu **Prüfen**, öffnet die Ergebnisleiste und fokussiert den zugehörigen Befund.
 - Auf Mobilgeräten hält die geöffnete Korrekturleiste den Fokus. Escape schliesst sie und gibt den Fokus an den Auslöser zurück.
 - Das Statistik-Popover lässt sich mit Escape schliessen; der Fokus kehrt zum Zähler zurück.
-- Diff-Blöcke können einzeln oder global angenommen und abgelehnt werden. Moduswechsel und weitere mutierende Aktionen sind während Verarbeitung und Review deaktiviert.
+- Diff-Blöcke können einzeln oder global angenommen und abgelehnt werden. Der deutsche Flesch-Vergleich nennt Vorher-, Nachher- und Differenzwert als Text und ist nicht allein über Farbe vermittelt. Moduswechsel und weitere mutierende Aktionen sind während Verarbeitung und Review deaktiviert.
 - Status-, Erfolgs- und Fehlermeldungen werden über Live-Regions angekündigt.
 
 Nicht freigeschaltete Werkzeuge werden im Frontend gar nicht gerendert. Damit entstehen weder unsichtbare Fokusziele noch parallele DOM-Verträge für dieselbe Funktion.
@@ -21,8 +21,8 @@ Die Browser-Suite prüft mit Playwright und `axe-core`:
 
 - die leere Editorarbeitsfläche,
 - die geöffnete Korrekturleiste,
-- Inline- und Zweispalten-Diff,
-- das Statistik-Popover,
+- Inline- und Zweispalten-Diff einschliesslich deutschem Flesch-Vergleich,
+- das Statistik-Popover mit eingeblendeter deutscher Flesch-Bewertung,
 - die mobile Ribbon- und Slideover-Nutzung.
 
 Unit- und Browser-Tests decken ausserdem Fokus-Rückgabe, Escape, fehlenden horizontalen Überlauf, die Abwesenheit nicht freigeschalteter Werkzeuge und die dynamische Ergebnisleiste ab.
