@@ -10,15 +10,23 @@ Der Editor verwendet Plaintext als verbindliches Inhaltsmodell. Importierte Form
 - Node.js 20.19 oder neuer und npm
 - optional: eine von Kreuzberg unterstützte lokale OCR-Laufzeit für Bild- und Scan-PDF-Texterkennung
 
-## Lokal starten
+## Lokal entwickeln
 
 Der ungeschützte Modus ist ausschliesslich an einer expliziten Loopback-Adresse erlaubt. Die Stub-Adapter benötigen keine externen Dienste:
 
 ```bash
-./gradlew bootRun --args='--server.address=127.0.0.1 --textbuddy.auth.enabled=false --textbuddy.llm.mode=stub --textbuddy.languagetool.mode=stub --textbuddy.document.mode=stub'
+./dev.sh
 ```
 
 Danach ist Textbuddy unter [http://127.0.0.1:8080](http://127.0.0.1:8080) erreichbar.
+
+Das Skript startet Spring Boot und den Frontend-Watcher gemeinsam. Änderungen unter `frontend/src/` werden automatisch neu gebaut und sind nach einem manuellen Browser-Reload sichtbar, ohne Spring Boot neu zu starten. Änderungen an Java-Code, JTE-Templates oder der Konfiguration erfordern weiterhin einen Neustart. `Ctrl+C` beendet beide Prozesse.
+
+Wenn kein Frontend-Watcher benötigt wird, kann das Backend weiterhin direkt gestartet werden:
+
+```bash
+./gradlew bootRun --args='--server.address=127.0.0.1 --textbuddy.auth.enabled=false --textbuddy.llm.mode=stub --textbuddy.languagetool.mode=stub --textbuddy.document.mode=stub'
+```
 
 ## Prüfen und bauen
 

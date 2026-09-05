@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc --noEmit && vite build",
+    "watch": "vite build --watch --outDir ../build/resources/main/static/editor",
     "test:unit": "tsx --test src/**/*.test.ts"
   },
   "devDependencies": {
