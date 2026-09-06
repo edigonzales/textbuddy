@@ -307,13 +307,13 @@ Der sichtbare Textbuddy-Advisor enthält fünf einzeln auswählbare Demo-Dokumen
 
 | Priorität | Vorschlag | Begründung |
 | --- | --- | --- |
-| mittel | **LanguageTool-Proxy nur mit breiterer fachlicher Validierung prüfen** | Das isolierte ZIX-Experiment ist ein Proxy-Kandidat, aber nicht ZIX-/CEFR-kompatibel. Vor einer Integration braucht es mehr unabhängige Texte und fachlich bewertete Grenzfälle. |
+| mittel | **Lexikalischen Proxy nur mit breiterer fachlicher Validierung prüfen** | ZIX ist nicht numerisch kompatibel. Das ergänzende wordhoard-Experiment erkennt auf dem kleinen Korpus 19 von 20 Vereinfachungen, kennt aber im Median nur 82,4 % der Inhaltswörter und nur zwei von zehn geprüften Schweizer Verwaltungsbegriffen. Vor einer Integration braucht es ein unabhängig bewertetes Domänenkorpus. |
 | mittel | **Advisor erst fachlich, dann mengenmässig ausbauen** | Der vertikale Schnitt ist vollständig. Als Nächstes lohnen echte organisationsspezifische Regeln und ein bewertetes Korpus mehr als zusätzliche Workflow-Infrastruktur. |
 | mittel | **Lesbarkeit nur bei echtem Bedarf mehrsprachig erweitern** | Der deutsche Vorher-/Nachher-Vergleich ist vorhanden. EN/FR/IT und CEFR rechtfertigen zusätzliche Formeln und Erkennung erst bei entsprechendem Nutzungsbedarf. |
 | niedrig | **Streaming nur bei nachgewiesenem Warteproblem** | Für zwei sichtbare LLM-Aktionen rechtfertigt einfaches Request/Response häufig die geringere Komplexität. |
 | niedrig | **Kürzen nur bei echtem Produktbedarf ergänzen** | Es ist die einzige wesentliche Text-Mate-Quick-Action, die auch im Textbuddy-Backend fehlt. |
 
-Nach Ockham sollte Textbuddy nicht versuchen, die gesamte Text-Mate-Oberfläche nachzubauen. Mit dem deutschen Vorher-/Nachher-Wert ist die naheliegende kleine Messlücke geschlossen. Der zwischenzeitlich erprobte automatische zweite LLM-Versuch wurde wieder entfernt. Das ZIX-Experiment bleibt bewusst im Testcode; eine produktive Proxy-Metrik oder ein erneuter Qualitätsversuch braucht zuerst zusätzliche fachliche Evidenz.
+Nach Ockham sollte Textbuddy nicht versuchen, die gesamte Text-Mate-Oberfläche nachzubauen. Mit dem deutschen Vorher-/Nachher-Wert ist die naheliegende kleine Messlücke geschlossen. Der zwischenzeitlich erprobte automatische zweite LLM-Versuch wurde wieder entfernt. ZIX- und wordhoard-Experiment bleiben bewusst im Testcode; eine produktive Proxy-Metrik oder ein erneuter Qualitätsversuch braucht zuerst zusätzliche fachliche Evidenz.
 
 ### Für Text-Mate
 

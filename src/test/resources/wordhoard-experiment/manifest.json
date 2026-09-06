@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "repository": "https://github.com/natema/wordhoard",
+    "release": "v0.1.0",
+    "commit": "1bc5730e8d6e682c416c03680b7cb8c6c7ca8cd0",
+    "archiveUrl": "https://github.com/natema/wordhoard/releases/download/v0.1.0/wordhoard-csv-v0.1.0.zip",
+    "archiveSha256": "83837efd46241e7226fc6daaa9d0cc81b57bf746434b8c539049c660d98ba761",
+    "csvName": "wordhoard-de.csv",
+    "dataLicense": "CC-BY-SA-4.0"
+  },
+  "transformation": {
+    "description": "German rows reduced to lexical difficulty fields; forms and gender omitted.",
+    "rowCount": 69877,
+    "columns": [
+      "lemma",
+      "pos",
+      "frequency_rank",
+      "frequency_count",
+      "cefr_estimate",
+      "cefr_source"
+    ],
+    "lexiconSha256": "a322af9238805fdf35be6a5cb60629ffcee6a7e2909db5145ec321dd772295b6",
+    "cefrCounts": {
+      "A1": 1266,
+      "A2": 1412,
+      "B1": 3406,
+      "B2": 4022,
+      "C1": 8850,
+      "C2": 50921
+    }
+  }
+}

@@ -70,7 +70,9 @@ sourceSets {
     }
     test {
         java.exclude 'app/textbuddy/zix/**'
+        java.exclude 'app/textbuddy/wordhoard/**'
         resources.exclude 'zix-compatibility/**'
+        resources.exclude 'wordhoard-experiment/**'
     }
     zixCompatibility {
         java {
@@ -82,11 +84,24 @@ sourceSets {
             include 'zix-compatibility/**'
         }
     }
+    wordhoardExperiment {
+        java {
+            srcDir 'src/test/java'
+            include 'app/textbuddy/wordhoard/**'
+        }
+        resources {
+            srcDir 'src/test/resources'
+            include 'wordhoard-experiment/**'
+            include 'zix-compatibility/reference.json'
+        }
+    }
 }
 
 configurations {
     zixCompatibilityImplementation.extendsFrom testImplementation
     zixCompatibilityRuntimeOnly.extendsFrom testRuntimeOnly
+    wordhoardExperimentImplementation.extendsFrom testImplementation
+    wordhoardExperimentRuntimeOnly.extendsFrom testRuntimeOnly
 }
 
 tasks.register('npmInstallFrontend', Exec) {
@@ -231,6 +246,18 @@ tasks.register('zixCompatibilityTest', Test) {
     maxHeapSize = '2g'
     jvmArgs '--enable-native-access=ALL-UNNAMED'
     systemProperty 'zix.reportDir', layout.buildDirectory.dir('reports/zix-compatibility').get().asFile.absolutePath
+}
+
+tasks.register('wordhoardExperimentTest', Test) {
+    description = 'Runs the isolated LanguageTool/wordhoard lexical-difficulty experiment.'
+    group = 'verification'
+    testClassesDirs = sourceSets.wordhoardExperiment.output.classesDirs
+    classpath = sourceSets.wordhoardExperiment.runtimeClasspath
+    filter.includeTestsMatching('app.textbuddy.wordhoard.WordhoardExperimentTest')
+    useJUnitPlatform()
+    maxHeapSize = '2g'
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
+    systemProperty 'wordhoard.reportDir', layout.buildDirectory.dir('reports/wordhoard-experiment').get().asFile.absolutePath
 }
 
 tasks.named('test') {

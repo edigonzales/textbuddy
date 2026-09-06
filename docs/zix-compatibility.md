@@ -87,4 +87,4 @@ Python wird nur zum bewussten Aktualisieren der Referenzdaten benötigt. Die gep
 
 ## Konsequenz für Schritt 3
 
-Schritt 3 wird nicht automatisch ausgelöst. Vor einer produktiven Proxy-Integration wären mindestens ein grösseres unabhängiges Korpus, fachlich markierte schwierige Passagen und eine Prüfung der schwachen Kategorien nötig. Ohne diese zusätzliche Evidenz bleibt die bestehende deutsche Amstad-Flesch-Anzeige die einzige produktive Lesbarkeitsmetrik.
+Schritt 3 wird nicht automatisch ausgelöst. Das ergänzende [wordhoard-Experiment](wordhoard-experiment.md) prüft inzwischen einen erklärbaren Frequenzrang und geschätzte lexikalische Abdeckung auf demselben Korpus. Auch dieses Ergebnis bleibt diagnostisch. Vor einer produktiven Proxy-Integration wären mindestens ein grösseres unabhängiges Korpus, fachlich markierte schwierige Passagen und eine Prüfung der schwachen Kategorien nötig. Ohne diese zusätzliche Evidenz bleibt die bestehende deutsche Amstad-Flesch-Anzeige die einzige produktive Lesbarkeitsmetrik.
