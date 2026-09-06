@@ -1,5 +1,6 @@
 package app.textbuddy.integration.llm;
 
+import app.textbuddy.advisor.AdvisorFixFinding;
 import app.textbuddy.advisor.AdvisorRuleCheck;
 import app.textbuddy.advisor.AdvisorRuleMatch;
 import app.textbuddy.quickaction.CharacterSpeechPrompt;
@@ -100,7 +101,7 @@ public final class OpenAiTextbuddyLlmClient implements TextbuddyLlmClient {
             matches.add(new AdvisorRuleMatch(
                     text(node, "documentName"),
                     text(node, "ruleId"),
-                    text(node, "matchedText"),
+                    rawText(node, "matchedText"),
                     text(node, "excerpt"),
                     text(node, "message"),
                     text(node, "suggestion")
@@ -108,6 +109,12 @@ public final class OpenAiTextbuddyLlmClient implements TextbuddyLlmClient {
         }
 
         return List.copyOf(matches);
+    }
+
+    @Override
+    public String fixAdvisor(String text, List<AdvisorFixFinding> findings) {
+        PromptMessages prompts = structuredPrompts.advisorFix(text, findings);
+        return chatClient.completeText(prompts.systemPrompt(), prompts.userPrompt());
     }
 
     private List<String> readStringArray(JsonNode... candidates) {
@@ -134,6 +141,10 @@ public final class OpenAiTextbuddyLlmClient implements TextbuddyLlmClient {
 
     private String text(JsonNode node, String field) {
         return normalize(node.path(field).asString(""));
+    }
+
+    private String rawText(JsonNode node, String field) {
+        return node.path(field).asString("");
     }
 
     private String normalize(String value) {

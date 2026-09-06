@@ -1,0 +1,18 @@
+Apply exactly the selected editorial findings below to the original text.
+
+Requirements:
+1. Correct only the selected findings at their exact UTF-16 ranges.
+2. Use the canonical rule and the displayed suggestion for each finding.
+3. Preserve every unrelated statement, fact, line break, and the outer whitespace.
+4. Do not add, remove, summarize, or invent information.
+5. Return the complete result as plain text without Markdown or HTML.
+
+Selected findings:
+---------------
+{{findings_json}}
+---------------
+
+Original text:
+---------------
+{{text}}
+---------------

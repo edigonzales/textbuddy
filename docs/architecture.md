@@ -32,15 +32,19 @@ Neue Abstraktionen sollen nur entstehen, wenn es tatsächlich mehrere Implementi
 | `POST /api/word-synonym` | JSON | Synonyme im Kontext |
 | `POST /api/quick-actions/{action}` | JSON | Volltext-Aktionen; eine abschliessende Antwort |
 | `GET /api/advisor/docs` | JSON | Statischer Advisor-Katalog |
-| `GET /api/advisor/doc/{name}` | PDF | Referenzdokument im Viewer |
-| `POST /api/advisor/validate` | SSE | Regelprüfung mit fortlaufenden Treffern |
+| `GET /api/advisor/doc/{name}` | PDF | Referenzdokument für einen neuen Browser-Tab |
+| `POST /api/advisor/validate` | SSE | Regelprüfung mit fortlaufenden Treffern und Batchfortschritt |
+| `POST /api/advisor/fix` | JSON | Ausgewählte Advisor-Befunde atomar auf den Volltext anwenden |
 | `POST /api/convert/doc` | Multipart/JSON | Dokument in bereinigtes HTML umwandeln; das Frontend reduziert es auf Plaintext |
 
-Nur die Advisor-Prüfung verwendet SSE, weil dort mehrere fachlich unabhängige Treffer laufend sichtbar werden. Quick Actions liefern eine normale JSON-Antwort; der LLM-Provider liefert intern ebenfalls nur eine vollständige Antwort.
+Nur die Advisor-Prüfung verwendet SSE, weil dort mehrere fachlich unabhängige Treffer laufend sichtbar werden. Die Regelsets werden in Batches von drei Regeln seriell geprüft; bei den derzeit zehn Regeln sind das höchstens vier Provider-Aufrufe. Der Advisor-Fix und Quick Actions liefern normale atomare JSON-Antworten. Es gibt keine automatischen Provider-Retries.
+
+Advisor-Befunde verwenden halb offene UTF-16-Indizes in den unveränderten Request-Text. Das entspricht Java-`String`- und Browser-String-Indizes. Der Server übernimmt keine vom Modell behaupteten Positionen, sondern lokalisiert einen exakt kopierten `matchedText` selbst, entfernt Duplikate und verwirft nicht auffindbare Treffer ohne Nutztext zu protokollieren. Der Fix löst Dokument und Regel erneut aus dem kanonischen Katalog auf.
 
 ## Zustand und Daten
 
 - Advisor-Metadaten und PDFs werden beim Start einmal aus dem Klassenpfad geladen. Alle angemeldeten Benutzer sehen denselben Katalog.
+- Die mitgelieferten Advisor-Dokumente sind projektinterne Demo-Regelwerke. Eigene Regelwerke werden als geprüftes JSON-/PDF-Paar in das Artefakt gebaut; Runtime-Uploads und Persistenz existieren nicht.
 - Das persönliche Wörterbuch liegt ausschliesslich in `localStorage` des Browsers. Es gibt keine Synchronisierung oder Serversicherung.
 - Bearbeitete Texte und hochgeladene Dokumente werden nicht dauerhaft gespeichert.
 - Provider- und Netzwerkadapter führen keine automatischen Wiederholungen aus. Einzige Ausnahme ist der lokale OCR-Adapter: Scheitert eine explizit gewählte Nicht-Standardsprache an einem OCR-Fehler, versucht er die Erkennung einmal mit der Standardsprache.

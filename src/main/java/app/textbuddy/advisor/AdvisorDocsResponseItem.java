@@ -5,6 +5,7 @@ public record AdvisorDocsResponseItem(
         String title,
         String summary,
         String source,
-        String documentUrl
+        String documentUrl,
+        int ruleCount
 ) {
 }

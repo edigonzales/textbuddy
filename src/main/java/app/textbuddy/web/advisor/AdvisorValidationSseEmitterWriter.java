@@ -1,6 +1,7 @@
 package app.textbuddy.web.advisor;
 
 import app.textbuddy.advisor.AdvisorValidationEvent;
+import app.textbuddy.advisor.AdvisorProgressEvent;
 import app.textbuddy.advisor.AdvisorValidationStreamHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,11 @@ final class AdvisorValidationSseEmitterWriter implements AdvisorValidationStream
     public void validation(AdvisorValidationEvent event) {
         validationCount += 1;
         send("validation", event);
+    }
+
+    @Override
+    public void progress(AdvisorProgressEvent event) {
+        send("progress", event);
     }
 
     @Override

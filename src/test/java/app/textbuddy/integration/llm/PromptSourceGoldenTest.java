@@ -39,6 +39,10 @@ class PromptSourceGoldenTest {
         assertThat(promptCatalog.get("source/structured/sentence-rewrite.user.txt"))
                 .contains("Generate at least 1 but maximum of 5 alternative rewrites");
         assertThat(promptCatalog.get("source/structured/advisor.user.txt"))
-                .contains("Review only the given rules");
+                .contains("Review only the given rules")
+                .contains("matchedText` must be copied exactly");
+        assertThat(promptCatalog.get("source/structured/advisor-fix.user.txt"))
+                .contains("Apply exactly the selected editorial findings")
+                .contains("complete result as plain text");
     }
 }

@@ -49,6 +49,8 @@ Stub-Modi dienen lokaler Entwicklung und reproduzierbaren Tests, nicht fachliche
 
 Textbuddy wiederholt fehlgeschlagene Provider- oder Netzwerkaufrufe nicht automatisch. Retries, falls fachlich gewünscht, müssen bewusst ausserhalb der Anwendung mit Idempotenz- und Kostenbetrachtung entworfen werden. Nur lokale OCR darf bei einem sprachbezogenen OCR-Fehler einmal mit der Standardsprache wiederholen.
 
+Eine Advisor-Prüfung verarbeitet maximal fünf Dokumente und zwanzig Regeln. Beim aktuellen Katalog mit zehn Regeln sind das vier serielle LLM-Aufrufe in Dreierbatches; das SSE-Timeout wird aus der maximalen Batchzahl und dem LLM-Timeout abgeleitet. Das Anwenden ausgewählter Befunde verursacht genau einen zusätzlichen atomaren LLM-Aufruf. Die Summe der angezeigten Vorschläge ist durch `textbuddy.input.max-prompt-length` begrenzt.
+
 ## Reverse Proxy
 
 Der Proxy sollte:
@@ -75,6 +77,8 @@ Textbuddy hält keine serverseitigen Nutzdaten dauerhaft. Zu sichern sind daher 
 - gegebenenfalls externe LanguageTool-N-Gram-Daten.
 
 Das browserlokale Wörterbuch kann nicht serverseitig wiederhergestellt werden. Advisor-Dokumente sind Bestandteil des JARs und werden durch ein neues Release aktualisiert.
+
+Die ausgelieferten Advisor-Regelwerke sind projektinterne Demos. Für eigene Regelwerke muss ein fachlich geprüftes JSON-/PDF-Paar gemäss [Advisor-Regelwerke erstellen](advisor-authoring.md) gebaut und die Anwendung neu gestartet werden.
 
 ## Release-Prüfung
 

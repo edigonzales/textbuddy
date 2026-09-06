@@ -1,9 +1,7 @@
-import type {
-  CorrectionStateChangedDetail,
-  WorkspaceBusyChangedDetail,
-} from "./types";
+import type { CorrectionStateChangedDetail, WorkspaceBusyChangedDetail } from "./types";
 
 type WorkspaceMode = "transform" | "validate";
+type ValidationPanel = "correction" | "advisor" | null;
 
 export interface CorrectionRailVisibilityState {
   mode: WorkspaceMode;
@@ -14,13 +12,8 @@ export interface CorrectionRailVisibilityState {
 }
 
 export function shouldShowCorrectionRail(state: CorrectionRailVisibilityState): boolean {
-  return (
-    state.mode === "validate" &&
-    state.count > 0 &&
-    !state.dismissed &&
-    !state.busy &&
-    state.view === "editor"
-  );
+  return state.mode === "validate" && state.count > 0 && !state.dismissed
+    && !state.busy && state.view === "editor";
 }
 
 export function dismissedAfterCorrectionCountChange(
@@ -29,66 +22,37 @@ export function dismissedAfterCorrectionCountChange(
   nextCount: number,
   mode: WorkspaceMode,
 ): boolean {
-  if (nextCount === 0 || (previousCount === 0 && mode === "validate")) {
-    return false;
-  }
+  if (nextCount === 0 || (previousCount === 0 && mode === "validate")) return false;
   return dismissed;
 }
 
 function focusableElements(container: HTMLElement): HTMLElement[] {
-  return Array.from(
-    container.querySelectorAll<HTMLElement>(
-      "button:not(:disabled), select:not(:disabled), input:not(:disabled), a[href], [tabindex]:not([tabindex='-1'])",
-    ),
-  ).filter(
-    (element) =>
-      !element.hidden &&
-      !element.closest("[hidden], [inert]") &&
-      element.getClientRects().length > 0,
-  );
+  return Array.from(container.querySelectorAll<HTMLElement>(
+    "button:not(:disabled), select:not(:disabled), input:not(:disabled), a[href], [tabindex]:not([tabindex='-1'])",
+  )).filter((element) => !element.hidden && !element.closest("[hidden], [inert]")
+    && element.getClientRects().length > 0);
 }
 
 export function mountWorkspaceShell(): void {
-  const root = document.querySelector<HTMLElement>("#editor-island-root");
-  const modeButtons = Array.from(
-    document.querySelectorAll<HTMLButtonElement>("button[data-workspace-mode]"),
-  );
-  const ribbons = Array.from(
-    document.querySelectorAll<HTMLElement>("[data-workspace-ribbon]"),
-  );
-  const rail = root?.querySelector<HTMLElement>("[data-correction-rail]");
-  const correctionPanel = root?.querySelector<HTMLElement>("[data-correction-panel]");
-  const closeButton = root?.querySelector<HTMLButtonElement>("[data-correction-rail-close]");
-  const overlay = root?.querySelector<HTMLElement>("[data-correction-overlay]");
-  const resultButton = document.querySelector<HTMLButtonElement>("[data-correction-results-toggle]");
-  const resultCount = document.querySelector<HTMLElement>("[data-correction-result-count]");
-  const modeBadge = document.querySelector<HTMLElement>("[data-correction-mode-badge]");
-  const ribbonStatus = document.querySelector<HTMLElement>("[data-correction-ribbon-status]");
+  const root = document.querySelector<HTMLElement>("#editor-island-root")!;
+  const modeButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("button[data-workspace-mode]"));
+  const ribbons = Array.from(document.querySelectorAll<HTMLElement>("[data-workspace-ribbon]"));
+  const rail = root.querySelector<HTMLElement>("[data-validation-rail]")!;
+  const correctionPanel = root.querySelector<HTMLElement>("[data-correction-panel]")!;
+  const advisorPanel = root.querySelector<HTMLElement>("[data-advisor-panel]")!;
+  const closeButtons = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-validation-rail-close]"));
+  const overlay = root.querySelector<HTMLElement>("[data-correction-overlay]");
+  const correctionButton = document.querySelector<HTMLButtonElement>("[data-correction-results-toggle]")!;
+  const advisorButton = document.querySelector<HTMLButtonElement>("[data-advisor-toggle]")!;
+  const resultCount = document.querySelector<HTMLElement>("[data-correction-result-count]")!;
+  const modeBadge = document.querySelector<HTMLElement>("[data-correction-mode-badge]")!;
+  const ribbonStatus = document.querySelector<HTMLElement>("[data-correction-ribbon-status]")!;
   const retryButton = document.querySelector<HTMLButtonElement>("[data-correction-retry]");
-
-  if (
-    !root ||
-    modeButtons.length === 0 ||
-    ribbons.length === 0 ||
-    !rail ||
-    !correctionPanel ||
-    !resultButton ||
-    !resultCount ||
-    !modeBadge ||
-    !ribbonStatus
-  ) {
-    return;
-  }
-
-  const resolvedRoot = root;
-  const resolvedRail = rail;
-  const resolvedCorrectionPanel = correctionPanel;
-  const resolvedResultButton = resultButton;
-  const resolvedResultCount = resultCount;
-  const resolvedModeBadge = modeBadge;
-  const resolvedRibbonStatus = ribbonStatus;
+  if (!root || !rail || !correctionPanel || !advisorPanel || !correctionButton || !advisorButton
+      || !resultCount || !modeBadge || !ribbonStatus || modeButtons.length === 0) return;
 
   let mode: WorkspaceMode = "transform";
+  let activePanel: ValidationPanel = null;
   let count = 0;
   let dismissed = false;
   let busy = false;
@@ -97,76 +61,80 @@ export function mountWorkspaceShell(): void {
   const mobileQuery = window.matchMedia("(max-width: 767px)");
 
   function railShouldBeOpen(): boolean {
-    return shouldShowCorrectionRail({ mode, count, dismissed, busy, view });
+    if (mode !== "validate" || dismissed || view !== "editor" || activePanel === null) return false;
+    if (activePanel === "advisor") return true;
+    return count > 0 && !busy;
   }
 
   function syncRail(): void {
     const open = railShouldBeOpen();
-
-    resolvedRail.hidden = !open;
-    resolvedCorrectionPanel.hidden = !open;
-    resolvedRail.setAttribute("aria-hidden", open ? "false" : "true");
-    resolvedResultButton.setAttribute("aria-expanded", open ? "true" : "false");
-    if (overlay) {
-      overlay.hidden = !open;
-    }
+    rail.hidden = !open;
+    correctionPanel.hidden = !open || activePanel !== "correction";
+    advisorPanel.hidden = !open || activePanel !== "advisor";
+    rail.setAttribute("aria-hidden", open ? "false" : "true");
+    correctionButton.setAttribute("aria-expanded", open && activePanel === "correction" ? "true" : "false");
+    advisorButton.setAttribute("aria-expanded", open && activePanel === "advisor" ? "true" : "false");
+    if (overlay) overlay.hidden = !open;
     document.body.dataset.correctionSlideoverOpen = open && mobileQuery.matches ? "true" : "false";
   }
 
   function setMode(nextMode: WorkspaceMode): void {
-    if (busy || view === "diff-review") {
-      return;
-    }
-
-    const modeChanged = mode !== nextMode;
+    if (busy || view === "diff-review") return;
+    const changed = mode !== nextMode;
     mode = nextMode;
-    if (modeChanged && mode === "validate" && count > 0) {
-      dismissed = false;
-    }
-    resolvedRoot.dataset.workspaceMode = mode;
+    if (changed && mode === "validate" && count > 0 && activePanel === null) activePanel = "correction";
+    if (changed && mode === "validate") dismissed = false;
+    root.dataset.workspaceMode = mode;
     modeButtons.forEach((button) => {
       const active = button.dataset.workspaceMode === mode;
       button.setAttribute("aria-selected", active ? "true" : "false");
       button.tabIndex = active ? 0 : -1;
     });
-    ribbons.forEach((ribbon) => {
-      ribbon.hidden = ribbon.dataset.workspaceRibbon !== mode;
-    });
-    if (mode === "validate" && count > 0 && !dismissed) {
-      railOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    }
+    ribbons.forEach((ribbon) => { ribbon.hidden = ribbon.dataset.workspaceRibbon !== mode; });
     syncRail();
   }
 
   function updateCount(nextCount: number): void {
     const previousCount = count;
     count = nextCount;
-    resolvedResultCount.textContent = String(count);
-    resolvedResultButton.disabled = count === 0 || busy;
-    resolvedResultButton.setAttribute("aria-disabled", resolvedResultButton.disabled ? "true" : "false");
-    resolvedModeBadge.textContent = String(count);
-    resolvedModeBadge.hidden = count === 0;
-
+    resultCount.textContent = String(count);
+    correctionButton.disabled = count === 0 || busy;
+    correctionButton.setAttribute("aria-disabled", correctionButton.disabled ? "true" : "false");
+    modeBadge.textContent = String(count);
+    modeBadge.hidden = count === 0;
     dismissed = dismissedAfterCorrectionCountChange(dismissed, previousCount, count, mode);
+    if (previousCount === 0 && count > 0 && mode === "validate" && activePanel === null) {
+      activePanel = "correction";
+    }
     syncRail();
   }
 
-  function dismissRail(restoreFocus = true): void {
+  function openPanel(panel: Exclude<ValidationPanel, null>, opener: HTMLElement): void {
+    if (busy && root.dataset.workspaceBusySource !== "advisor") return;
+    railOpener = opener;
+    if (!rail.hidden && activePanel === panel) {
+      dismissed = true;
+      syncRail();
+      return;
+    }
+    activePanel = panel;
+    dismissed = false;
+    syncRail();
+    root.dispatchEvent(new CustomEvent("validation:panel-changed", { bubbles: true, detail: { panel } }));
+    if (panel === "advisor") root.dispatchEvent(new CustomEvent("advisor:opened", { bubbles: true }));
+    if (mobileQuery.matches) closeButtons.find((button) => !button.closest("[hidden]"))?.focus();
+  }
+
+  function dismissRail(): void {
     dismissed = true;
     syncRail();
-    if (restoreFocus) {
-      (railOpener ?? resolvedResultButton).focus();
-    }
+    (railOpener ?? (activePanel === "advisor" ? advisorButton : correctionButton)).focus();
   }
 
   modeButtons.forEach((button, index) => {
-    button.addEventListener("click", () => {
-      setMode(button.dataset.workspaceMode === "validate" ? "validate" : "transform");
-    });
+    button.addEventListener("click", () => setMode(button.dataset.workspaceMode === "validate" ? "validate" : "transform"));
     button.addEventListener("keydown", (event) => {
-      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
-        return;
-      }
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
       event.preventDefault();
       const direction = event.key === "ArrowRight" ? 1 : -1;
       const next = modeButtons.at((index + direction + modeButtons.length) % modeButtons.length);
@@ -174,74 +142,58 @@ export function mountWorkspaceShell(): void {
       next?.focus();
     });
   });
+  correctionButton.addEventListener("click", () => openPanel("correction", correctionButton));
+  advisorButton.addEventListener("click", () => openPanel("advisor", advisorButton));
+  closeButtons.forEach((button) => button.addEventListener("click", dismissRail));
+  overlay?.addEventListener("click", dismissRail);
+  retryButton?.addEventListener("click", () => root.dispatchEvent(new CustomEvent("correction:retry", { bubbles: true })));
 
-  resolvedResultButton.addEventListener("click", () => {
-    railOpener = resolvedResultButton;
-    if (!resolvedRail.hidden) {
-      dismissRail(false);
-      return;
-    }
-    dismissed = false;
-    syncRail();
-    if (mobileQuery.matches) {
-      closeButton?.focus();
-    }
-  });
-  closeButton?.addEventListener("click", () => dismissRail());
-  overlay?.addEventListener("click", () => dismissRail());
-  retryButton?.addEventListener("click", () => {
-    resolvedRoot.dispatchEvent(new CustomEvent("correction:retry", { bubbles: true }));
-  });
-
-  resolvedRoot.addEventListener("correction:state-changed", (event) => {
+  root.addEventListener("correction:state-changed", (event) => {
     const detail = (event as CustomEvent<CorrectionStateChangedDetail>).detail;
-    resolvedRibbonStatus.textContent = detail.message;
-    resolvedRibbonStatus.dataset.state = detail.state;
+    ribbonStatus.textContent = detail.message;
+    ribbonStatus.dataset.state = detail.state;
     retryButton?.toggleAttribute("hidden", detail.state !== "error");
     updateCount(detail.count);
   });
-  resolvedRoot.addEventListener("workspace:open-correction", (event) => {
+  root.addEventListener("workspace:open-correction", (event) => {
     const detail = (event as CustomEvent<{ index?: number }>).detail;
-    dismissed = false;
     setMode("validate");
+    railOpener = correctionButton;
+    activePanel = "correction";
+    dismissed = false;
     syncRail();
-    const item = resolvedCorrectionPanel.querySelector<HTMLElement>(
-      `[data-correction-focus-index='${detail?.index ?? 0}']`,
-    );
+    root.dispatchEvent(new CustomEvent("validation:panel-changed", {
+      bubbles: true,
+      detail: { panel: "correction" },
+    }));
+    const item = correctionPanel.querySelector<HTMLElement>(`[data-correction-focus-index='${detail?.index ?? 0}']`);
     window.setTimeout(() => {
       item?.scrollIntoView({ block: "center" });
       item?.focus();
     }, 0);
   });
-  resolvedRoot.addEventListener("workspace:busy-changed", (event) => {
+  root.addEventListener("workspace:busy-changed", (event) => {
     const detail = (event as CustomEvent<WorkspaceBusyChangedDetail>).detail;
     busy = detail.busy;
     view = detail.view;
-    modeButtons.forEach((button) => {
-      button.disabled = busy;
-    });
-    resolvedResultButton.disabled = busy || count === 0;
+    modeButtons.forEach((button) => { button.disabled = busy; });
+    correctionButton.disabled = busy || count === 0;
+    advisorButton.disabled = busy;
     syncRail();
   });
 
   document.addEventListener("keydown", (event) => {
-    if (resolvedRail.hidden || !mobileQuery.matches) {
-      return;
-    }
+    if (rail.hidden || !mobileQuery.matches) return;
     if (event.key === "Escape") {
       event.preventDefault();
       dismissRail();
       return;
     }
-    if (event.key !== "Tab") {
-      return;
-    }
-    const focusable = focusableElements(resolvedRail);
+    if (event.key !== "Tab") return;
+    const focusable = focusableElements(rail);
     const first = focusable.at(0);
     const last = focusable.at(-1);
-    if (!first || !last) {
-      return;
-    }
+    if (!first || !last) return;
     if (event.shiftKey && document.activeElement === first) {
       event.preventDefault();
       last.focus();

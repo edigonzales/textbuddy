@@ -78,8 +78,8 @@ export function mountTextCorrectionBridge(
   let visibleBlockCount = 0;
   const dictionaryStore = createLocalDictionaryStore();
 
-  function isQuickActionRunning(): boolean {
-    return root.dataset.quickActionRunning === "true";
+  function isMutatingActionRunning(): boolean {
+    return root.dataset.quickActionRunning === "true" || root.dataset.advisorRunning === "true";
   }
 
   function setPanelState(
@@ -403,7 +403,7 @@ export function mountTextCorrectionBridge(
     const nextText = (event as CustomEvent<EditorTextChangedDetail>).detail.text;
     const previousText = currentText;
     currentText = nextText;
-    if (isQuickActionRunning()) {
+    if (isMutatingActionRunning()) {
       latestRequestId += 1;
       if (typeof debounceHandle === "number") {
         window.clearTimeout(debounceHandle);
@@ -415,6 +415,12 @@ export function mountTextCorrectionBridge(
       return;
     }
     scheduleCorrection(previousText, nextText);
+  });
+
+  root.addEventListener("validation:panel-changed", (event) => {
+    if ((event as CustomEvent<{ panel: string }>).detail.panel === "correction") {
+      renderProblems(currentText, panelState);
+    }
   });
 
   void dictionaryStore.load().then((words) => {

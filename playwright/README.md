@@ -6,8 +6,8 @@ Dieses Verzeichnis enthält die Browser- und UI-Tests für sichtbare Textbuddy-I
 
 Die Suite deckt folgende Verhaltensbereiche ab:
 
-- `editor-island.spec.ts`: Editor und Hidden Mirror, Undo/Redo, Statistik, Korrektur, lokales Wörterbuch, Plaintext-Import, Dokumentexport sowie die sichtbaren Volltext-Aktionen mit Diff-Review.
-- `editor-island.a11y.spec.ts`: Accessibility und Tastaturbedienung für Editor, Korrekturleiste, Diff-Ansichten, Statistik-Popover, mobile Darstellung und Upload.
+- `editor-island.spec.ts`: Editor und Hidden Mirror, Undo/Redo, Statistik, Korrektur, lokales Wörterbuch, Advisor, Plaintext-Import, Dokumentexport sowie die sichtbaren Volltext-Aktionen mit gemeinsamem Diff-Review.
+- `editor-island.a11y.spec.ts`: Accessibility und Tastaturbedienung für Editor, Prüfseitenleiste, Advisor-Befunde, Diff-Ansichten, Statistik-Popover, mobile Darstellung und Upload.
 
 Die Tests bilden die sichtbare Oberfläche mit den Modi **Überarbeiten** und **Prüfen** ab. API-Hooks und `data-testid` sind die primären Selektoren; nicht freigeschaltete Werkzeuge müssen im DOM fehlen.
 

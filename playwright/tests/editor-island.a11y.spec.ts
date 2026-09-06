@@ -62,6 +62,19 @@ test("axe: correction rail", async ({ page }) => {
   await expectNoBlockingViolations(page);
 });
 
+test("axe: advisor document selection and findings", async ({ page }) => {
+  await prepare(page);
+  await page.getByTestId("editor-input").fill("Bitte handeln Sie per sofort.");
+  await page.getByTestId("workspace-mode-validate").click();
+  await page.getByTestId("advisor-toggle").click();
+  await expect(page.getByTestId("advisor-document")).toHaveCount(5);
+  await expectNoBlockingViolations(page);
+  await page.locator("[data-testid='advisor-document-checkbox'][value='schreibweisungen']").check();
+  await page.getByTestId("advisor-start").click();
+  await expect(page.getByTestId("advisor-finding")).toHaveCount(1);
+  await expectNoBlockingViolations(page);
+});
+
 test("axe: inline and split diff review", async ({ page }) => {
   await prepare(page);
   await page.route("**/api/quick-actions/plain-language", async (route) => {

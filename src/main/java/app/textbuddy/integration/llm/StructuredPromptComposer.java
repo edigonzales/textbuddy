@@ -1,5 +1,6 @@
 package app.textbuddy.integration.llm;
 
+import app.textbuddy.advisor.AdvisorFixFinding;
 import app.textbuddy.advisor.AdvisorRuleCheck;
 import tools.jackson.databind.ObjectMapper;
 
@@ -12,6 +13,7 @@ public final class StructuredPromptComposer {
     private static final String SENTENCE_REWRITE_JSON_SHELL = "shells/structured/sentence-rewrite-json.system.txt";
     private static final String WORD_SYNONYM_JSON_SHELL = "shells/structured/word-synonym-json.system.txt";
     private static final String ADVISOR_JSON_SHELL = "shells/structured/advisor-json.system.txt";
+    private static final String ADVISOR_FIX_SHELL = "shells/structured/advisor-fix.system.txt";
     private static final String NO_CONTEXT_MESSAGE = "Es liegt kein zusätzlicher Kontext vor.";
 
     private final PromptCatalog promptCatalog;
@@ -46,8 +48,18 @@ public final class StructuredPromptComposer {
         return new PromptMessages(
                 promptCatalog.get(ADVISOR_JSON_SHELL),
                 promptCatalog.render("source/structured/advisor.user.txt", Map.of(
-                        "text", normalize(text),
+                        "text", literal(text),
                         "rules_json", toJson(ruleChecks)
+                ))
+        );
+    }
+
+    public PromptMessages advisorFix(String text, List<AdvisorFixFinding> findings) {
+        return new PromptMessages(
+                promptCatalog.get(ADVISOR_FIX_SHELL),
+                promptCatalog.render("source/structured/advisor-fix.user.txt", Map.of(
+                        "text", literal(text),
+                        "findings_json", toJson(findings)
                 ))
         );
     }
@@ -67,5 +79,9 @@ public final class StructuredPromptComposer {
 
     private String normalize(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private String literal(String value) {
+        return value == null ? "" : value;
     }
 }

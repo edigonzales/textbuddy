@@ -1,6 +1,7 @@
 import { Editor } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 
+import { mountAdvisor } from "./advisor";
 import { TextCorrectionDecorationExtension } from "./correction-mark-extension";
 import {
   findCorrectionElements,
@@ -11,6 +12,7 @@ import { mountDocumentImport } from "./document-import";
 import { dispatchTextChanged } from "./events";
 import { countWords, getPlainText, plainTextToHtml } from "./plain-text";
 import { mountQuickActions } from "./quick-actions";
+import { createReviewController } from "./review-controller";
 import { mountTextCorrectionBridge } from "./text-correction";
 import type { EditorElements, WorkspaceBusyChangedDetail } from "./types";
 import { t } from "./ui-i18n";
@@ -90,6 +92,7 @@ export function mountEditorIsland(): void {
 
   elements.root.addEventListener("workspace:busy-changed", (event) => {
     workspaceBusy = (event as CustomEvent<WorkspaceBusyChangedDetail>).detail.busy;
+    editor.setEditable(!workspaceBusy);
     syncUndoRedoState(elements, editor, workspaceBusy);
   });
 
@@ -115,5 +118,7 @@ export function mountEditorIsland(): void {
     mountTextCorrectionBridge(editor, elements.root, correctionElements);
   }
 
-  mountQuickActions(editor, elements.root);
+  const reviewController = createReviewController(editor, elements.root);
+  mountQuickActions(editor, elements.root, reviewController);
+  mountAdvisor(editor, elements.root, reviewController);
 }

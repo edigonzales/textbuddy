@@ -5,6 +5,7 @@ Guidelines:
 2. If you are unsure whether a rule is violated, do not report it.
 3. Provide practical, respectful rewrite proposals that keep the author's intent.
 4. If no qualifying violations exist, return an empty list.
+5. `matchedText` must be copied exactly, including capitalization, from the input text and correspond to one of the rule's `matchTerms`. Do not invent a match.
 
 Rules documentation:
 ---------------

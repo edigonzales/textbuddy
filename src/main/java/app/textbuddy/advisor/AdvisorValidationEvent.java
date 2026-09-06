@@ -12,6 +12,8 @@ public record AdvisorValidationEvent(
         String matchedText,
         String excerpt,
         String suggestion,
-        String referenceUrl
+        String referenceUrl,
+        int start,
+        int end
 ) {
 }

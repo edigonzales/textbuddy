@@ -2,22 +2,24 @@ package app.textbuddy.advisor;
 
 import app.textbuddy.integration.llm.TextbuddyLlmClient;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class AdvisorValidationServiceTest {
+class AdvisorServiceTest {
 
     @Test
     void streamBudgetCoversAllProviderBatchesAndMargin() {
-        assertThat(AdvisorValidationService.maximumValidationDuration(Duration.ofSeconds(30)))
+        assertThat(AdvisorService.maximumValidationDuration(Duration.ofSeconds(30)))
                 .isEqualTo(Duration.ofSeconds(220));
     }
 
@@ -57,7 +59,7 @@ class AdvisorValidationServiceTest {
                     ))
                     .toList();
         });
-        AdvisorValidationService service = new AdvisorValidationService(catalog, llmClient, 2);
+        AdvisorService service = new AdvisorService(catalog, llmClient, 2);
         RecordingHandler handler = new RecordingHandler();
 
         service.validate(
@@ -73,9 +75,14 @@ class AdvisorValidationServiceTest {
         assertThat(handler.validations)
                 .extracting(AdvisorValidationEvent::stableKey)
                 .containsExactly(
-                        "doc-a::rule-1::downloaden",
-                        "doc-b::rule-4::per-sofort"
+                        "doc-a::rule-1::6:16",
+                        "doc-b::rule-4::34:44"
                 );
+        assertThat(handler.progress).containsExactly(
+                new AdvisorProgressEvent(2, 5),
+                new AdvisorProgressEvent(4, 5),
+                new AdvisorProgressEvent(5, 5)
+        );
         assertThat(handler.validations)
                 .extracting(AdvisorValidationEvent::referenceUrl)
                 .containsExactly(
@@ -95,7 +102,7 @@ class AdvisorValidationServiceTest {
             requestedBatches.add(ruleChecks.stream().map(AdvisorRuleCheck::ruleId).toList());
             return List.of();
         });
-        AdvisorValidationService service = new AdvisorValidationService(
+        AdvisorService service = new AdvisorService(
                 catalog(document("doc-a", "Dokument A", 1, List.of(rule("rule-1", 3, List.of("downloaden"))))),
                 llmClient,
                 2
@@ -126,7 +133,7 @@ class AdvisorValidationServiceTest {
             requestedBatchSizes.add(ruleChecks.size());
             return List.of();
         });
-        AdvisorValidationService service = new AdvisorValidationService(catalog, llmClient, 3);
+        AdvisorService service = new AdvisorService(catalog, llmClient, 3);
         RecordingHandler handler = new RecordingHandler();
 
         service.validate(new AdvisorValidateRequest("Text", List.of("doc-a")), handler);
@@ -135,10 +142,24 @@ class AdvisorValidationServiceTest {
         assertThat(handler.completeCount).isEqualTo(1);
     }
 
+    @Test
+    void validateRejectsMoreThanFiveSelectedDocuments() {
+        AdvisorService service = new AdvisorService(mock(AdvisorCatalog.class), mock(TextbuddyLlmClient.class), 3);
+
+        assertThatThrownBy(() -> service.validate(
+                new AdvisorValidateRequest("Text", List.of("a", "b", "c", "d", "e", "f")),
+                new RecordingHandler()
+        )).isInstanceOf(ResponseStatusException.class)
+                .satisfies(error -> assertThat(((ResponseStatusException) error).getStatusCode().value()).isEqualTo(400));
+    }
+
     private static AdvisorCatalog catalog(AdvisorDocument... documents) {
         List<AdvisorDocument> values = List.of(documents);
         AdvisorCatalog catalog = mock(AdvisorCatalog.class);
         when(catalog.documents()).thenReturn(values);
+        for (AdvisorDocument document : values) {
+            when(catalog.find(document.name())).thenReturn(java.util.Optional.of(document));
+        }
         return catalog;
     }
 
@@ -169,12 +190,18 @@ class AdvisorValidationServiceTest {
     private static final class RecordingHandler implements AdvisorValidationStreamHandler {
 
         private final List<AdvisorValidationEvent> validations = new ArrayList<>();
+        private final List<AdvisorProgressEvent> progress = new ArrayList<>();
         private final List<String> errors = new ArrayList<>();
         private int completeCount;
 
         @Override
         public void validation(AdvisorValidationEvent event) {
             validations.add(event);
+        }
+
+        @Override
+        public void progress(AdvisorProgressEvent event) {
+            progress.add(event);
         }
 
         @Override

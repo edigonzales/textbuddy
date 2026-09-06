@@ -21,7 +21,7 @@
       "instructions": "Prüfe Abkürzungen in der Briefadressierung auf Lesbarkeit.",
       "message": "Abkürzungen in der Adressierung sollten ausgeschrieben werden.",
       "suggestion": "Nutze eine ausgeschriebene Form wie 'zuhanden von'.",
-      "matchTerms": ["z.hd.", "zuhanden"]
+      "matchTerms": ["z.hd."]
     }
   ]
 }

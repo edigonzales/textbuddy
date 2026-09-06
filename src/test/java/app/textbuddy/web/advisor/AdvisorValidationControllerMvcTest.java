@@ -46,11 +46,60 @@ class AdvisorValidationControllerMvcTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM))
                 .andExpect(content().string(containsString("event:validation")))
+                .andExpect(content().string(containsString("event:progress")))
+                .andExpect(content().string(containsString("\"checked\":3")))
+                .andExpect(content().string(containsString("\"checked\":4")))
                 .andExpect(content().string(containsString("\"documentName\":\"empfehlungen-anglizismen-maerz-2020\"")))
                 .andExpect(content().string(containsString("\"ruleId\":\"downloaden-statt-herunterladen\"")))
                 .andExpect(content().string(containsString("\"matchedText\":\"downloaden\"")))
+                .andExpect(content().string(containsString("\"start\":6")))
+                .andExpect(content().string(containsString("\"end\":16")))
                 .andExpect(content().string(containsString("\"documentName\":\"schreibweisungen\"")))
                 .andExpect(content().string(containsString("\"ruleId\":\"per-sofort-vermeiden\"")))
                 .andExpect(content().string(containsString("\"matchedText\":\"per sofort\"")));
+    }
+
+    @Test
+    void postAdvisorFixReturnsAnAtomicCorrectedText() throws Exception {
+        MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+
+        mockMvc.perform(post("/api/advisor/fix")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "text": "  Das gilt per sofort.  ",
+                                  "findings": [{
+                                    "documentName": "schreibweisungen",
+                                    "ruleId": "per-sofort-vermeiden",
+                                    "start": 11,
+                                    "end": 21,
+                                    "suggestion": "ab sofort"
+                                  }]
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().string(containsString("  Das gilt ab sofort.  ")));
+    }
+
+    @Test
+    void postAdvisorFixRejectsUnknownOrMismatchedFindings() throws Exception {
+        MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+
+        mockMvc.perform(post("/api/advisor/fix")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "text": "Das gilt per sofort.",
+                                  "findings": [{
+                                    "documentName": "schreibweisungen",
+                                    "ruleId": "per-sofort-vermeiden",
+                                    "start": 0,
+                                    "end": 3,
+                                    "suggestion": "ab sofort"
+                                  }]
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
     }
 }

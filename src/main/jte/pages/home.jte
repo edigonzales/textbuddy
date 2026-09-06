@@ -116,6 +116,9 @@
                 <button type="button" class="ribbon-action" data-correction-results-toggle data-testid="correction-results-toggle" aria-expanded="false" disabled>
                     ${page.t("workspace.correction.results")} (<span data-correction-result-count>0</span>)
                 </button>
+                <button type="button" class="ribbon-action" data-advisor-toggle data-testid="advisor-toggle" aria-expanded="false">
+                    ${page.t("workspace.advisor.results")}
+                </button>
                 <button type="button" class="ribbon-action ribbon-action-secondary" data-correction-retry data-testid="correction-retry" hidden>${page.t("workspace.correction.retry")}</button>
             </div>
         </div>
@@ -268,12 +271,12 @@
             </section>
 
             <div class="correction-overlay" data-correction-overlay hidden></div>
-            <aside class="panel correction-rail" data-correction-rail data-testid="correction-rail" aria-label="${page.t("correction.title")}" aria-hidden="true" hidden>
+            <aside class="panel correction-rail" data-correction-rail data-validation-rail data-testid="correction-rail" aria-label="${page.t("workspace.validation.title")}" aria-hidden="true" hidden>
                 <div class="panel-body correction-rail-body">
                     <section class="correction-panel" data-testid="correction-panel" data-correction-panel data-correction-state="idle" role="region" aria-labelledby="correction-panel-title" hidden>
                         <div class="correction-rail-head">
                             <h3 id="correction-panel-title">${page.t("correction.title")}</h3>
-                            <button type="button" class="correction-rail-close" data-correction-rail-close aria-label="${page.t("workspace.correction.close")}" title="${page.t("workspace.correction.close")}">×</button>
+                            <button type="button" class="correction-rail-close" data-validation-rail-close aria-label="${page.t("workspace.correction.close")}" title="${page.t("workspace.correction.close")}">×</button>
                         </div>
 
                         <details class="dictionary-shell" data-testid="dictionary-shell">
@@ -297,6 +300,26 @@
                         <p class="problem-status" data-correction-status data-testid="correction-status" role="status" aria-live="polite" aria-atomic="true"></p>
                         <div class="problem-list" data-correction-list data-testid="correction-problem-list" role="list" aria-label="${page.t("correction.problemList.ariaLabel")}"></div>
 
+                    </section>
+
+                    <section class="advisor-panel" data-advisor-panel data-testid="advisor-panel" role="region" aria-labelledby="advisor-panel-title" hidden>
+                        <div class="correction-rail-head">
+                            <div>
+                                <h3 id="advisor-panel-title">${page.t("advisor.title")}</h3>
+                                <p class="advisor-demo-label">${page.t("advisor.demoLabel")}</p>
+                            </div>
+                            <button type="button" class="correction-rail-close" data-validation-rail-close aria-label="${page.t("advisor.close")}" title="${page.t("advisor.close")}">×</button>
+                        </div>
+                        <p class="advisor-intro">${page.t("advisor.intro")}</p>
+                        <div class="advisor-documents" data-advisor-documents data-testid="advisor-documents" role="group" aria-label="${page.t("advisor.documents.label")}"></div>
+                        <div class="advisor-actions">
+                            <button type="button" class="advisor-button" data-advisor-reload data-testid="advisor-reload" hidden>${page.t("advisor.reload")}</button>
+                            <button type="button" class="advisor-button advisor-button-primary" data-advisor-start data-testid="advisor-start" disabled>${page.t("advisor.start")}</button>
+                            <button type="button" class="advisor-button" data-advisor-cancel data-testid="advisor-cancel" hidden>${page.t("advisor.cancel")}</button>
+                        </div>
+                        <p class="problem-status" data-advisor-status data-testid="advisor-status" role="status" aria-live="polite" aria-atomic="true"></p>
+                        <div class="advisor-findings" data-advisor-findings data-testid="advisor-findings" role="list" aria-label="${page.t("advisor.findings.label")}"></div>
+                        <button type="button" class="advisor-button advisor-button-primary advisor-fix" data-advisor-fix data-testid="advisor-fix" hidden>${page.t("advisor.fix")}</button>
                     </section>
                 </div>
             </aside>

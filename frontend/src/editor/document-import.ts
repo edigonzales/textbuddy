@@ -3,6 +3,7 @@ import type { Editor } from "@tiptap/core";
 import { apiFetch } from "./api-fetch";
 import { isApiLocked } from "./auth";
 import { importedHtmlToPlainText, setEditorPlainText } from "./editor-content";
+import { dispatchWorkspaceBusy } from "./events";
 import { extractErrorMessage } from "./http-error";
 import { mapTextLanguageToOcr } from "./import-language";
 import type { DocumentImportElements } from "./types";
@@ -61,13 +62,8 @@ export function mountDocumentImport(
     dropTarget.dataset.authLocked = isApiLocked(root) ? "true" : "false";
     dropTarget.setAttribute("aria-busy", busy ? "true" : "false");
     root.dataset.documentImportRunning = busy ? "true" : "false";
-    editor.setEditable(!busy && root.dataset.quickActionRunning !== "true");
-    root.dispatchEvent(
-      new CustomEvent("workspace:busy-changed", {
-        bubbles: true,
-        detail: { busy, view: "editor" },
-      }),
-    );
+    editor.setEditable(!busy && root.dataset.workspaceBusy !== "true");
+    dispatchWorkspaceBusy(root, busy, "editor", busy ? "document-import" : "");
   }
 
   async function importFile(file: File): Promise<void> {

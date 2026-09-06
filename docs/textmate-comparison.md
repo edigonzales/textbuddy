@@ -22,7 +22,7 @@ Die beiden fremden Repositories wurden statisch analysiert. Es wurde keine produ
 
 Text-Mate ist das funktional breitere Produkt. Besonders der Dokument-Advisor, die gemessene Vereinfachung, die kontextbezogenen Wort- und Satzalternativen sowie konfigurierbare Benutzeraktionen sind vollständig oder weitgehend bis ins UI geführt.
 
-Textbuddy verfolgt nach der Bereinigung bewusst einen engeren Ansatz: drei sichtbare Schreibwerkzeuge und möglichst wenig Frontend-Komplexität. Dafür besitzt Textbuddy eine echte kontinuierliche LanguageTool-Korrektur, ein tatsächlich integriertes lokales Wörterbuch, einen breiteren lokalen Import mit OCR, einen gegen große Eingaben abgesicherten Diff und ein stärker auf eine eigenständig installierbare Anwendung ausgerichtetes Release-Verfahren.
+Textbuddy verfolgt bewusst einen engeren Ansatz: vier sichtbare, vollständige Abläufe und möglichst wenig Frontend-Komplexität. Der neue Advisor-Demo-Schnitt schliesst den Weg von gebündelten Regelwerken über Prüfung und Quellenbezug bis zum kontrollierten Diff. Textbuddy besitzt ausserdem eine echte kontinuierliche LanguageTool-Korrektur, ein integriertes lokales Wörterbuch, einen breiteren lokalen Import mit OCR, einen gegen grosse Eingaben abgesicherten Diff und ein auf eine eigenständig installierbare Anwendung ausgerichtetes Release-Verfahren.
 
 Ein isolierter Vergleich von LanguageTool mit ZIX 0.2.1 zeigt zwar eine sehr gute Rang- und Richtungsübereinstimmung, aber keine numerische oder CEFR-Kompatibilität. Das Experiment ist deshalb nicht produktiv integriert; Details stehen im [ZIX-Kompatibilitätsbericht](zix-compatibility.md).
 
@@ -139,7 +139,7 @@ Der Wort-Diff besitzt aktuell keine Größenbegrenzung. Außerdem enthalten sein
 
 ### Sichtbare Schreibwerkzeuge
 
-In der normalen Oberfläche sind bewusst genau drei Werkzeuge sichtbar:
+In der normalen Oberfläche sind bewusst vier vollständige Abläufe sichtbar:
 
 1. **Korrektur**
    - automatische Prüfung des vollständigen Textes nach 350 Millisekunden Eingabepause;
@@ -156,6 +156,12 @@ In der normalen Oberfläche sind bewusst genau drei Werkzeuge sichtbar:
 3. **Zusammenfassen**
    - ein Satz, drei Sätze, ein Absatz, eine Seite oder Management Summary;
    - Ergebnis wird vor der Übernahme als Diff gezeigt.
+4. **Richtlinien-Advisor**
+   - Auswahl von bis zu fünf gebündelten, projektinternen Demo-Regelwerken;
+   - zehn Regeln in seriellen Dreierbatches mit SSE-Fortschritt;
+   - exakte Textmarkierung, Begründung, Vorschlag und PDF-Quelle;
+   - **Korrigieren** oder **Überspringen** pro Befund;
+   - ein atomarer LLM-Fix und Prüfung im gemeinsamen Diff.
 
 ### Persönliches Wörterbuch
 
@@ -200,10 +206,8 @@ Im Gegensatz dazu enthält Text-Mate zwar eine IndexedDB-Implementierung und ein
 - Freie eigene Anweisung.
 - Kontextbezogene Synonyme.
 - Satzalternativen.
-- Advisor-Dokumentkatalog und PDF-Auslieferung.
-- Gestreamte Advisor-Prüfung.
 
-Der Textbuddy-Advisor enthält fünf einzeln auswählbare Quelldokumente mit derzeit je zwei Regeln, also insgesamt zehn Regeln. Er besitzt keine Advisor-Fix-Schnittstelle und keine sichtbare Ergebnisoberfläche.
+Der sichtbare Textbuddy-Advisor enthält fünf einzeln auswählbare Demo-Dokumente mit derzeit je zwei Regeln, also insgesamt zehn Regeln. Eigene Regelwerke können als JSON-/PDF-Paar gebündelt werden. Laufzeit-Upload, Rollenmodell, Notizen und Persistenz sind bewusst nicht vorhanden.
 
 ### Betrieb
 
@@ -241,9 +245,9 @@ Der Textbuddy-Advisor enthält fünf einzeln auswählbare Quelldokumente mit der
 | Satzalternativen | sichtbar am Satz | – | vorhanden | Backend-Parität; Text-Mate hat den vollständigen UI-Fluss. |
 | Diff-Review | sichtbar | sichtbar | – | Funktionsumfang ähnlich. Textbuddy ist bei großen Texten und Hunk-IDs robuster. |
 | Streaming von KI-Text | sichtbar | – | – | Text-Mate zeigt Ergebnisse und Fortschritt früher; Textbuddy bleibt einfacher. |
-| Advisor-Prüfung | sichtbar | – | vorhanden | Text-Mate ist Ende-zu-Ende vollständig und besitzt wesentlich mehr Regeln. |
-| Advisor-Korrektur | sichtbar | – | – | Nur Text-Mate. |
-| Advisor-PDF auf Quellseite | sichtbar | – | PDF und Referenz-URL vorhanden | Textbuddy hat die Datenbasis, aber keinen sichtbaren Viewer. |
+| Advisor-Prüfung | sichtbar | sichtbar | sichtbar | Beide sind Ende-zu-Ende nutzbar; Text-Mate besitzt 65 statt zehn Regeln und ein Evaluationskorpus. |
+| Advisor-Korrektur | sichtbar, gestreamt | sichtbar, atomar mit Diff | sichtbar | Fachlich vergleichbar; Textbuddy verwendet den vorhandenen begrenzten Diff und bleibt technisch einfacher. |
+| Advisor-PDF auf Quellseite | eingebettet | neuer Tab auf referenzierter Seite | PDF-Auslieferung | Text-Mate integriert den Viewer stärker; Textbuddy vermeidet einen eigenen PDF-Zustand. |
 | Notizen an Textstellen/Befunden | sichtbar, nur Sitzung | – | – | Nur Text-Mate; keine Kollaborationspersistenz. |
 | Zeichen-, Wort- und Satzstatistik | sichtbar | sichtbar | – | Vergleichbar bei Grundwerten. |
 | Sprachabhängige Lesbarkeit und CEFR | sichtbar | teilweise: deutsche Amstad-Flesch-Lesbarkeit bei `de-CH`, ohne CEFR | – | Die deutsche Kernlücke ist reduziert; Text-Mate deckt zusätzlich automatische Erkennung, EN/FR/IT und CEFR ab. |
@@ -262,8 +266,8 @@ Der Textbuddy-Advisor enthält fünf einzeln auswählbare Quelldokumente mit der
 1. **Einfache Sprache mit messbarer Zielerreichung**
    Text-Mate misst sprachabhängig, versucht schwierige Einheiten höchstens einmal erneut und zeigt verbleibende problematische Passagen. Textbuddy führt lediglich eine einzelne, promptbasierte Transformation aus.
 
-2. **Advisor als vollständiger Benutzerfluss**
-   Text-Mate verbindet Dokumentauswahl, 65 Regeln, gestreamte Prüfung, Textmarkierung, Quellen-PDF und gemeinsame Korrektur. Textbuddy besitzt davon nur Katalog, zehn Regeln, PDF-Auslieferung und Validierungsstream im Backend.
+2. **Advisor-Inhalt, Rollen und Evaluation**
+   Beide Projekte verbinden Dokumentauswahl, Prüfung, Textmarkierung, Quelle und Korrektur. Text-Mate ist mit 65 Regeln, rollenbasierten Sammlungen, Notizen, eingebettetem PDF und eigenem Evaluationskorpus deutlich weiter. Textbuddy zeigt mit zehn projektinternen Regeln bewusst nur einen kleinen, vollständigen Demo-Schnitt.
 
 3. **Exponierte Transformationsbreite**
    Die meisten in beiden Backends vorhandenen Aktionen sind in Text-Mate auf Desktop und Mobil nutzbar. Textbuddy zeigt sie absichtlich nicht.
@@ -304,7 +308,7 @@ Der Textbuddy-Advisor enthält fünf einzeln auswählbare Quelldokumente mit der
 | Priorität | Vorschlag | Begründung |
 | --- | --- | --- |
 | mittel | **LanguageTool-Proxy nur mit breiterer fachlicher Validierung prüfen** | Das isolierte ZIX-Experiment ist ein Proxy-Kandidat, aber nicht ZIX-/CEFR-kompatibel. Vor einer Integration braucht es mehr unabhängige Texte und fachlich bewertete Grenzfälle. |
-| mittel | **Advisor nur als vollständigen vertikalen Schnitt exponieren** | Falls fachlich gewünscht: Dokumentwahl, Ergebnisse, Übernehmen und Quellenlink gemeinsam liefern. Keine erneut versteckte halbe UI. |
+| mittel | **Advisor erst fachlich, dann mengenmässig ausbauen** | Der vertikale Schnitt ist vollständig. Als Nächstes lohnen echte organisationsspezifische Regeln und ein bewertetes Korpus mehr als zusätzliche Workflow-Infrastruktur. |
 | mittel | **Lesbarkeit nur bei echtem Bedarf mehrsprachig erweitern** | Der deutsche Vorher-/Nachher-Vergleich ist vorhanden. EN/FR/IT und CEFR rechtfertigen zusätzliche Formeln und Erkennung erst bei entsprechendem Nutzungsbedarf. |
 | niedrig | **Streaming nur bei nachgewiesenem Warteproblem** | Für zwei sichtbare LLM-Aktionen rechtfertigt einfaches Request/Response häufig die geringere Komplexität. |
 | niedrig | **Kürzen nur bei echtem Produktbedarf ergänzen** | Es ist die einzige wesentliche Text-Mate-Quick-Action, die auch im Textbuddy-Backend fehlt. |
@@ -338,11 +342,12 @@ Die README-Dateien geben einen guten Überblick, sind aber nicht vollständig de
 
 README, Funktionsübersicht und Architektur passen zum analysierten Stand:
 
-- genau drei sichtbare Werkzeuge;
+- vier sichtbare vollständige Abläufe einschliesslich Advisor;
 - zusätzliche Funktionen nur im Backend;
 - Plaintext als verbindliches Modell;
 - ein Request je Korrekturzyklus;
 - 10.000-Zeichen-Grenze für Wort-Diffs;
+- Advisor mit zehn projektinternen Demo-Regeln, höchstens vier seriellen Validierungsaufrufen und einem atomaren Fix-Aufruf;
 - keine automatischen Provider-Retries, abgesehen vom dokumentierten lokalen OCR-Sprachfallback.
 
 Weiterführend: [Funktionsübersicht](features.md), [Architektur](architecture.md) und [Betrieb](operations.md).

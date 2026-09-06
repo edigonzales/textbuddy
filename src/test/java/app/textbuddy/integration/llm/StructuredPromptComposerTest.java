@@ -1,5 +1,6 @@
 package app.textbuddy.integration.llm;
 
+import app.textbuddy.advisor.AdvisorFixFinding;
 import app.textbuddy.advisor.AdvisorRuleCheck;
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -49,5 +50,26 @@ class StructuredPromptComposerTest {
         assertThat(promptMessages.systemPrompt()).contains("JSON array");
         assertThat(promptMessages.userPrompt()).contains("Review only the given rules");
         assertThat(promptMessages.userPrompt()).contains("\"ruleId\":\"rule-1\"");
+    }
+
+    @Test
+    void advisorFixIncludesExactFindingsOriginalAndPlainTextRequirements() {
+        PromptMessages promptMessages = promptComposer.advisorFix(
+                "  Bitte per sofort handeln.  ",
+                List.of(new AdvisorFixFinding(
+                        "schreibweisungen", "Schreibweisungen", "per-sofort-vermeiden",
+                        "Per sofort ersetzen", "Prüfe die Formulierung.", "Nutze ab sofort.",
+                        8, 18, "per sofort", "ab sofort"
+                ))
+        );
+
+        assertThat(promptMessages.systemPrompt()).contains("complete corrected plain text");
+        assertThat(promptMessages.userPrompt())
+                .contains("\"ruleId\":\"per-sofort-vermeiden\"")
+                .contains("\"matchedText\":\"per sofort\"")
+                .contains("\"suggestion\":\"ab sofort\"")
+                .contains("  Bitte per sofort handeln.  ")
+                .contains("Preserve every unrelated statement")
+                .contains("without Markdown or HTML");
     }
 }

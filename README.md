@@ -1,6 +1,6 @@
 # Textbuddy
 
-Textbuddy ist eine serverbasierte Schreibassistenz mit drei bewusst sichtbaren Werkzeugen: Textkorrektur, verständlicher schreiben und zusammenfassen. Das Backend enthält zusätzlich die bestehenden, derzeit nicht exponierten Fachfunktionen und den Dokumentimport. Die Anwendung besteht aus Spring Boot MVC und einer kleinen TypeScript-/Tiptap-Insel in serverseitig gerendertem JTE-HTML.
+Textbuddy ist eine serverbasierte Schreibassistenz mit vier bewusst sichtbaren Abläufen: Textkorrektur, Richtlinien-Advisor, verständlicher schreiben und zusammenfassen. Der Advisor demonstriert mit fünf projektinternen Demo-Regelwerken, wie später eigene gebündelte Richtlinien eingesetzt werden können. Das Backend enthält zusätzlich bestehende, derzeit nicht exponierte Fachfunktionen und den Dokumentimport. Die Anwendung besteht aus Spring Boot MVC und einer kleinen TypeScript-/Tiptap-Insel in serverseitig gerendertem JTE-HTML.
 
 Der Editor verwendet Plaintext als verbindliches Inhaltsmodell. Importierte Formatierungen werden auf Text und Absatzumbrüche reduziert; KI-Ergebnisse und DOCX-Exporte interpretieren Zeichen wie `#`, `*` oder `1.` nicht als Formatierungsanweisung.
 
@@ -63,6 +63,7 @@ Weitere Dokumentation:
 - [Architektur](docs/architecture.md)
 - [Betrieb und Konfiguration](docs/operations.md)
 - [Accessibility](docs/accessibility.md)
+- [Eigene Advisor-Regelwerke erstellen](docs/advisor-authoring.md)
 
 ## Sicherheitsmodell in Kürze
 

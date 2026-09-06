@@ -1,5 +1,6 @@
 package app.textbuddy.integration.llm;
 
+import app.textbuddy.advisor.AdvisorFixFinding;
 import app.textbuddy.advisor.AdvisorRuleCheck;
 import app.textbuddy.advisor.AdvisorRuleMatch;
 import app.textbuddy.quickaction.CharacterSpeechPrompt;
@@ -99,7 +100,7 @@ public final class StubTextbuddyLlmClient implements TextbuddyLlmClient {
 
     @Override
     public List<AdvisorRuleMatch> validate(String text, List<AdvisorRuleCheck> ruleChecks) {
-        String normalizedText = normalize(text);
+        String normalizedText = text == null ? "" : text;
 
         if (normalizedText.isBlank() || ruleChecks == null || ruleChecks.isEmpty()) {
             return List.of();
@@ -114,11 +115,26 @@ public final class StubTextbuddyLlmClient implements TextbuddyLlmClient {
                     match.matchedText(),
                     excerptAround(normalizedText, match.startIndex(), match.endIndex()),
                     rule.message() + " Gefunden: '" + match.matchedText() + "'.",
-                    rule.suggestion()
+                    replacementFor(rule.ruleId(), match.matchedText(), rule.suggestion())
             )));
         }
 
         return List.copyOf(matches);
+    }
+
+    @Override
+    public String fixAdvisor(String text, List<AdvisorFixFinding> findings) {
+        String result = text == null ? "" : text;
+        List<AdvisorFixFinding> ordered = findings == null ? List.of() : findings.stream()
+                .sorted(Comparator.comparingInt(AdvisorFixFinding::start).reversed())
+                .toList();
+        for (AdvisorFixFinding finding : ordered) {
+            if (finding.start() >= 0 && finding.end() <= result.length()
+                    && result.substring(finding.start(), finding.end()).equals(finding.matchedText())) {
+                result = result.substring(0, finding.start()) + finding.suggestion() + result.substring(finding.end());
+            }
+        }
+        return result;
     }
 
     private String plainLanguage(String text, String language) {
@@ -262,12 +278,50 @@ public final class StubTextbuddyLlmClient implements TextbuddyLlmClient {
 
     private static Optional<TextMatch> findMatch(String text, String term) {
         String normalizedTerm = normalize(term);
-        int index = text.toLowerCase(Locale.ROOT).indexOf(normalizedTerm.toLowerCase(Locale.ROOT));
+        if (normalizedTerm.isBlank()) {
+            return Optional.empty();
+        }
+        String lowerText = text.toLowerCase(Locale.ROOT);
+        String lowerTerm = normalizedTerm.toLowerCase(Locale.ROOT);
+        int index = lowerText.indexOf(lowerTerm);
+        while (index >= 0 && !hasWordBoundaries(text, index, index + normalizedTerm.length(), normalizedTerm)) {
+            index = lowerText.indexOf(lowerTerm, index + 1);
+        }
         return index < 0 ? Optional.empty() : Optional.of(new TextMatch(
                 text.substring(index, index + normalizedTerm.length()),
                 index,
                 index + normalizedTerm.length()
         ));
+    }
+
+    private static boolean hasWordBoundaries(String text, int start, int end, String term) {
+        boolean left = !Character.isLetterOrDigit(term.charAt(0)) || start == 0
+                || !Character.isLetterOrDigit(text.charAt(start - 1));
+        boolean right = !Character.isLetterOrDigit(term.charAt(term.length() - 1)) || end == text.length()
+                || !Character.isLetterOrDigit(text.charAt(end));
+        return left && right;
+    }
+
+    private static String replacementFor(String ruleId, String matchedText, String fallback) {
+        String term = matchedText.toLowerCase(Locale.ROOT);
+        return switch (ruleId) {
+            case "downloaden-statt-herunterladen" -> switch (term) {
+                case "gedownloadet" -> "heruntergeladen";
+                case "updaten" -> "aktualisieren";
+                case "upgedatet" -> "aktualisiert";
+                default -> "herunterladen";
+            };
+            case "meeting-und-feedback-pruefen" -> term.equals("feedback") ? "Rückmeldung" : "Besprechung";
+            case "mitarbeiter-neutral-formulieren" -> "Mitarbeitende";
+            case "buerger-neutral-formulieren" -> "Bevölkerung";
+            case "alte-dass-schreibung" -> "dass";
+            case "email-mit-bindestrich" -> "E-Mail";
+            case "per-sofort-vermeiden" -> "ab sofort";
+            case "zhd-ausschreiben" -> "zuhanden von";
+            case "beiliegend-modernisieren" -> "Im Anhang";
+            case "obgenannt-vermeiden" -> "genannt";
+            default -> fallback;
+        };
     }
 
     private static String excerptAround(String text, int start, int end) {

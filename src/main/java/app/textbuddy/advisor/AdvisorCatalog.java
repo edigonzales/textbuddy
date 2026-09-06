@@ -52,9 +52,14 @@ public final class AdvisorCatalog {
                         document.title(),
                         document.summary(),
                         document.source(),
-                        "/api/advisor/doc/" + UriUtils.encodePathSegment(document.name(), StandardCharsets.UTF_8)
+                        "/api/advisor/doc/" + UriUtils.encodePathSegment(document.name(), StandardCharsets.UTF_8),
+                        document.rules().size()
                 ))
                 .toList();
+    }
+
+    public Optional<AdvisorDocument> find(String name) {
+        return Optional.ofNullable(documentsByName.get(normalize(name)));
     }
 
     public Optional<AdvisorDocumentFile> findDocument(String name) {

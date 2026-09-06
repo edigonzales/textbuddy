@@ -192,7 +192,8 @@ test("starts with a wide editor and only the three MVP tools", async ({ page }) 
   await expect(page.getByTestId("quick-action-proofread")).toHaveCount(0);
   await expect(page.getByTestId("quick-action-bullet-points")).toHaveCount(0);
   await expect(page.getByTestId("quick-action-formality")).toHaveCount(0);
-  await expect(page.getByTestId("advisor-panel")).toHaveCount(0);
+  await expect(page.getByTestId("advisor-toggle")).toBeHidden();
+  await expect(page.getByTestId("advisor-panel")).toBeHidden();
   await expect(page.getByTestId("rewrite-bubble")).toHaveCount(0);
 
   const widths = await page.evaluate(() => ({
@@ -280,6 +281,100 @@ test("clicking a correction mark switches mode and focuses its finding", async (
     "true",
   );
   await expect(page.getByRole("button", { name: /Problem 1: teh/ })).toBeFocused();
+});
+
+test("advisor validates bundled guidelines, reviews selected fixes and preserves findings on rejection", async ({
+  page,
+}) => {
+  await stubCorrection(page);
+  const documents = [
+    {
+      name: "empfehlungen-anglizismen-maerz-2020",
+      title: "Empfehlungen zu Anglizismen",
+      summary: "Demo für verständliche deutsche Alternativen.",
+      source: "Textbuddy Referenzblatt (projektintern)",
+      documentUrl: "/api/advisor/doc/empfehlungen-anglizismen-maerz-2020",
+      ruleCount: 2,
+    },
+    {
+      name: "schreibweisungen",
+      title: "Schreibweisungen",
+      summary: "Demo für interne Schreibstandards.",
+      source: "Textbuddy Referenzblatt (projektintern)",
+      documentUrl: "/api/advisor/doc/schreibweisungen",
+      ruleCount: 2,
+    },
+  ];
+  let validateBody: unknown;
+  let fixBody: { text: string; findings: Array<{ ruleId: string }> } | undefined;
+  await page.route("**/api/advisor/docs", async (route) => route.fulfill({ json: documents }));
+  await page.route("**/api/advisor/validate", async (route) => {
+    validateBody = route.request().postDataJSON();
+    const validation = (stableKey: string, documentName: string, documentTitle: string,
+      ruleId: string, ruleTitle: string, matchedText: string, suggestion: string,
+      start: number, end: number) => `event:validation\ndata:${JSON.stringify({
+        stableKey, documentName, documentTitle, ruleId, ruleTitle, page: 1, pageLabel: "Seite 1",
+        message: "Diese Formulierung entspricht nicht der Demo-Regel.", matchedText,
+        excerpt: `…${matchedText}…`, suggestion,
+        referenceUrl: `/api/advisor/doc/${documentName}#page=1`, start, end,
+      })}\n\n`;
+    await route.fulfill({
+      contentType: "text/event-stream",
+      body: validation("ang::download::6:16", documents[0]!.name, documents[0]!.title,
+        "downloaden-statt-herunterladen", "Deutsche Alternative", "downloaden", "herunterladen", 6, 16)
+        + 'event:progress\ndata:{"checked":2,"total":4}\n\n'
+        + validation("schreib::sofort::21:31", documents[1]!.name, documents[1]!.title,
+          "per-sofort-vermeiden", "Per sofort ersetzen", "per sofort", "ab sofort", 21, 31)
+        + 'event:progress\ndata:{"checked":4,"total":4}\n\n',
+    });
+  });
+  await page.route("**/api/advisor/fix", async (route) => {
+    fixBody = route.request().postDataJSON() as typeof fixBody;
+    await route.fulfill({ json: { text: "Bitte herunterladen Sie per sofort." } });
+  });
+  await page.goto("/");
+  await enterText(page, "Bitte downloaden Sie per sofort.");
+
+  await expect(page.getByTestId("advisor-toggle")).toBeHidden();
+  await page.getByTestId("workspace-mode-validate").click();
+  await page.getByTestId("advisor-toggle").click();
+  await expect(page.getByTestId("advisor-panel")).toBeVisible();
+  await expect(page.getByTestId("advisor-document")).toHaveCount(2);
+  await expect(page.getByTestId("advisor-document").first()).toContainText("2 Regeln");
+  await expect(page.getByTestId("advisor-document").first().getByRole("link", { name: "PDF öffnen" }))
+    .toHaveAttribute("target", "_blank");
+  await page.getByTestId("advisor-document-checkbox").first().check();
+  await page.getByTestId("advisor-document-checkbox").nth(1).check();
+  await page.getByTestId("advisor-start").click();
+
+  await expect(page.getByTestId("advisor-status")).toContainText("Prüfung abgeschlossen: 2 Befund(e)");
+  await expect(page.getByTestId("advisor-finding")).toHaveCount(2);
+  await expect(page.getByTestId("advisor-finding-excerpt").first()).toHaveText("…downloaden…");
+  expect(validateBody).toEqual({
+    text: "Bitte downloaden Sie per sofort.",
+    docs: [documents[0]!.name, documents[1]!.name],
+  });
+  await page.getByTestId("advisor-finding-focus").first().click();
+  await expect(page.locator("[data-testid='correction-mark']")).toHaveText("downloaden");
+  await page.getByTestId("advisor-decision").nth(1).click();
+  await expect(page.getByTestId("advisor-decision").nth(1)).toHaveText("Überspringen");
+  await page.getByTestId("advisor-fix").click();
+
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+  expect(fixBody?.findings).toHaveLength(1);
+  expect(fixBody?.findings[0]?.ruleId).toBe("downloaden-statt-herunterladen");
+  await expect(page.getByTestId("editor-mirror")).toHaveValue("Bitte downloaden Sie per sofort.");
+  await page.getByRole("button", { name: "Alle ablehnen" }).click();
+  await expect(page.getByTestId("advisor-panel")).toBeVisible();
+  await expect(page.getByTestId("advisor-finding")).toHaveCount(2);
+  await expect(page.getByTestId("advisor-status")).toContainText("Prüfung abgeschlossen: 2 Befund(e)");
+
+  await page.getByTestId("advisor-fix").click();
+  await page.getByRole("button", { name: "Alle annehmen" }).click();
+  await expect(page.getByTestId("editor-mirror")).toHaveValue("Bitte herunterladen Sie per sofort.");
+  await expect(page.getByTestId("advisor-finding")).toHaveCount(0);
+  await page.getByTestId("editor-undo").click();
+  await expect(page.getByTestId("editor-mirror")).toHaveValue("Bitte downloaden Sie per sofort.");
 });
 
 test("correction sends one request for a 50000-character document", async ({ page }) => {

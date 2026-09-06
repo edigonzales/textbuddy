@@ -34,6 +34,7 @@ class AdvisorCatalogControllerMvcTest {
                 .andExpect(jsonPath("$[0].name").value("empfehlungen-anglizismen-maerz-2020"))
                 .andExpect(jsonPath("$[0].title").value("Empfehlungen zu Anglizismen"))
                 .andExpect(jsonPath("$[0].documentUrl").value("/api/advisor/doc/empfehlungen-anglizismen-maerz-2020"))
+                .andExpect(jsonPath("$[0].ruleCount").value(2))
                 .andExpect(jsonPath("$[3].name").value("schreibweisungen"));
     }
 
