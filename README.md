@@ -58,6 +58,7 @@ Weitere Dokumentation:
 
 - [Funktionsübersicht](docs/features.md)
 - [Vergleich mit Text-Mate](docs/textmate-comparison.md)
+- [ZIX-/LanguageTool-Kompatibilität](docs/zix-compatibility.md)
 - [Getting Started](docs/getting-started.md)
 - [Architektur](docs/architecture.md)
 - [Betrieb und Konfiguration](docs/operations.md)

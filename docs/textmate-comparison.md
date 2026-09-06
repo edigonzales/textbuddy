@@ -1,6 +1,6 @@
 # Funktionsvergleich: Text-Mate und Textbuddy
 
-Stand: 5. September 2026
+Stand: 6. September 2026
 
 ## Quellen und Abgrenzung
 
@@ -8,7 +8,7 @@ Verglichen wurden die Implementierung, Konfiguration, Tests und README-Dateien d
 
 - [Text-Mate Frontend, Commit `9009178`](https://github.com/DCC-BS/text-mate-frontend/tree/9009178858dcfc9600bf31c5edf816a11080bff6), 1. September 2026
 - [Text-Mate Backend, Commit `97f9361`](https://github.com/DCC-BS/text-mate-backend/tree/97f93611a19c78f71b88b8e9d1d1d2a09bd149db), 28. August 2026
-- Textbuddy, Commit `ecbc2cf`, 5. September 2026
+- Textbuddy, Stand dieser Dokumentation, 6. September 2026
 
 Die Analyse unterscheidet bewusst zwischen:
 
@@ -23,6 +23,8 @@ Die beiden fremden Repositories wurden statisch analysiert. Es wurde keine produ
 Text-Mate ist das funktional breitere Produkt. Besonders der Dokument-Advisor, die gemessene Vereinfachung, die kontextbezogenen Wort- und Satzalternativen sowie konfigurierbare Benutzeraktionen sind vollständig oder weitgehend bis ins UI geführt.
 
 Textbuddy verfolgt nach der Bereinigung bewusst einen engeren Ansatz: drei sichtbare Schreibwerkzeuge und möglichst wenig Frontend-Komplexität. Dafür besitzt Textbuddy eine echte kontinuierliche LanguageTool-Korrektur, ein tatsächlich integriertes lokales Wörterbuch, einen breiteren lokalen Import mit OCR, einen gegen große Eingaben abgesicherten Diff und ein stärker auf eine eigenständig installierbare Anwendung ausgerichtetes Release-Verfahren.
+
+Ein isolierter Vergleich von LanguageTool mit ZIX 0.2.1 zeigt zwar eine sehr gute Rang- und Richtungsübereinstimmung, aber keine numerische oder CEFR-Kompatibilität. Das Experiment ist deshalb nicht produktiv integriert; Details stehen im [ZIX-Kompatibilitätsbericht](zix-compatibility.md).
 
 Die Projekte sind daher nicht einfach unterschiedliche Ausbaustufen desselben Produkts:
 
@@ -301,13 +303,13 @@ Der Textbuddy-Advisor enthält fünf einzeln auswählbare Quelldokumente mit der
 
 | Priorität | Vorschlag | Begründung |
 | --- | --- | --- |
-| mittel | **Höchstens einen qualitätsgesteuerten zweiten Versuch prüfen** | Nur wenn der erste Text das Ziel klar verfehlt. Keine allgemeine Agenten- oder Workflow-Plattform einführen. |
+| mittel | **LanguageTool-Proxy nur mit breiterer fachlicher Validierung prüfen** | Das isolierte ZIX-Experiment ist ein Proxy-Kandidat, aber nicht ZIX-/CEFR-kompatibel. Vor einer Integration braucht es mehr unabhängige Texte und fachlich bewertete Grenzfälle. |
 | mittel | **Advisor nur als vollständigen vertikalen Schnitt exponieren** | Falls fachlich gewünscht: Dokumentwahl, Ergebnisse, Übernehmen und Quellenlink gemeinsam liefern. Keine erneut versteckte halbe UI. |
 | mittel | **Lesbarkeit nur bei echtem Bedarf mehrsprachig erweitern** | Der deutsche Vorher-/Nachher-Vergleich ist vorhanden. EN/FR/IT und CEFR rechtfertigen zusätzliche Formeln und Erkennung erst bei entsprechendem Nutzungsbedarf. |
 | niedrig | **Streaming nur bei nachgewiesenem Warteproblem** | Für zwei sichtbare LLM-Aktionen rechtfertigt einfaches Request/Response häufig die geringere Komplexität. |
 | niedrig | **Kürzen nur bei echtem Produktbedarf ergänzen** | Es ist die einzige wesentliche Text-Mate-Quick-Action, die auch im Textbuddy-Backend fehlt. |
 
-Nach Ockham sollte Textbuddy nicht versuchen, die gesamte Text-Mate-Oberfläche nachzubauen. Mit dem deutschen Vorher-/Nachher-Wert ist die naheliegende kleine Messlücke geschlossen; weitere Formeln oder Qualitätsversuche sollten erst durch konkreten Produktbedarf begründet werden.
+Nach Ockham sollte Textbuddy nicht versuchen, die gesamte Text-Mate-Oberfläche nachzubauen. Mit dem deutschen Vorher-/Nachher-Wert ist die naheliegende kleine Messlücke geschlossen. Der zwischenzeitlich erprobte automatische zweite LLM-Versuch wurde wieder entfernt. Das ZIX-Experiment bleibt bewusst im Testcode; eine produktive Proxy-Metrik oder ein erneuter Qualitätsversuch braucht zuerst zusätzliche fachliche Evidenz.
 
 ### Für Text-Mate
 

@@ -68,6 +68,25 @@ sourceSets {
             srcDir generatedFrontendResourcesDir
         }
     }
+    test {
+        java.exclude 'app/textbuddy/zix/**'
+        resources.exclude 'zix-compatibility/**'
+    }
+    zixCompatibility {
+        java {
+            srcDir 'src/test/java'
+            include 'app/textbuddy/zix/**'
+        }
+        resources {
+            srcDir 'src/test/resources'
+            include 'zix-compatibility/**'
+        }
+    }
+}
+
+configurations {
+    zixCompatibilityImplementation.extendsFrom testImplementation
+    zixCompatibilityRuntimeOnly.extendsFrom testRuntimeOnly
 }
 
 tasks.register('npmInstallFrontend', Exec) {
@@ -200,6 +219,18 @@ tasks.register('embeddedLanguageToolTest', Test) {
     filter.includeTestsMatching('app.textbuddy.integration.languagetool.EmbeddedLanguageToolClientTest')
     useJUnitPlatform()
     jvmArgs '--enable-native-access=ALL-UNNAMED'
+}
+
+tasks.register('zixCompatibilityTest', Test) {
+    description = 'Runs the isolated LanguageTool/ZIX compatibility experiment.'
+    group = 'verification'
+    testClassesDirs = sourceSets.zixCompatibility.output.classesDirs
+    classpath = sourceSets.zixCompatibility.runtimeClasspath
+    filter.includeTestsMatching('app.textbuddy.zix.ZixCompatibilityTest')
+    useJUnitPlatform()
+    maxHeapSize = '2g'
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
+    systemProperty 'zix.reportDir', layout.buildDirectory.dir('reports/zix-compatibility').get().asFile.absolutePath
 }
 
 tasks.named('test') {

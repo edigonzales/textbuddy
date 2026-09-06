@@ -1,0 +1,1009 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "repository": "https://github.com/machinelearningZH/zix_understandability-index",
+    "commit": "3cd7e7e9fd0937e1c41e2bf0e040950172ab3a6e",
+    "zixVersion": "0.2.1",
+    "spacyModel": "de_core_news_sm",
+    "spacyModelVersion": "3.8.0",
+    "lockFile": "uv.lock"
+  },
+  "featureOrder": [
+    "sentence_length_mean",
+    "rix",
+    "vocab_a1",
+    "vocab_a2",
+    "vocab_b1",
+    "common_word_score"
+  ],
+  "cases": [
+    {
+      "id": "admin-permit-original",
+      "pairId": "admin-permit",
+      "role": "original",
+      "category": "administration",
+      "text": "Die Gesuchstellenden werden hiermit darauf aufmerksam gemacht, dass die abschliessende Bearbeitung des Bewilligungsantrags erst nach vollständigem Eingang sämtlicher erforderlicher Nachweisdokumente vorgenommen werden kann.",
+      "wordCount": 23,
+      "normalizedText": "Die Gesuchstellenden werden hiermit darauf aufmerksam gemacht, dass die abschliessende Bearbeitung des Bewilligungsantrags erst nach vollständigem Eingang sämtlicher erforderlicher Nachweisdokumente vorgenommen werden kann.",
+      "features": {
+        "sentence_length_mean": 23.0,
+        "rix": 13.0,
+        "vocab_a1": 0.391304347826087,
+        "vocab_a2": 0.5217391304347826,
+        "vocab_b1": 0.6521739130434783,
+        "common_word_score": 5.787913043478261
+      },
+      "zixScore": -2.2941563179249655,
+      "cefrBand": "C1"
+    },
+    {
+      "id": "admin-permit-simplified",
+      "pairId": "admin-permit",
+      "role": "simplified",
+      "category": "administration",
+      "text": "Wir bearbeiten Ihr Gesuch, sobald alle nötigen Unterlagen da sind. Prüfen Sie deshalb bitte, ob Sie jedes verlangte Dokument geschickt haben.",
+      "wordCount": 21,
+      "normalizedText": "Wir bearbeiten Ihr Gesuch, sobald alle nötigen Unterlagen da sind. Prüfen Sie deshalb bitte, ob Sie jedes verlangte Dokument geschickt haben.",
+      "features": {
+        "sentence_length_mean": 10.5,
+        "rix": 3.5,
+        "vocab_a1": 0.47619047619047616,
+        "vocab_a2": 0.5714285714285714,
+        "vocab_b1": 0.8095238095238095,
+        "common_word_score": 7.3939047619047615
+      },
+      "zixScore": -1.8287362483196858,
+      "cefrBand": "B2"
+    },
+    {
+      "id": "admin-tax-original",
+      "pairId": "admin-tax",
+      "role": "original",
+      "category": "administration",
+      "text": "Sofern die Steuererklärung nicht innerhalb der angesetzten Einreichungsfrist übermittelt wird, behält sich das Steueramt die kostenpflichtige Anordnung einer Fristverlängerung sowie weiterer verfahrensrechtlicher Massnahmen vor.",
+      "wordCount": 24,
+      "normalizedText": "Sofern die Steuererklärung nicht innerhalb der angesetzten Einreichungsfrist übermittelt wird, behält sich das Steueramt die kostenpflichtige Anordnung einer Fristverlängerung sowie weiterer verfahrensrechtlicher Massnahmen vor.",
+      "features": {
+        "sentence_length_mean": 24.0,
+        "rix": 12.0,
+        "vocab_a1": 0.4166666666666667,
+        "vocab_a2": 0.4166666666666667,
+        "vocab_b1": 0.5,
+        "common_word_score": 5.276625
+      },
+      "zixScore": -6.128184984951428,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "admin-tax-simplified",
+      "pairId": "admin-tax",
+      "role": "simplified",
+      "category": "administration",
+      "text": "Reichen Sie die Steuererklärung rechtzeitig ein. Wenn Sie mehr Zeit brauchen, beantragen Sie vorher eine neue Frist. Dafür kann das Steueramt eine Gebühr verlangen.",
+      "wordCount": 24,
+      "normalizedText": "Reichen Sie die Steuererklärung rechtzeitig ein. Wenn Sie mehr Zeit brauchen, beantragen Sie vorher eine neue Frist. Dafür kann das Steueramt eine Gebühr verlangen.",
+      "features": {
+        "sentence_length_mean": 8.0,
+        "rix": 2.3333333333333335,
+        "vocab_a1": 0.5416666666666666,
+        "vocab_a2": 0.6666666666666666,
+        "vocab_b1": 0.9166666666666666,
+        "common_word_score": 8.245208333333334
+      },
+      "zixScore": 1.1469294534284167,
+      "cefrBand": "B1"
+    },
+    {
+      "id": "admin-application-original",
+      "pairId": "admin-application",
+      "role": "original",
+      "category": "administration",
+      "text": "Eine materielle Prüfung der Anspruchsvoraussetzungen setzt voraus, dass das unterzeichnete Antragsformular einschliesslich der darin bezeichneten Beilagen in vollständig ausgefüllter Form bei der zuständigen Stelle vorliegt.",
+      "wordCount": 25,
+      "normalizedText": "Eine materielle Prüfung der Anspruchsvoraussetzungen setzt voraus, dass das unterzeichnete Antragsformular einschliesslich der darin bezeichneten Beilagen in vollständig ausgefüllter Form bei der zuständigen Stelle vorliegt.",
+      "features": {
+        "sentence_length_mean": 25.0,
+        "rix": 12.0,
+        "vocab_a1": 0.36,
+        "vocab_a2": 0.44,
+        "vocab_b1": 0.6,
+        "common_word_score": 5.94532
+      },
+      "zixScore": -5.487408686215346,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "admin-application-simplified",
+      "pairId": "admin-application",
+      "role": "simplified",
+      "category": "administration",
+      "text": "Füllen Sie das Formular vollständig aus und unterschreiben Sie es. Legen Sie alle genannten Beilagen dazu. Dann kann die zuständige Stelle Ihren Anspruch prüfen.",
+      "wordCount": 24,
+      "normalizedText": "Füllen Sie das Formular vollständig aus und unterschreiben Sie es. Legen Sie alle genannten Beilagen dazu. Dann kann die zuständige Stelle Ihren Anspruch prüfen.",
+      "features": {
+        "sentence_length_mean": 6.0,
+        "rix": 1.75,
+        "vocab_a1": 0.625,
+        "vocab_a2": 0.6666666666666666,
+        "vocab_b1": 0.75,
+        "common_word_score": 7.519833333333333
+      },
+      "zixScore": 0.7086511445324408,
+      "cefrBand": "B1"
+    },
+    {
+      "id": "admin-consultation-original",
+      "pairId": "admin-consultation",
+      "role": "original",
+      "category": "administration",
+      "text": "Im Rahmen des Vernehmlassungsverfahrens wird den interessierten Organisationen Gelegenheit eingeräumt, zu den vorgesehenen Ausführungsbestimmungen bis zum Ablauf der publizierten Frist schriftlich Stellung zu nehmen.",
+      "wordCount": 24,
+      "normalizedText": "Im Rahmen des Vernehmlassungsverfahrens wird den interessierten Organisationen Gelegenheit eingeräumt, zu den vorgesehenen Ausführungsbestimmungen bis zum Ablauf der publizierten Frist schriftlich Stellung zu nehmen.",
+      "features": {
+        "sentence_length_mean": 24.0,
+        "rix": 10.0,
+        "vocab_a1": 0.4583333333333333,
+        "vocab_a2": 0.5,
+        "vocab_b1": 0.625,
+        "common_word_score": 5.6942916666666665
+      },
+      "zixScore": -7.416927587973898,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "admin-consultation-simplified",
+      "pairId": "admin-consultation",
+      "role": "simplified",
+      "category": "administration",
+      "text": "Interessierte Organisationen können ihre Meinung zu den neuen Regeln mitteilen. Senden Sie uns Ihre schriftliche Antwort bis zum veröffentlichten Termin.",
+      "wordCount": 20,
+      "normalizedText": "Interessierte Organisationen können ihre Meinung zu den neuen Regeln mitteilen. Senden Sie uns Ihre schriftliche Antwort bis zum veröffentlichten Termin.",
+      "features": {
+        "sentence_length_mean": 10.0,
+        "rix": 3.5,
+        "vocab_a1": 0.55,
+        "vocab_a2": 0.65,
+        "vocab_b1": 0.85,
+        "common_word_score": 8.03735
+      },
+      "zixScore": 0.7515174116170087,
+      "cefrBand": "B1"
+    },
+    {
+      "id": "sentences-maintenance-original",
+      "pairId": "sentences-maintenance",
+      "role": "original",
+      "category": "sentence-splitting",
+      "text": "Da die Lüftungsanlage während der angekündigten Wartungsarbeiten ausser Betrieb genommen werden muss und deshalb die Raumtemperatur vorübergehend ansteigen kann, empfehlen wir den Mitarbeitenden, ihre Tätigkeit nach Möglichkeit im Homeoffice auszuüben.",
+      "wordCount": 30,
+      "normalizedText": "Da die Lüftungsanlage während der angekündigten Wartungsarbeiten ausser Betrieb genommen werden muss und deshalb die Raumtemperatur vorübergehend ansteigen kann, empfehlen wir den Mitarbeitenden, ihre Tätigkeit nach Möglichkeit im Homeoffice auszuüben.",
+      "features": {
+        "sentence_length_mean": 30.0,
+        "rix": 16.0,
+        "vocab_a1": 0.4666666666666667,
+        "vocab_a2": 0.5333333333333333,
+        "vocab_b1": 0.6666666666666666,
+        "common_word_score": 6.8612
+      },
+      "zixScore": -0.8408466284372285,
+      "cefrBand": "B2"
+    },
+    {
+      "id": "sentences-maintenance-simplified",
+      "pairId": "sentences-maintenance",
+      "role": "simplified",
+      "category": "sentence-splitting",
+      "text": "Wir warten die Lüftungsanlage. Sie ist deshalb einige Zeit ausgeschaltet, und die Räume können wärmer werden. Arbeiten Sie an diesem Tag wenn möglich zu Hause.",
+      "wordCount": 25,
+      "normalizedText": "Wir warten die Lüftungsanlage. Sie ist deshalb einige Zeit ausgeschaltet, und die Räume können wärmer werden. Arbeiten Sie an diesem Tag wenn möglich zu Hause.",
+      "features": {
+        "sentence_length_mean": 8.333333333333334,
+        "rix": 1.6666666666666667,
+        "vocab_a1": 0.72,
+        "vocab_a2": 0.84,
+        "vocab_b1": 0.88,
+        "common_word_score": 8.78296
+      },
+      "zixScore": 3.046556774251809,
+      "cefrBand": "A2"
+    },
+    {
+      "id": "sentences-move-original",
+      "pairId": "sentences-move",
+      "role": "original",
+      "category": "sentence-splitting",
+      "text": "Nachdem Sie Ihren Wohnsitz in eine andere Gemeinde verlegt haben, sind Sie verpflichtet, die Adressänderung sowohl der bisherigen als auch der neuen Einwohnerkontrolle innerhalb der gesetzlich vorgesehenen Frist bekanntzugeben.",
+      "wordCount": 29,
+      "normalizedText": "Nachdem Sie Ihren Wohnsitz in eine andere Gemeinde verlegt haben, sind Sie verpflichtet, die Adressänderung sowohl der bisherigen als auch der neuen Einwohnerkontrolle innerhalb der gesetzlich vorgesehenen Frist bekanntzugeben.",
+      "features": {
+        "sentence_length_mean": 29.0,
+        "rix": 12.0,
+        "vocab_a1": 0.4482758620689655,
+        "vocab_a2": 0.4827586206896552,
+        "vocab_b1": 0.6896551724137931,
+        "common_word_score": 7.2476206896551725
+      },
+      "zixScore": -5.213097906349377,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "sentences-move-simplified",
+      "pairId": "sentences-move",
+      "role": "simplified",
+      "category": "sentence-splitting",
+      "text": "Sind Sie in eine andere Gemeinde gezogen? Melden Sie Ihre neue Adresse rechtzeitig. Informieren Sie die Einwohnerkontrolle am alten und am neuen Wohnort.",
+      "wordCount": 23,
+      "normalizedText": "Sind Sie in eine andere Gemeinde gezogen? Melden Sie Ihre neue Adresse rechtzeitig. Informieren Sie die Einwohnerkontrolle am alten und am neuen Wohnort.",
+      "features": {
+        "sentence_length_mean": 7.666666666666667,
+        "rix": 2.3333333333333335,
+        "vocab_a1": 0.6521739130434783,
+        "vocab_a2": 0.7391304347826086,
+        "vocab_b1": 0.8695652173913043,
+        "common_word_score": 8.806869565217392
+      },
+      "zixScore": 3.605741228540425,
+      "cefrBand": "A2"
+    },
+    {
+      "id": "sentences-decision-original",
+      "pairId": "sentences-decision",
+      "role": "original",
+      "category": "sentence-splitting",
+      "text": "Gegen die vorliegende Verfügung kann innert dreissig Tagen seit ihrer Zustellung unter Beilage einer Kopie des angefochtenen Entscheids und unter Angabe einer nachvollziehbaren Begründung schriftlich Rekurs erhoben werden.",
+      "wordCount": 28,
+      "normalizedText": "Gegen die vorliegende Verfügung kann innert dreissig Tagen seit ihrer Zustellung unter Beilage einer Kopie des angefochtenen Entscheids und unter Angabe einer nachvollziehbaren Begründung schriftlich Rekurs erhoben werden.",
+      "features": {
+        "sentence_length_mean": 28.0,
+        "rix": 11.0,
+        "vocab_a1": 0.5,
+        "vocab_a2": 0.5357142857142857,
+        "vocab_b1": 0.6428571428571429,
+        "common_word_score": 5.816607142857143
+      },
+      "zixScore": -8.49486896525694,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "sentences-decision-simplified",
+      "pairId": "sentences-decision",
+      "role": "simplified",
+      "category": "sentence-splitting",
+      "text": "Sie können gegen diesen Entscheid Rekurs einlegen. Senden Sie den Rekurs innerhalb von dreissig Tagen schriftlich ein. Begründen Sie ihn und legen Sie eine Kopie des Entscheids bei.",
+      "wordCount": 28,
+      "normalizedText": "Sie können gegen diesen Entscheid Rekurs einlegen. Senden Sie den Rekurs innerhalb von dreissig Tagen schriftlich ein. Begründen Sie ihn und legen Sie eine Kopie des Entscheids bei.",
+      "features": {
+        "sentence_length_mean": 9.333333333333334,
+        "rix": 2.3333333333333335,
+        "vocab_a1": 0.6071428571428571,
+        "vocab_a2": 0.6428571428571429,
+        "vocab_b1": 0.7857142857142857,
+        "common_word_score": 7.280607142857143
+      },
+      "zixScore": -1.903201690210281,
+      "cefrBand": "B2"
+    },
+    {
+      "id": "sentences-grant-original",
+      "pairId": "sentences-grant",
+      "role": "original",
+      "category": "sentence-splitting",
+      "text": "Die Auszahlung des zugesicherten Förderbeitrags erfolgt, nachdem die antragstellende Person den Abschluss der Arbeiten gemeldet, die Schlussrechnung eingereicht und die fachgerechte Ausführung durch geeignete Unterlagen nachgewiesen hat.",
+      "wordCount": 27,
+      "normalizedText": "Die Auszahlung des zugesicherten Förderbeitrags erfolgt, nachdem die antragstellende Person den Abschluss der Arbeiten gemeldet, die Schlussrechnung eingereicht und die fachgerechte Ausführung durch geeignete Unterlagen nachgewiesen hat.",
+      "features": {
+        "sentence_length_mean": 27.0,
+        "rix": 16.0,
+        "vocab_a1": 0.4074074074074074,
+        "vocab_a2": 0.4444444444444444,
+        "vocab_b1": 0.5925925925925926,
+        "common_word_score": 5.90237037037037
+      },
+      "zixScore": -1.4310545794690004,
+      "cefrBand": "B2"
+    },
+    {
+      "id": "sentences-grant-simplified",
+      "pairId": "sentences-grant",
+      "role": "simplified",
+      "category": "sentence-splitting",
+      "text": "Wir zahlen den Förderbeitrag nach Abschluss der Arbeiten aus. Melden Sie uns den Abschluss. Senden Sie auch die Schlussrechnung und einen passenden Nachweis.",
+      "wordCount": 23,
+      "normalizedText": "Wir zahlen den Förderbeitrag nach Abschluss der Arbeiten aus. Melden Sie uns den Abschluss. Senden Sie auch die Schlussrechnung und einen passenden Nachweis.",
+      "features": {
+        "sentence_length_mean": 7.666666666666667,
+        "rix": 2.3333333333333335,
+        "vocab_a1": 0.6086956521739131,
+        "vocab_a2": 0.6086956521739131,
+        "vocab_b1": 0.782608695652174,
+        "common_word_score": 8.060608695652174
+      },
+      "zixScore": 0.914523140507745,
+      "cefrBand": "B1"
+    },
+    {
+      "id": "compound-waste-original",
+      "pairId": "compound-waste",
+      "role": "original",
+      "category": "compounds",
+      "text": "Die Kehrichtgebührenveranlagungsverfügung des kommunalen Entsorgungsbetriebs berücksichtigt im jeweiligen Abrechnungszeitraum die gebührenpflichtige Abfallbehälterkapazität sowie allfällige Zusatzaufwendungen für Sonderleerungen und nicht ordnungsgemäss bereitgestellte Entsorgungsgüter.",
+      "wordCount": 22,
+      "normalizedText": "Die Kehrichtgebührenveranlagungsverfügung des kommunalen Entsorgungsbetriebs berücksichtigt im jeweiligen Abrechnungszeitraum die gebührenpflichtige Abfallbehälterkapazität sowie allfällige Zusatzaufwendungen für Sonderleerungen und nicht ordnungsgemäss bereitgestellte Entsorgungsgüter.",
+      "features": {
+        "sentence_length_mean": 22.0,
+        "rix": 14.0,
+        "vocab_a1": 0.3181818181818182,
+        "vocab_a2": 0.3181818181818182,
+        "vocab_b1": 0.3181818181818182,
+        "common_word_score": 3.7246363636363635
+      },
+      "zixScore": -6.0437139295127,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "compound-waste-simplified",
+      "pairId": "compound-waste",
+      "role": "simplified",
+      "category": "compounds",
+      "text": "Die Abfallgebühr richtet sich nach der Grösse Ihres Behälters. Zusätzliche Leerungen können mehr kosten. Das gilt auch, wenn Sie den Abfall falsch bereitstellen.",
+      "wordCount": 23,
+      "normalizedText": "Die Abfallgebühr richtet sich nach der Grösse Ihres Behälters. Zusätzliche Leerungen können mehr kosten. Das gilt auch, wenn Sie den Abfall falsch bereitstellen.",
+      "features": {
+        "sentence_length_mean": 7.666666666666667,
+        "rix": 2.0,
+        "vocab_a1": 0.5652173913043478,
+        "vocab_a2": 0.6086956521739131,
+        "vocab_b1": 0.7391304347826086,
+        "common_word_score": 7.876347826086957
+      },
+      "zixScore": 0.014051924452466835,
+      "cefrBand": "B1"
+    },
+    {
+      "id": "compound-privacy-original",
+      "pairId": "compound-privacy",
+      "role": "original",
+      "category": "compounds",
+      "text": "Vor der geplanten Inbetriebnahme des Fachsystems ist eine Datenschutzfolgenabschätzung einschliesslich Schutzbedarfsanalyse, Berechtigungskonzept und Aufbewahrungsfristenregelung durch die Informationssicherheitsverantwortlichen der zuständigen Organisationseinheit zu genehmigen.",
+      "wordCount": 22,
+      "normalizedText": "Vor der geplanten Inbetriebnahme des Fachsystems ist eine Datenschutzfolgenabschätzung einschliesslich Schutzbedarfsanalyse, Berechtigungskonzept und Aufbewahrungsfristenregelung durch die Informationssicherheitsverantwortlichen der zuständigen Organisationseinheit zu genehmigen.",
+      "features": {
+        "sentence_length_mean": 22.0,
+        "rix": 12.0,
+        "vocab_a1": 0.45454545454545453,
+        "vocab_a2": 0.45454545454545453,
+        "vocab_b1": 0.5909090909090909,
+        "common_word_score": 5.307090909090909
+      },
+      "zixScore": -4.2973938265851075,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "compound-privacy-simplified",
+      "pairId": "compound-privacy",
+      "role": "simplified",
+      "category": "compounds",
+      "text": "Vor dem Start müssen wir die Risiken für persönliche Daten prüfen. Wir regeln den Zugriff, den Schutz und die Dauer der Speicherung. Die zuständige Person genehmigt diese Regeln.",
+      "wordCount": 28,
+      "normalizedText": "Vor dem Start müssen wir die Risiken für persönliche Daten prüfen. Wir regeln den Zugriff, den Schutz und die Dauer der Speicherung. Die zuständige Person genehmigt diese Regeln.",
+      "features": {
+        "sentence_length_mean": 9.333333333333334,
+        "rix": 2.0,
+        "vocab_a1": 0.5,
+        "vocab_a2": 0.5714285714285714,
+        "vocab_b1": 0.9285714285714286,
+        "common_word_score": 8.042142857142856
+      },
+      "zixScore": -1.6863470754811178,
+      "cefrBand": "B2"
+    },
+    {
+      "id": "compound-building-original",
+      "pairId": "compound-building",
+      "role": "original",
+      "category": "compounds",
+      "text": "Im Baubewilligungsverfahren sind neben dem Umgebungsplan auch der Energienachweis, die Entwässerungsplanung und gegebenenfalls eine denkmalpflegerische Stellungnahme bei der Baugesuchsprüfung zu berücksichtigen.",
+      "wordCount": 21,
+      "normalizedText": "Im Baubewilligungsverfahren sind neben dem Umgebungsplan auch der Energienachweis, die Entwässerungsplanung und gegebenenfalls eine denkmalpflegerische Stellungnahme bei der Baugesuchsprüfung zu berücksichtigen.",
+      "features": {
+        "sentence_length_mean": 21.0,
+        "rix": 9.0,
+        "vocab_a1": 0.5238095238095238,
+        "vocab_a2": 0.5714285714285714,
+        "vocab_b1": 0.5714285714285714,
+        "common_word_score": 5.672714285714285
+      },
+      "zixScore": -5.7218602088186685,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "compound-building-simplified",
+      "pairId": "compound-building",
+      "role": "simplified",
+      "category": "compounds",
+      "text": "Für die Baubewilligung brauchen wir mehrere Unterlagen. Dazu gehören der Plan der Umgebung, der Nachweis zur Energie und der Plan für das Abwasser. Manchmal ist auch der Denkmalschutz wichtig.",
+      "wordCount": 29,
+      "normalizedText": "Für die Baubewilligung brauchen wir mehrere Unterlagen. Dazu gehören der Plan der Umgebung, der Nachweis zur Energie und der Plan für das Abwasser. Manchmal ist auch der Denkmalschutz wichtig.",
+      "features": {
+        "sentence_length_mean": 9.666666666666666,
+        "rix": 4.0,
+        "vocab_a1": 0.6551724137931034,
+        "vocab_a2": 0.6896551724137931,
+        "vocab_b1": 0.8275862068965517,
+        "common_word_score": 8.432655172413794
+      },
+      "zixScore": 3.201212771805322,
+      "cefrBand": "A2"
+    },
+    {
+      "id": "compound-refund-original",
+      "pairId": "compound-refund",
+      "role": "original",
+      "category": "compounds",
+      "text": "Die Abonnementsrückerstattungsberechnung für den öffentlichen Verkehr erfolgt bei einer vorzeitigen Vertragsauflösung unter anteilsmässiger Berücksichtigung der verbleibenden Gültigkeitsdauer und eines vertraglich festgelegten Bearbeitungskostenabzugs.",
+      "wordCount": 22,
+      "normalizedText": "Die Abonnementsrückerstattungsberechnung für den öffentlichen Verkehr erfolgt bei einer vorzeitigen Vertragsauflösung unter anteilsmässiger Berücksichtigung der verbleibenden Gültigkeitsdauer und eines vertraglich festgelegten Bearbeitungskostenabzugs.",
+      "features": {
+        "sentence_length_mean": 22.0,
+        "rix": 13.0,
+        "vocab_a1": 0.4090909090909091,
+        "vocab_a2": 0.45454545454545453,
+        "vocab_b1": 0.5,
+        "common_word_score": 4.986090909090909
+      },
+      "zixScore": -3.579460788805495,
+      "cefrBand": "C1"
+    },
+    {
+      "id": "compound-refund-simplified",
+      "pairId": "compound-refund",
+      "role": "simplified",
+      "category": "compounds",
+      "text": "Sie können einen Teil des Preises für Ihr Abo zurückerhalten. Der Betrag hängt von der restlichen Laufzeit ab. Wir ziehen eine feste Gebühr für die Bearbeitung ab.",
+      "wordCount": 27,
+      "normalizedText": "Sie können einen Teil des Preises für Ihr Abo zurückerhalten. Der Betrag hängt von der restlichen Laufzeit ab. Wir ziehen eine feste Gebühr für die Bearbeitung ab.",
+      "features": {
+        "sentence_length_mean": 9.0,
+        "rix": 1.6666666666666667,
+        "vocab_a1": 0.6296296296296297,
+        "vocab_a2": 0.7407407407407407,
+        "vocab_b1": 0.8148148148148148,
+        "common_word_score": 7.938777777777777
+      },
+      "zixScore": -0.27961152990726124,
+      "cefrBand": "B2"
+    },
+    {
+      "id": "list-documents-original",
+      "pairId": "list-documents",
+      "role": "original",
+      "category": "lists",
+      "text": "Für die Gesuchsbehandlung sind nachstehende Unterlagen einzureichen:\n- vollständig ausgefülltes Formular\n- aktueller Versicherungsnachweis\n- unterzeichnete Einverständniserklärung\nFehlende Beilagen führen zu einer Verzögerung des Verfahrens",
+      "wordCount": 25,
+      "normalizedText": "Für die Gesuchsbehandlung sind nachstehende Unterlagen einzureichen:. vollständig ausgefülltes Formular. aktueller Versicherungsnachweis. unterzeichnete Einverständniserklärung. Fehlende Beilagen führen zu einer Verzögerung des Verfahrens.",
+      "features": {
+        "sentence_length_mean": 4.4,
+        "rix": 3.0,
+        "vocab_a1": 0.36363636363636365,
+        "vocab_a2": 0.4090909090909091,
+        "vocab_b1": 0.45454545454545453,
+        "common_word_score": 4.260136363636364
+      },
+      "zixScore": -5.89993571503865,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "list-documents-simplified",
+      "pairId": "list-documents",
+      "role": "simplified",
+      "category": "lists",
+      "text": "Senden Sie uns diese Unterlagen:\n- das ausgefüllte Formular\n- einen aktuellen Nachweis Ihrer Versicherung\n- die unterschriebene Einwilligung\nWenn etwas fehlt, dauert die Prüfung länger",
+      "wordCount": 26,
+      "normalizedText": "Senden Sie uns diese Unterlagen:. das ausgefüllte Formular. einen aktuellen Nachweis Ihrer Versicherung. die unterschriebene Einwilligung. Wenn etwas fehlt, dauert die Prüfung länger.",
+      "features": {
+        "sentence_length_mean": 4.6,
+        "rix": 1.8,
+        "vocab_a1": 0.4782608695652174,
+        "vocab_a2": 0.6086956521739131,
+        "vocab_b1": 0.7391304347826086,
+        "common_word_score": 6.771347826086957
+      },
+      "zixScore": -0.627623615120946,
+      "cefrBand": "B2"
+    },
+    {
+      "id": "list-event-original",
+      "pairId": "list-event",
+      "role": "original",
+      "category": "lists",
+      "text": "Veranstaltende haben insbesondere folgende Auflagen einzuhalten:\n• Gewährleistung der Fluchtwege\n• Sicherstellung des Sanitätsdienstes\n• Einhaltung der Nachtruhe\nZuwiderhandlungen können den sofortigen Bewilligungsentzug zur Folge haben",
+      "wordCount": 26,
+      "normalizedText": "Veranstaltende haben insbesondere folgende Auflagen einzuhalten:. Gewährleistung der Fluchtwege. Sicherstellung des Sanitätsdienstes. Einhaltung der Nachtruhe. Zuwiderhandlungen können den sofortigen Bewilligungsentzug zur Folge haben.",
+      "features": {
+        "sentence_length_mean": 4.6,
+        "rix": 2.8,
+        "vocab_a1": 0.34782608695652173,
+        "vocab_a2": 0.34782608695652173,
+        "vocab_b1": 0.43478260869565216,
+        "common_word_score": 4.804478260869565
+      },
+      "zixScore": -5.566724701252721,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "list-event-simplified",
+      "pairId": "list-event",
+      "role": "simplified",
+      "category": "lists",
+      "text": "Für Ihre Veranstaltung gelten diese Regeln:\n• Halten Sie die Fluchtwege frei\n• Organisieren Sie medizinische Hilfe\n• Beachten Sie die Nachtruhe\nSonst können wir die Bewilligung sofort entziehen",
+      "wordCount": 29,
+      "normalizedText": "Für Ihre Veranstaltung gelten diese Regeln:. Halten Sie die Fluchtwege frei. Organisieren Sie medizinische Hilfe. Beachten Sie die Nachtruhe. Sonst können wir die Bewilligung sofort entziehen.",
+      "features": {
+        "sentence_length_mean": 3.7142857142857144,
+        "rix": 1.1428571428571428,
+        "vocab_a1": 0.5384615384615384,
+        "vocab_a2": 0.6538461538461539,
+        "vocab_b1": 0.7692307692307693,
+        "common_word_score": 7.733807692307693
+      },
+      "zixScore": 1.7957136914576877,
+      "cefrBand": "B1"
+    },
+    {
+      "id": "list-emergency-original",
+      "pairId": "list-emergency",
+      "role": "original",
+      "category": "lists",
+      "text": "Zur Gewährleistung der individuellen Notfallvorsorge wird die Bevorratung folgender Gegenstände empfohlen:\n- neun Liter Trinkwasser je Person\n- haltbare Nahrungsmittel\n- batteriebetriebenes Radio\n- persönliche Medikamente für mehrere Tage",
+      "wordCount": 29,
+      "normalizedText": "Zur Gewährleistung der individuellen Notfallvorsorge wird die Bevorratung folgender Gegenstände empfohlen:. neun Liter Trinkwasser je Person. haltbare Nahrungsmittel. batteriebetriebenes Radio. persönliche Medikamente für mehrere Tage.",
+      "features": {
+        "sentence_length_mean": 5.0,
+        "rix": 2.8,
+        "vocab_a1": 0.36,
+        "vocab_a2": 0.48,
+        "vocab_b1": 0.8,
+        "common_word_score": 6.89196
+      },
+      "zixScore": -0.6738061840284608,
+      "cefrBand": "B2"
+    },
+    {
+      "id": "list-emergency-simplified",
+      "pairId": "list-emergency",
+      "role": "simplified",
+      "category": "lists",
+      "text": "Bereiten Sie sich auf einen Notfall vor. Lagern Sie diese Dinge zu Hause:\n- neun Liter Wasser pro Person\n- Essen, das lange hält\n- ein Radio mit Batterien\n- Ihre Medikamente",
+      "wordCount": 32,
+      "normalizedText": "Bereiten Sie sich auf einen Notfall vor. Lagern Sie diese Dinge zu Hause:. neun Liter Wasser pro Person. Essen, das lange hält. ein Radio mit Batterien. Ihre Medikamente.",
+      "features": {
+        "sentence_length_mean": 3.5,
+        "rix": 0.5,
+        "vocab_a1": 0.6428571428571429,
+        "vocab_a2": 0.8214285714285714,
+        "vocab_b1": 0.9642857142857143,
+        "common_word_score": 9.362285714285713
+      },
+      "zixScore": 6.019061374355796,
+      "cefrBand": "A1"
+    },
+    {
+      "id": "numbers-tax-original",
+      "pairId": "numbers-tax",
+      "role": "original",
+      "category": "numbers",
+      "text": "Der ausstehende Steuerbetrag von 12 480 Franken ist in drei Raten zu jeweils 4 160 Franken am 31. Oktober, 30. November und 31. Dezember 2026 zu entrichten.",
+      "wordCount": 27,
+      "normalizedText": "Der ausstehende Steuerbetrag von 12 480 Franken ist in drei Raten zu jeweils 4 160 Franken am 31. Oktober, 30. November und 31. Dezember 2026 zu entrichten.",
+      "features": {
+        "sentence_length_mean": 27.0,
+        "rix": 9.0,
+        "vocab_a1": 0.631578947368421,
+        "vocab_a2": 0.631578947368421,
+        "vocab_b1": 0.6842105263157895,
+        "common_word_score": 7.385052631578947
+      },
+      "zixScore": -5.910506752601071,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "numbers-tax-simplified",
+      "pairId": "numbers-tax",
+      "role": "simplified",
+      "category": "numbers",
+      "text": "Sie müssen noch 12 480 Franken bezahlen. Zahlen Sie dreimal 4 160 Franken. Die Termine sind der 31. Oktober, der 30. November und der 31. Dezember 2026.",
+      "wordCount": 27,
+      "normalizedText": "Sie müssen noch 12 480 Franken bezahlen. Zahlen Sie dreimal 4 160 Franken. Die Termine sind der 31. Oktober, der 30. November und der 31. Dezember 2026.",
+      "features": {
+        "sentence_length_mean": 6.75,
+        "rix": 2.0,
+        "vocab_a1": 0.7894736842105263,
+        "vocab_a2": 0.8421052631578947,
+        "vocab_b1": 0.8421052631578947,
+        "common_word_score": 9.306315789473684
+      },
+      "zixScore": 6.175664029671961,
+      "cefrBand": "A1"
+    },
+    {
+      "id": "numbers-energy-original",
+      "pairId": "numbers-energy",
+      "role": "original",
+      "category": "numbers",
+      "text": "Anrechenbar sind höchstens 35 Prozent der nachgewiesenen Investitionskosten, wobei der Förderbeitrag pro Wohneinheit auf 18 500 Franken und pro Liegenschaft auf 74 000 Franken begrenzt ist.",
+      "wordCount": 26,
+      "normalizedText": "Anrechenbar sind höchstens 35 Prozent der nachgewiesenen Investitionskosten, wobei der Förderbeitrag pro Wohneinheit auf 18 500 Franken und pro Liegenschaft auf 74 000 Franken begrenzt ist.",
+      "features": {
+        "sentence_length_mean": 26.0,
+        "rix": 11.0,
+        "vocab_a1": 0.38095238095238093,
+        "vocab_a2": 0.47619047619047616,
+        "vocab_b1": 0.5714285714285714,
+        "common_word_score": 5.832761904761904
+      },
+      "zixScore": -7.516820813417681,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "numbers-energy-simplified",
+      "pairId": "numbers-energy",
+      "role": "simplified",
+      "category": "numbers",
+      "text": "Wir bezahlen höchstens 35 Prozent Ihrer belegten Kosten. Pro Wohnung erhalten Sie höchstens 18 500 Franken. Für ein ganzes Gebäude zahlen wir höchstens 74 000 Franken.",
+      "wordCount": 26,
+      "normalizedText": "Wir bezahlen höchstens 35 Prozent Ihrer belegten Kosten. Pro Wohnung erhalten Sie höchstens 18 500 Franken. Für ein ganzes Gebäude zahlen wir höchstens 74 000 Franken.",
+      "features": {
+        "sentence_length_mean": 8.666666666666666,
+        "rix": 3.6666666666666665,
+        "vocab_a1": 0.5238095238095238,
+        "vocab_a2": 0.6190476190476191,
+        "vocab_b1": 0.8571428571428571,
+        "common_word_score": 8.788666666666666
+      },
+      "zixScore": 3.4223994184901922,
+      "cefrBand": "A2"
+    },
+    {
+      "id": "numbers-construction-original",
+      "pairId": "numbers-construction",
+      "role": "original",
+      "category": "numbers",
+      "text": "Infolge der Gleiserneuerungsarbeiten verkehren die Linien 7 und 13 vom 14. September 2026, 04.30 Uhr, bis 28. September 2026, 05.00 Uhr, nur bis Bahnhofquai.",
+      "wordCount": 24,
+      "normalizedText": "Infolge der Gleiserneuerungsarbeiten verkehren die Linien 7 und 13 vom 14. September 2026, 04.30 Uhr, bis 28. September 2026, 05.00 Uhr, nur bis Bahnhofquai.",
+      "features": {
+        "sentence_length_mean": 24.0,
+        "rix": 6.0,
+        "vocab_a1": 0.6875,
+        "vocab_a2": 0.6875,
+        "vocab_b1": 0.75,
+        "common_word_score": 7.2305625
+      },
+      "zixScore": -7.6618560560567435,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "numbers-construction-simplified",
+      "pairId": "numbers-construction",
+      "role": "simplified",
+      "category": "numbers",
+      "text": "Wir erneuern die Gleise. Darum fahren die Linien 7 und 13 nur bis Bahnhofquai. Das gilt vom 14. September 2026 um 04.30 Uhr bis zum 28. September 2026 um 05.00 Uhr.",
+      "wordCount": 31,
+      "normalizedText": "Wir erneuern die Gleise. Darum fahren die Linien 7 und 13 nur bis Bahnhofquai. Das gilt vom 14. September 2026 um 04.30 Uhr bis zum 28. September 2026 um 05.00 Uhr.",
+      "features": {
+        "sentence_length_mean": 10.333333333333334,
+        "rix": 1.3333333333333333,
+        "vocab_a1": 0.782608695652174,
+        "vocab_a2": 0.782608695652174,
+        "vocab_b1": 0.8695652173913043,
+        "common_word_score": 9.158478260869567
+      },
+      "zixScore": 1.6023807935923635,
+      "cefrBand": "B1"
+    },
+    {
+      "id": "names-registry-original",
+      "pairId": "names-registry",
+      "role": "original",
+      "category": "proper-names",
+      "text": "Die von Frau Zoë Gwerder und Herrn Quirin von Arx eingereichten Unterlagen werden nach erfolgter Registerbereinigung durch die Sachbearbeiterin Dženana Petrović erneut geprüft.",
+      "wordCount": 23,
+      "normalizedText": "Die von Frau Zoë Gwerder und Herrn Quirin von Arx eingereichten Unterlagen werden nach erfolgter Registerbereinigung durch die Sachbearbeiterin Dženana Petrović erneut geprüft.",
+      "features": {
+        "sentence_length_mean": 23.0,
+        "rix": 9.0,
+        "vocab_a1": 0.43478260869565216,
+        "vocab_a2": 0.4782608695652174,
+        "vocab_b1": 0.5217391304347826,
+        "common_word_score": 5.137434782608696
+      },
+      "zixScore": -9.344620057265548,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "names-registry-simplified",
+      "pairId": "names-registry",
+      "role": "simplified",
+      "category": "proper-names",
+      "text": "Frau Zoë Gwerder und Herr Quirin von Arx haben Unterlagen eingereicht. Dženana Petrović bereinigt zuerst das Register. Danach prüft sie die Unterlagen erneut.",
+      "wordCount": 23,
+      "normalizedText": "Frau Zoë Gwerder und Herr Quirin von Arx haben Unterlagen eingereicht. Dženana Petrović bereinigt zuerst das Register. Danach prüft sie die Unterlagen erneut.",
+      "features": {
+        "sentence_length_mean": 4.6,
+        "rix": 1.6,
+        "vocab_a1": 0.34782608695652173,
+        "vocab_a2": 0.43478260869565216,
+        "vocab_b1": 0.5652173913043478,
+        "common_word_score": 5.280086956521739
+      },
+      "zixScore": -5.685799131836845,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "names-meeting-original",
+      "pairId": "names-meeting",
+      "role": "original",
+      "category": "proper-names",
+      "text": "Die Projektverantwortlichen Päivi Järvinen, François Njoku und İpek Şahin koordinieren die standortübergreifende Besprechung mit den Vertretungen aus Bülach, Rüti und Wettswil am Albis.",
+      "wordCount": 23,
+      "normalizedText": "Die Projektverantwortlichen Päivi Järvinen, François Njoku und İpek Şahin koordinieren die standortübergreifende Besprechung mit den Vertretungen aus Bülach, Rüti und Wettswil am Albis.",
+      "features": {
+        "sentence_length_mean": 23.0,
+        "rix": 8.0,
+        "vocab_a1": 0.34782608695652173,
+        "vocab_a2": 0.34782608695652173,
+        "vocab_b1": 0.43478260869565216,
+        "common_word_score": 3.615217391304348
+      },
+      "zixScore": -10.0,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "names-meeting-simplified",
+      "pairId": "names-meeting",
+      "role": "simplified",
+      "category": "proper-names",
+      "text": "Päivi Järvinen, François Njoku und İpek Şahin leiten das Projekt. Sie planen ein Treffen mit Personen aus Bülach, Rüti und Wettswil am Albis.",
+      "wordCount": 23,
+      "normalizedText": "Päivi Järvinen, François Njoku und İpek Şahin leiten das Projekt. Sie planen ein Treffen mit Personen aus Bülach, Rüti und Wettswil am Albis.",
+      "features": {
+        "sentence_length_mean": 5.75,
+        "rix": 1.5,
+        "vocab_a1": 0.391304347826087,
+        "vocab_a2": 0.5217391304347826,
+        "vocab_b1": 0.5652173913043478,
+        "common_word_score": 5.461217391304348
+      },
+      "zixScore": -5.506106778522549,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "edge-short-one",
+      "pairId": null,
+      "role": "diagnostic",
+      "category": "short",
+      "text": "Gesuch bewilligt",
+      "wordCount": 2,
+      "normalizedText": "Gesuch bewilligt.",
+      "features": {
+        "sentence_length_mean": 2.0,
+        "rix": 1.0,
+        "vocab_a1": 0.0,
+        "vocab_a2": 0.0,
+        "vocab_b1": 0.0,
+        "common_word_score": 0.0
+      },
+      "zixScore": -10.0,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "edge-short-question",
+      "pairId": null,
+      "role": "diagnostic",
+      "category": "short",
+      "text": "Wann beginnt die Sitzung?",
+      "wordCount": 4,
+      "normalizedText": "Wann beginnt die Sitzung?",
+      "features": {
+        "sentence_length_mean": 4.0,
+        "rix": 2.0,
+        "vocab_a1": 0.75,
+        "vocab_a2": 0.75,
+        "vocab_b1": 0.75,
+        "common_word_score": 9.0975
+      },
+      "zixScore": 7.168950444427377,
+      "cefrBand": "A1"
+    },
+    {
+      "id": "edge-short-sentence",
+      "pairId": null,
+      "role": "diagnostic",
+      "category": "short",
+      "text": "Bitte senden Sie das Formular bis morgen an unsere zentrale Stelle.",
+      "wordCount": 11,
+      "normalizedText": "Bitte senden Sie das Formular bis morgen an unsere zentrale Stelle.",
+      "features": {
+        "sentence_length_mean": 11.0,
+        "rix": 2.0,
+        "vocab_a1": 0.8181818181818182,
+        "vocab_a2": 0.8181818181818182,
+        "vocab_b1": 1.0,
+        "common_word_score": 7.680363636363636
+      },
+      "zixScore": -1.269087984255302,
+      "cefrBand": "B2"
+    },
+    {
+      "id": "edge-short-fragment",
+      "pairId": null,
+      "role": "diagnostic",
+      "category": "short",
+      "text": "Nach abschliessender verwaltungsinterner Zuständigkeitsabklärung",
+      "wordCount": 4,
+      "normalizedText": "Nach abschliessender verwaltungsinterner Zuständigkeitsabklärung.",
+      "features": {
+        "sentence_length_mean": 4.0,
+        "rix": 3.0,
+        "vocab_a1": 0.25,
+        "vocab_a2": 0.25,
+        "vocab_b1": 0.25,
+        "common_word_score": 2.488
+      },
+      "zixScore": -10.0,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "edge-swiss-ss",
+      "pairId": null,
+      "role": "diagnostic",
+      "category": "ss-sharp-s",
+      "text": "Die Strasse bleibt wegen der grossen Baustelle geschlossen, deshalb müssen alle Busse über die äussere Umfahrung fahren.",
+      "wordCount": 17,
+      "normalizedText": "Die Strasse bleibt wegen der grossen Baustelle geschlossen, deshalb müssen alle Busse über die äussere Umfahrung fahren.",
+      "features": {
+        "sentence_length_mean": 17.0,
+        "rix": 7.0,
+        "vocab_a1": 0.5882352941176471,
+        "vocab_a2": 0.7647058823529411,
+        "vocab_b1": 0.7647058823529411,
+        "common_word_score": 6.960470588235293
+      },
+      "zixScore": -1.119586684207306,
+      "cefrBand": "B2"
+    },
+    {
+      "id": "edge-german-sharp-s",
+      "pairId": null,
+      "role": "diagnostic",
+      "category": "ss-sharp-s",
+      "text": "Die Straße bleibt wegen der großen Baustelle geschlossen, deshalb müssen alle Busse über die äußere Umfahrung fahren.",
+      "wordCount": 17,
+      "normalizedText": "Die Straße bleibt wegen der großen Baustelle geschlossen, deshalb müssen alle Busse über die äußere Umfahrung fahren.",
+      "features": {
+        "sentence_length_mean": 17.0,
+        "rix": 4.0,
+        "vocab_a1": 0.47058823529411764,
+        "vocab_a2": 0.6470588235294118,
+        "vocab_b1": 0.6470588235294118,
+        "common_word_score": 6.305411764705882
+      },
+      "zixScore": -7.764427730880739,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "edge-list-dashes",
+      "pairId": null,
+      "role": "diagnostic",
+      "category": "lists",
+      "text": "- Pass mitbringen\n- Formular ausfüllen\n- Gebühr am Schalter bezahlen",
+      "wordCount": 11,
+      "normalizedText": "Pass mitbringen. Formular ausfüllen. Gebühr am Schalter bezahlen.",
+      "features": {
+        "sentence_length_mean": 2.6666666666666665,
+        "rix": 1.6666666666666667,
+        "vocab_a1": 0.75,
+        "vocab_a2": 0.75,
+        "vocab_b1": 0.875,
+        "common_word_score": 5.825625
+      },
+      "zixScore": -0.022334546291970625,
+      "cefrBand": "B2"
+    },
+    {
+      "id": "edge-list-bullets",
+      "pairId": null,
+      "role": "diagnostic",
+      "category": "lists",
+      "text": "• Wasser prüfen\n• Strom ausschalten\n• zuständige Hauswartung anrufen",
+      "wordCount": 10,
+      "normalizedText": "Wasser prüfen. Strom ausschalten. zuständige Hauswartung anrufen.",
+      "features": {
+        "sentence_length_mean": 2.3333333333333335,
+        "rix": 1.3333333333333333,
+        "vocab_a1": 0.2857142857142857,
+        "vocab_a2": 0.42857142857142855,
+        "vocab_b1": 0.7142857142857143,
+        "common_word_score": 7.132
+      },
+      "zixScore": -0.509799873631426,
+      "cefrBand": "B2"
+    },
+    {
+      "id": "edge-figures-money",
+      "pairId": null,
+      "role": "diagnostic",
+      "category": "numbers",
+      "text": "Im Jahr 2025 wurden 1 248 Gesuche geprüft; 87,5 Prozent davon konnten innerhalb von 30 Tagen erledigt werden.",
+      "wordCount": 18,
+      "normalizedText": "Im Jahr 2025 wurden 1 248 Gesuche geprüft; 87,5 Prozent davon konnten innerhalb von 30 Tagen erledigt werden.",
+      "features": {
+        "sentence_length_mean": 9.0,
+        "rix": 3.0,
+        "vocab_a1": 0.6153846153846154,
+        "vocab_a2": 0.6923076923076923,
+        "vocab_b1": 0.8461538461538461,
+        "common_word_score": 8.806153846153846
+      },
+      "zixScore": 3.087641053699987,
+      "cefrBand": "A2"
+    },
+    {
+      "id": "edge-figures-code",
+      "pairId": null,
+      "role": "diagnostic",
+      "category": "numbers",
+      "text": "Melden Sie den Zählerstand 03-481-992 mit dem Wert 17'450,8 bis spätestens 07.09.2026 über das Portal.",
+      "wordCount": 15,
+      "normalizedText": "Melden Sie den Zählerstand 03-481-992 mit dem Wert 17'450,8 bis spätestens 07.09.2026 über das Portal.",
+      "features": {
+        "sentence_length_mean": 17.0,
+        "rix": 4.0,
+        "vocab_a1": 0.5384615384615384,
+        "vocab_a2": 0.5384615384615384,
+        "vocab_b1": 0.7692307692307693,
+        "common_word_score": 7.086
+      },
+      "zixScore": -6.9148351542759094,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "edge-name-unicode",
+      "pairId": null,
+      "role": "diagnostic",
+      "category": "proper-names",
+      "text": "Dženana Petrović bespricht den Antrag von Zoë Gwerder morgen mit İpek Şahin im Gemeindehaus von Rüschlikon.",
+      "wordCount": 16,
+      "normalizedText": "Dženana Petrović bespricht den Antrag von Zoë Gwerder morgen mit İpek Şahin im Gemeindehaus von Rüschlikon.",
+      "features": {
+        "sentence_length_mean": 8.0,
+        "rix": 3.0,
+        "vocab_a1": 0.375,
+        "vocab_a2": 0.375,
+        "vocab_b1": 0.5,
+        "common_word_score": 4.5339375
+      },
+      "zixScore": -8.382567895367213,
+      "cefrBand": "C2"
+    },
+    {
+      "id": "edge-name-organisations",
+      "pairId": null,
+      "role": "diagnostic",
+      "category": "proper-names",
+      "text": "Die Genossenschaft Ämtlerglück und die Firma Qwirlix AG reichen bei der Gemeinde Aeugst am Albis gemeinsam ein Baugesuch ein.",
+      "wordCount": 19,
+      "normalizedText": "Die Genossenschaft Ämtlerglück und die Firma Qwirlix AG reichen bei der Gemeinde Aeugst am Albis gemeinsam ein Baugesuch ein.",
+      "features": {
+        "sentence_length_mean": 9.5,
+        "rix": 3.5,
+        "vocab_a1": 0.47368421052631576,
+        "vocab_a2": 0.47368421052631576,
+        "vocab_b1": 0.5789473684210527,
+        "common_word_score": 6.467052631578947
+      },
+      "zixScore": -3.5438483379951915,
+      "cefrBand": "C1"
+    }
+  ]
+}
