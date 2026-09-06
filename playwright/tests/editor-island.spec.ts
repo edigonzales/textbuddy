@@ -126,21 +126,26 @@ test("workspace mode tabs use icons and the intended visual states", async ({ pa
 
   await expect(transformTab).toHaveCSS("border-style", "none");
   await expect(transformTab).toHaveCSS("font-weight", "400");
-  await expect(transformTab).toHaveCSS("background-color", "rgb(236, 245, 252)");
+  await expect(transformTab).toHaveCSS("background-color", "rgb(232, 241, 247)");
+  await expect(transformTab).toHaveCSS(
+    "box-shadow",
+    /rgb\(53, 122, 180\).*inset/,
+  );
   await expect(transformTab).toHaveCSS("color", "rgb(39, 51, 61)");
-  await expect(transformTab.locator("svg")).toHaveCSS("color", "rgb(66, 153, 225)");
+  await expect(transformTab.locator("svg")).toHaveCSS("color", "rgb(53, 122, 180)");
 
   await validateTab.click();
   await expect(transformTab).toHaveAttribute("aria-selected", "false");
   await expect(validateTab).toHaveAttribute("aria-selected", "true");
   await expect(transformTab).toHaveCSS("border-style", "none");
   await expect(transformTab).toHaveCSS("background-color", "rgb(237, 242, 245)");
+  await expect(transformTab).toHaveCSS("box-shadow", "none");
   await expect(transformTab).toHaveCSS("color", "rgb(94, 109, 121)");
   await expect(validateTab).toHaveCSS("border-style", "none");
   await expect(validateTab).toHaveCSS("font-weight", "400");
-  await expect(validateTab).toHaveCSS("background-color", "rgb(236, 245, 252)");
+  await expect(validateTab).toHaveCSS("background-color", "rgb(232, 241, 247)");
   await expect(validateTab).toHaveCSS("color", "rgb(39, 51, 61)");
-  await expect(validateTab.locator("svg")).toHaveCSS("color", "rgb(66, 153, 225)");
+  await expect(validateTab.locator("svg")).toHaveCSS("color", "rgb(53, 122, 180)");
 
   await transformTab.hover();
   await expect(transformTab).toHaveCSS("background-color", "rgb(232, 241, 247)");
@@ -179,7 +184,7 @@ test("starts with a wide editor and only the three MVP tools", async ({ page }) 
   await expect(ribbonTitles.first()).toHaveCSS("font-size", "14px");
   await expect(ribbonTitles.first()).toHaveCSS("font-weight", "400");
   await expect(ribbonTitles.first()).toHaveCSS("text-transform", "none");
-  await expect(ribbonTitles.first()).toHaveCSS("color", "rgb(63, 75, 85)");
+  await expect(ribbonTitles.first()).toHaveCSS("color", "rgb(39, 51, 61)");
   const firstRibbonGroupPosition = await transformRibbon
     .locator(".ribbon-group-with-title")
     .first()
@@ -467,7 +472,7 @@ test("plain-language review preserves the original and commits as one undoable t
   await expect(page.getByRole("button", { name: "Erneut ausführen" }).locator("svg")).toHaveCount(1);
   await expect(page.locator("[data-review-inline] .diff-removed").first()).toHaveCSS(
     "background-color",
-    "rgb(232, 237, 240)",
+    "rgb(237, 242, 245)",
   );
   await expect(page.locator("[data-review-inline] .diff-removed").first()).toHaveCSS(
     "color",
@@ -498,7 +503,7 @@ test("plain-language review preserves the original and commits as one undoable t
   await expect(page.getByTestId("review-readability-difference")).toHaveText("(+11.7)");
   await expect(page.locator("[data-review-split-before] .diff-rejected").first()).toHaveCSS(
     "background-color",
-    "rgb(232, 237, 240)",
+    "rgb(237, 242, 245)",
   );
   await page.getByRole("button", { name: "Inline" }).click();
   await page.locator("[data-review-inline] [data-diff-decision='rejected']").first().click();

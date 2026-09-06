@@ -71,7 +71,7 @@
 
 #editor-island-root .correction-rail-close:hover:enabled {
   border-color: var(--textbuddy-color-primary);
-  background: var(--textbuddy-neutral-hover);
+  background: var(--textbuddy-color-interactive-bg);
 }
 
 #editor-island-root .dictionary-shell,
@@ -132,8 +132,8 @@
 #editor-island-root .dictionary-word-remove:hover,
 #editor-island-root .suggestion-button:hover {
   border-color: var(--textbuddy-color-primary);
-  background: var(--textbuddy-neutral-hover);
-  color: var(--textbuddy-neutral-emphasis);
+  background: var(--textbuddy-color-interactive-bg);
+  color: var(--textbuddy-neutral-ink);
 }
 
 #editor-island-root .dictionary-list {
@@ -152,7 +152,7 @@
   padding-left: 0.5rem;
   border: 1px solid var(--textbuddy-neutral-border);
   border-radius: var(--textbuddy-radius);
-  background: var(--textbuddy-neutral-header);
+  background: var(--textbuddy-neutral-subtle);
 }
 
 #editor-island-root .dictionary-word-label {
@@ -195,7 +195,7 @@
 }
 
 #editor-island-root .problem-item:hover {
-  background: var(--textbuddy-neutral-hover);
+  background: var(--textbuddy-color-interactive-bg);
 }
 
 #editor-island-root .problem-item-head {
@@ -215,7 +215,7 @@
 }
 
 #editor-island-root .problem-index {
-  color: var(--textbuddy-neutral-emphasis);
+  color: var(--textbuddy-neutral-ink);
   font-size: 0.8rem;
   font-weight: 600;
 }
@@ -269,7 +269,7 @@
 #editor-island-root .advisor-finding-excerpt {
   padding: 0.5rem;
   border-radius: var(--textbuddy-radius);
-  background: var(--textbuddy-neutral-header);
+  background: var(--textbuddy-neutral-subtle);
   color: var(--textbuddy-neutral-ink);
 }
 
@@ -332,13 +332,13 @@
 #editor-island-root .advisor-button-primary,
 #editor-island-root .advisor-decision[data-decision="fix"] {
   border-color: var(--textbuddy-color-primary);
-  background: var(--textbuddy-color-active-bg);
-  color: var(--textbuddy-neutral-emphasis);
+  background: var(--textbuddy-color-interactive-bg);
+  color: var(--textbuddy-neutral-ink);
 }
 
 #editor-island-root .advisor-button:hover:enabled,
 #editor-island-root .advisor-decision:hover:enabled {
-  background: var(--textbuddy-neutral-hover);
+  background: var(--textbuddy-color-interactive-bg);
 }
 
 #editor-island-root .advisor-button:disabled,
@@ -366,7 +366,7 @@
 #editor-island-root .advisor-finding-suggestion {
   padding-left: 0.625rem;
   border-left: 3px solid var(--textbuddy-color-success);
-  color: var(--textbuddy-neutral-emphasis);
+  color: var(--textbuddy-neutral-ink);
 }
 
 #editor-island-root .advisor-fix {
@@ -429,13 +429,13 @@ body[data-correction-slideover-open="true"] {
 
 #editor-island-root .editor-button:hover:enabled {
   border-color: var(--textbuddy-color-primary);
-  background: var(--textbuddy-neutral-hover);
-  color: var(--textbuddy-neutral-emphasis);
+  background: var(--textbuddy-color-interactive-bg);
+  color: var(--textbuddy-neutral-ink);
 }
 
 #editor-island-root .editor-button:disabled {
   border-color: var(--textbuddy-neutral-border);
-  background: var(--textbuddy-neutral-header);
+  background: var(--textbuddy-neutral-subtle);
   color: var(--textbuddy-neutral-muted);
   cursor: not-allowed;
 }
@@ -449,7 +449,7 @@ body[data-correction-slideover-open="true"] {
 }
 
 #editor-island-root .counter-pill strong {
-  color: var(--textbuddy-neutral-emphasis);
+  color: var(--textbuddy-neutral-ink);
   font-weight: 600;
 }
 
@@ -485,7 +485,7 @@ body[data-correction-slideover-open="true"] {
 }
 
 #editor-island-root .editor-input {
-  color: var(--textbuddy-neutral-emphasis);
+  color: var(--textbuddy-neutral-ink);
   outline: 0;
   white-space: pre-wrap;
 }
@@ -505,7 +505,7 @@ body[data-correction-slideover-open="true"] {
 #editor-island-root .editor-input h5,
 #editor-island-root .editor-input h6 {
   margin: 0 0 0.75rem;
-  color: var(--textbuddy-neutral-emphasis);
+  color: var(--textbuddy-neutral-ink);
   line-height: 1.2;
 }
 
@@ -547,7 +547,7 @@ body[data-correction-slideover-open="true"] {
 #editor-island-root .text-stats-item dd,
 #editor-island-root .text-stats-flesch-head strong {
   margin: 0;
-  color: var(--textbuddy-neutral-emphasis);
+  color: var(--textbuddy-neutral-ink);
   font-weight: 600;
 }
 
@@ -569,7 +569,7 @@ body[data-correction-slideover-open="true"] {
   height: 0.5rem;
   overflow: hidden;
   border-radius: var(--textbuddy-radius);
-  background: var(--textbuddy-neutral-header);
+  background: var(--textbuddy-neutral-subtle);
 }
 
 #editor-island-root .text-stats-flesch-bar span {
@@ -590,7 +590,7 @@ body[data-correction-slideover-open="true"] {
   margin: 0 0 0.5rem;
   padding: 0.5rem 0.75rem;
   border-left: 3px solid var(--textbuddy-color-primary);
-  background: var(--textbuddy-color-active-bg);
+  background: var(--textbuddy-color-interactive-bg);
 }
 
 #editor-island-root .workspace-status[data-state="error"] {
@@ -632,7 +632,7 @@ body[data-correction-slideover-open="true"] {
 
 #editor-island-root .counter-button:hover {
   border-color: var(--textbuddy-neutral-border);
-  background: var(--textbuddy-neutral-hover);
+  background: var(--textbuddy-color-interactive-bg);
 }
 
 #editor-island-root .editor-canvas[data-dragging="true"] .editor-drop-overlay {
@@ -649,8 +649,8 @@ body[data-correction-slideover-open="true"] {
   flex-direction: column;
   gap: 0.5rem;
   border: 2px dashed var(--textbuddy-color-primary);
-  background: rgba(236, 245, 252, 0.94);
-  color: var(--textbuddy-neutral-emphasis);
+  background: color-mix(in srgb, var(--textbuddy-color-interactive-bg) 94%, transparent);
+  color: var(--textbuddy-neutral-ink);
   pointer-events: none;
 }
 
@@ -683,7 +683,7 @@ body[data-correction-slideover-open="true"] {
   justify-content: center;
   flex-direction: column;
   gap: 0.75rem;
-  background: rgba(255, 255, 255, 0.82);
+  background: color-mix(in srgb, var(--textbuddy-neutral-surface) 82%, transparent);
 }
 
 #editor-island-root[data-workspace-busy-source="quick-action"] .workspace-busy-overlay,
@@ -739,7 +739,7 @@ body[data-correction-slideover-open="true"] {
   margin: 0.75rem 0;
   padding: 0.625rem 0.75rem;
   border-left: 3px solid var(--textbuddy-color-primary);
-  background: var(--textbuddy-color-active-bg);
+  background: var(--textbuddy-color-interactive-bg);
 }
 
 #editor-island-root .review-readability-label {
@@ -750,7 +750,7 @@ body[data-correction-slideover-open="true"] {
   display: inline-flex;
   align-items: baseline;
   gap: 0.375rem;
-  color: var(--textbuddy-neutral-emphasis);
+  color: var(--textbuddy-neutral-ink);
   font-variant-numeric: tabular-nums;
 }
 
@@ -777,7 +777,7 @@ body[data-correction-slideover-open="true"] {
 }
 
 #editor-island-root .review-button:hover:enabled {
-  background: var(--textbuddy-neutral-hover);
+  background: var(--textbuddy-color-interactive-bg);
 }
 
 #editor-island-root .review-button:disabled {
@@ -799,12 +799,12 @@ body[data-correction-slideover-open="true"] {
 
 #editor-island-root .review-button[aria-pressed="true"],
 #editor-island-root .review-button[aria-pressed="true"]:hover:enabled {
-  background: var(--textbuddy-neutral-emphasis);
-  color: #ffffff;
+  background: var(--textbuddy-neutral-ink);
+  color: var(--textbuddy-color-on-strong);
 }
 
 #editor-island-root .review-button-bulk-reject {
-  background: var(--textbuddy-neutral-header);
+  background: var(--textbuddy-neutral-subtle);
 }
 
 #editor-island-root .review-button-bulk-accept {
@@ -814,7 +814,7 @@ body[data-correction-slideover-open="true"] {
 
 #editor-island-root .review-button-bulk-accept:hover:enabled {
   background: var(--textbuddy-color-success);
-  color: #ffffff;
+  color: var(--textbuddy-color-on-strong);
 }
 
 #editor-island-root .diff-inline,
@@ -822,7 +822,7 @@ body[data-correction-slideover-open="true"] {
   min-height: 12rem;
   padding: 1rem;
   overflow: auto;
-  color: var(--textbuddy-neutral-emphasis);
+  color: var(--textbuddy-neutral-ink);
   font-size: 1rem;
   line-height: 2;
   white-space: pre-wrap;
@@ -866,14 +866,14 @@ body[data-correction-slideover-open="true"] {
 }
 
 #editor-island-root .diff-removed {
-  background: var(--textbuddy-neutral-deleted-bg);
+  background: var(--textbuddy-neutral-subtle);
   color: var(--textbuddy-neutral-muted);
   text-decoration: line-through;
   text-decoration-color: var(--textbuddy-neutral-muted);
 }
 
 #editor-island-root .diff-rejected {
-  background: var(--textbuddy-neutral-deleted-bg);
+  background: var(--textbuddy-neutral-subtle);
   color: var(--textbuddy-neutral-muted);
   text-decoration: line-through;
   text-decoration-color: var(--textbuddy-neutral-muted);
@@ -899,33 +899,33 @@ body[data-correction-slideover-open="true"] {
   padding: 0;
   border: 0;
   border-radius: var(--textbuddy-radius);
-  background: var(--textbuddy-neutral-header);
+  background: var(--textbuddy-neutral-subtle);
   color: var(--textbuddy-neutral-ink);
 }
 
 #editor-island-root .diff-decision:hover {
-  background: var(--textbuddy-neutral-hover);
-  color: var(--textbuddy-neutral-emphasis);
+  background: var(--textbuddy-color-interactive-bg);
+  color: var(--textbuddy-neutral-ink);
 }
 
 #editor-island-root .diff-decision-accepted {
   background: var(--textbuddy-color-success);
-  color: #ffffff;
+  color: var(--textbuddy-color-on-strong);
 }
 
 #editor-island-root .diff-decision-accepted:hover {
   background: var(--textbuddy-color-success);
-  color: #ffffff;
+  color: var(--textbuddy-color-on-strong);
 }
 
 #editor-island-root .diff-decision-rejected {
-  background: var(--textbuddy-neutral-header);
+  background: var(--textbuddy-neutral-subtle);
   color: var(--textbuddy-neutral-ink);
 }
 
 #editor-island-root .diff-decision-rejected:hover {
-  background: var(--textbuddy-neutral-hover);
-  color: var(--textbuddy-neutral-emphasis);
+  background: var(--textbuddy-color-interactive-bg);
+  color: var(--textbuddy-neutral-ink);
 }
 
 #editor-island-root .review-no-changes {
@@ -950,7 +950,7 @@ body[data-correction-slideover-open="true"] {
     inset: 0;
     z-index: 1090;
     display: block;
-    background: rgba(var(--textbuddy-neutral-emphasis-rgb), 0.35);
+    background: color-mix(in srgb, var(--textbuddy-neutral-ink) 35%, transparent);
   }
 
   #editor-island-root .correction-rail:not([hidden]) {
