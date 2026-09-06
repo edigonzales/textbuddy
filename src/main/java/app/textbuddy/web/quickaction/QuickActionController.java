@@ -43,11 +43,6 @@ public final class QuickActionController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quick Action ist ungültig."));
 
         inputValidator.text(request == null ? null : request.text());
-        inputValidator.text(request == null ? null : request.previousText());
-        inputValidator.combinedText(
-                request == null ? null : request.text(),
-                request == null ? null : request.previousText()
-        );
         inputValidator.prompt(request == null ? null : request.prompt());
 
         return quickActionService.execute(type, request, currentUserResolver.resolve(authentication));

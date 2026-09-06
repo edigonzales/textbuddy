@@ -35,14 +35,7 @@ public final class OpenAiTextbuddyLlmClient implements TextbuddyLlmClient {
     @Override
     public String rewrite(QuickActionType action, QuickActionRequest request, MediumCurrentUser currentUser) {
         PromptMessages prompts = switch (action) {
-            case PLAIN_LANGUAGE -> request.previousText() == null
-                    ? quickActionPrompts.plainLanguage(request.text(), request.language())
-                    : quickActionPrompts.plainLanguageRetry(
-                            request.text(),
-                            request.previousText(),
-                            request.previousFleschScore(),
-                            request.language()
-                    );
+            case PLAIN_LANGUAGE -> quickActionPrompts.plainLanguage(request.text(), request.language());
             case BULLET_POINTS -> quickActionPrompts.bulletPoints(request.text(), request.language());
             case PROOFREAD -> quickActionPrompts.proofread(request.text(), request.language());
             case SUMMARIZE -> quickActionPrompts.summarize(

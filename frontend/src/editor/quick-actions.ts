@@ -8,11 +8,7 @@ import { extractErrorMessage } from "./http-error";
 import { getPlainText } from "./plain-text";
 import { normalizeRequestedLanguage } from "./request-language";
 import { createRewriteDiff, resolveRewriteDiff, rewriteDiffHunks } from "./rewrite-diff";
-import {
-  calculateTextStatistics,
-  shouldRetryGermanFlesch,
-  supportsGermanFlesch,
-} from "./text-statistics";
+import { calculateTextStatistics, supportsGermanFlesch } from "./text-statistics";
 import type {
   QuickActionResponse,
   RewriteDiffHunk,
@@ -29,8 +25,6 @@ interface QuickActionRequestBody {
   text: string;
   language: string;
   option?: string;
-  previousText?: string;
-  previousFleschScore?: number;
 }
 
 interface ReviewState {
@@ -410,61 +404,29 @@ export function mountQuickActions(editor: Editor, root: HTMLElement): void {
     setStatus("running", definition.running);
 
     try {
-      const requestRewrite = async (request: QuickActionRequestBody): Promise<string> => {
-        const response = await apiFetch(definition.endpoint, {
-          method: "POST",
-          headers: { Accept: "application/json", "Content-Type": "application/json" },
-          body: JSON.stringify(request),
-          signal: controller.signal,
-        });
-        if (!response.ok) {
-          throw new Error(await extractErrorMessage(response, definition.error));
-        }
-        const payload = (await response.json()) as QuickActionResponse;
-        if (typeof payload.text !== "string" || (!payload.text.trim() && original.trim())) {
-          throw new Error(definition.error);
-        }
-        return payload.text;
-      };
-
-      let rewritten = await requestRewrite(body);
+      const response = await apiFetch(definition.endpoint, {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        throw new Error(await extractErrorMessage(response, definition.error));
+      }
+      const payload = (await response.json()) as QuickActionResponse;
       if (activeRequest !== controller) {
         return;
       }
-
-      if (action === "plain-language") {
-        const firstStatistics = calculateTextStatistics(rewritten);
-        if (shouldRetryGermanFlesch(body.language, firstStatistics)) {
-          setStatus("running", t("quickAction.running.plainLanguageRetry"));
-          try {
-            const retryText = await requestRewrite({
-              text: original,
-              language: body.language,
-              previousText: rewritten,
-              previousFleschScore: firstStatistics.fleschScore,
-            });
-            if (activeRequest !== controller) {
-              return;
-            }
-            const retryStatistics = calculateTextStatistics(retryText);
-            if (retryStatistics.words > 0
-                && retryStatistics.fleschScore > firstStatistics.fleschScore) {
-              rewritten = retryText;
-            }
-          } catch (error) {
-            if (isAbortError(error) || activeRequest !== controller) {
-              throw error;
-            }
-          }
-        }
+      if (typeof payload.text !== "string" || (!payload.text.trim() && original.trim())) {
+        throw new Error(definition.error);
       }
 
-      const diff = createRewriteDiff(original, rewritten);
+      const diff = createRewriteDiff(original, payload.text);
       review = {
         action,
         request: body,
         original,
-        readability: createReadabilityComparison(action, body.language, original, rewritten),
+        readability: createReadabilityComparison(action, body.language, original, payload.text),
         segments: diff.segments,
         statuses: Object.fromEntries(
           rewriteDiffHunks(diff.segments).map((hunk) => [hunk.key, "pending"]),

@@ -15,8 +15,6 @@ public final class QuickActionService {
     private static final String INVALID_OPTION = "Option ist ungültig.";
     private static final String REQUIRED_PROMPT = "Custom-Prompt ist erforderlich.";
     private static final String INVALID_PROMPT = "Custom-Prompt ist ungültig.";
-    private static final String INCOMPLETE_RETRY = "Nachbesserungsdaten sind unvollständig.";
-    private static final String INVALID_RETRY = "Nachbesserungsdaten sind ungültig.";
 
     private final TextbuddyLlmClient llmClient;
 
@@ -31,7 +29,6 @@ public final class QuickActionService {
     ) {
         QuickActionRequest normalized = normalize(request);
 
-        validateRetry(action, normalized);
         if (normalized.text().isBlank()) {
             return new QuickActionResponse("");
         }
@@ -61,24 +58,6 @@ public final class QuickActionService {
         }
     }
 
-    private void validateRetry(QuickActionType action, QuickActionRequest request) {
-        boolean hasPreviousText = request.previousText() != null;
-        boolean hasPreviousScore = request.previousFleschScore() != null;
-
-        if (!hasPreviousText && !hasPreviousScore) {
-            return;
-        }
-        if (!hasPreviousText || !hasPreviousScore) {
-            badRequest(INCOMPLETE_RETRY);
-        }
-        if (action != QuickActionType.PLAIN_LANGUAGE
-                || !request.language().equalsIgnoreCase("de-CH")
-                || request.previousText().isBlank()
-                || !Double.isFinite(request.previousFleschScore())) {
-            badRequest(INVALID_RETRY);
-        }
-    }
-
     private void requireOption(String option, boolean valid) {
         if (normalize(option).isBlank()) {
             badRequest(REQUIRED_OPTION);
@@ -105,9 +84,7 @@ public final class QuickActionService {
                 Objects.requireNonNullElse(request == null ? null : request.text(), ""),
                 normalize(request == null ? null : request.language()),
                 normalize(request == null ? null : request.option()),
-                normalize(request == null ? null : request.prompt()),
-                request == null ? null : request.previousText(),
-                request == null ? null : request.previousFleschScore()
+                normalize(request == null ? null : request.prompt())
         );
     }
 

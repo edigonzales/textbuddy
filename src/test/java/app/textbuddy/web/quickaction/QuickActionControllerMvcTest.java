@@ -60,37 +60,4 @@ class QuickActionControllerMvcTest {
                         .content(oversizedPrompt))
                 .andExpect(status().isBadRequest());
     }
-
-    @Test
-    void acceptsValidRetryAndRejectsInvalidOrOversizedRetryData() throws Exception {
-        MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
-
-        mockMvc.perform(post("/api/quick-actions/plain-language")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "text":"Der komplizierte Sachverhalt ist relevant.",
-                                  "language":"de-CH",
-                                  "previousText":"Der Text ist weiterhin kompliziert.",
-                                  "previousFleschScore":47.3
-                                }
-                                """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.text").isString());
-
-        mockMvc.perform(post("/api/quick-actions/plain-language")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"text":"Text","language":"fr","previousText":"Entwurf","previousFleschScore":47.3}
-                                """))
-                .andExpect(status().isBadRequest());
-
-        String oversizedCombinedText = "{\"text\":\"" + "x".repeat(25_001)
-                + "\",\"language\":\"de-CH\",\"previousText\":\"" + "y".repeat(25_000)
-                + "\",\"previousFleschScore\":47.3}";
-        mockMvc.perform(post("/api/quick-actions/plain-language")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(oversizedCombinedText))
-                .andExpect(status().isBadRequest());
-    }
 }

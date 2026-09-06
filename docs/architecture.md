@@ -36,16 +36,14 @@ Neue Abstraktionen sollen nur entstehen, wenn es tatsächlich mehrere Implementi
 | `POST /api/advisor/validate` | SSE | Regelprüfung mit fortlaufenden Treffern |
 | `POST /api/convert/doc` | Multipart/JSON | Dokument in bereinigtes HTML umwandeln; das Frontend reduziert es auf Plaintext |
 
-Nur die Advisor-Prüfung verwendet SSE, weil dort mehrere fachlich unabhängige Treffer laufend sichtbar werden. Quick Actions liefern pro Request eine normale JSON-Antwort; der LLM-Provider liefert intern ebenfalls nur eine vollständige Antwort.
-
-Für **Verständlicher schreiben** darf der Browser nach einer gültigen ersten Antwort genau einen zweiten, seriellen Request senden: nur bei explizitem `de-CH`, mindestens 20 Wörtern im ersten Entwurf und einem deutschen Flesch-Wert unter 60. Der zweite Request verwendet denselben Endpoint und ergänzt `previousText` sowie `previousFleschScore`; `text` bleibt der Originaltext. Der Server validiert diese Felder und baut daraus einen spezialisierten Nachbesserungs-Prompt, berechnet den Messwert aber nicht selbst. Die Response bleibt `{ "text": "…" }`.
+Nur die Advisor-Prüfung verwendet SSE, weil dort mehrere fachlich unabhängige Treffer laufend sichtbar werden. Quick Actions liefern eine normale JSON-Antwort; der LLM-Provider liefert intern ebenfalls nur eine vollständige Antwort.
 
 ## Zustand und Daten
 
 - Advisor-Metadaten und PDFs werden beim Start einmal aus dem Klassenpfad geladen. Alle angemeldeten Benutzer sehen denselben Katalog.
 - Das persönliche Wörterbuch liegt ausschliesslich in `localStorage` des Browsers. Es gibt keine Synchronisierung oder Serversicherung.
 - Bearbeitete Texte und hochgeladene Dokumente werden nicht dauerhaft gespeichert.
-- Provider- und Netzwerkadapter führen keine automatischen Wiederholungen fehlgeschlagener Aufrufe aus. Die qualitätsgesteuerte Nachbesserung für verständlicheres Deutsch ist ein neuer fachlicher Request nach einer erfolgreichen ersten Antwort, kein Transport-Retry. Einzige technische Ausnahme ist der lokale OCR-Adapter: Scheitert eine explizit gewählte Nicht-Standardsprache an einem OCR-Fehler, versucht er die Erkennung einmal mit der Standardsprache.
+- Provider- und Netzwerkadapter führen keine automatischen Wiederholungen aus. Einzige Ausnahme ist der lokale OCR-Adapter: Scheitert eine explizit gewählte Nicht-Standardsprache an einem OCR-Fehler, versucht er die Erkennung einmal mit der Standardsprache.
 
 ## Sicherheitsgrenzen
 

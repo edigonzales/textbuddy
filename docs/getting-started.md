@@ -185,7 +185,7 @@ Prüfe die Base-URL. Für einen üblichen Provider ist beispielsweise `https://l
 
 ### Der Provider liefert HTTP 429
 
-Das Rate Limit oder ein Nutzungskontingent ist erreicht. Textbuddy wiederholt fehlgeschlagene Provider-Aufrufe nicht automatisch. Die optionale zweite Vereinfachung für deutsches `de-CH` startet nur nach einer erfolgreichen ersten Antwort und wiederholt einen fehlgeschlagenen Aufruf ebenfalls nicht.
+Das Rate Limit oder ein Nutzungskontingent ist erreicht. Textbuddy wiederholt fehlgeschlagene Provider-Aufrufe nicht automatisch.
 
 ### Die LLM-Anfrage läuft in einen Timeout
 

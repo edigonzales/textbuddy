@@ -4,12 +4,6 @@ public record QuickActionRequest(
         String text,
         String language,
         String option,
-        String prompt,
-        String previousText,
-        Double previousFleschScore
+        String prompt
 ) {
-
-    public QuickActionRequest(String text, String language, String option, String prompt) {
-        this(text, language, option, prompt, null, null);
-    }
 }

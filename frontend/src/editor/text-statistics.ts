@@ -12,8 +12,6 @@ const WORD_REGEX = /\p{L}+(?:['’-]\p{L}+)*/gu;
 const WORD_STRIP_REGEX = /[^\p{L}'’-]+/gu;
 const VOWEL_GROUP_REGEX = /[aeiouyäöüy]+/gu;
 const GERMAN_FLESCH_LANGUAGE = "de-ch";
-export const GERMAN_FLESCH_RETRY_TARGET = 60;
-export const GERMAN_FLESCH_RETRY_MIN_WORDS = 20;
 
 function normalizeText(value: string): string {
   return value.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
@@ -28,15 +26,6 @@ export function splitWords(text: string): string[] {
 
 export function supportsGermanFlesch(language: string | null | undefined): boolean {
   return (language ?? "").trim().toLowerCase() === GERMAN_FLESCH_LANGUAGE;
-}
-
-export function shouldRetryGermanFlesch(
-  language: string | null | undefined,
-  statistics: Pick<TextStatistics, "words" | "fleschScore">,
-): boolean {
-  return supportsGermanFlesch(language)
-    && statistics.words >= GERMAN_FLESCH_RETRY_MIN_WORDS
-    && statistics.fleschScore < GERMAN_FLESCH_RETRY_TARGET;
 }
 
 export function countSyllablesInWord(word: string): number {

@@ -64,30 +64,12 @@ test("axe: correction rail", async ({ page }) => {
 
 test("axe: inline and split diff review", async ({ page }) => {
   await prepare(page);
-  const original = Array.from({ length: 20 }, () => "Ausgangsinformation").join(" ") + ".";
-  const firstDraft = Array.from({ length: 20 }, () => "Verantwortungsübertragung").join(" ") + ".";
-  const secondDraft = Array.from({ length: 10 }, () => "Das Haus ist gut.").join(" ");
-  let releaseRetry = (): void => undefined;
-  const retryResponse = new Promise<void>((resolve) => {
-    releaseRetry = resolve;
-  });
   await page.route("**/api/quick-actions/plain-language", async (route) => {
-    const payload = route.request().postDataJSON() as { previousText?: string };
-    if (payload.previousText === undefined) {
-      await route.fulfill({ json: { text: firstDraft } });
-      return;
-    }
-    await retryResponse;
-    await route.fulfill({ json: { text: secondDraft } });
+    await route.fulfill({ json: { text: "Das neue Haus ist gross." } });
   });
-  await page.getByTestId("editor-input").fill(original);
+  await page.getByTestId("editor-input").fill("Das alte Haus ist klein.");
   await selectTextLanguage(page, "de-CH");
   await page.getByTestId("mvp-action-plain-language").click();
-  await expect(page.getByTestId("workspace-status")).toHaveText(
-    "Lesbarkeit wird weiter verbessert...",
-  );
-  await expectNoBlockingViolations(page);
-  releaseRetry();
   await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
   await expectNoBlockingViolations(page);
   await page.getByRole("button", { name: "Zwei Spalten" }).click();

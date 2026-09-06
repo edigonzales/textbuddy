@@ -7,7 +7,6 @@ import app.textbuddy.quickaction.MediumPrompt;
 import app.textbuddy.quickaction.SocialMediaPrompt;
 import app.textbuddy.quickaction.SummarizePrompt;
 
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -17,10 +16,8 @@ public final class QuickActionPromptComposer {
     private static final String LANGUAGE_AND_OUTPUT_SHELL = "shells/quick-actions/language-and-output.system.txt";
     private static final String PLAIN_LANGUAGE_SYSTEM = "source/quick-actions/plain-language/system.txt";
     private static final String PLAIN_LANGUAGE_OPENAI_TEMPLATE = "source/quick-actions/plain-language/openai-template.user.txt";
-    private static final String PLAIN_LANGUAGE_RETRY_TEMPLATE = "source/quick-actions/plain-language/retry.user.txt";
     private static final String PLAIN_LANGUAGE_REWRITE_COMPLETE = "source/quick-actions/plain-language/rewrite-complete.txt";
     private static final String PLAIN_LANGUAGE_RULES = "source/quick-actions/plain-language/rules-ls.txt";
-    private static final double PLAIN_LANGUAGE_FLESCH_TARGET = 60.0;
 
     private final PromptCatalog promptCatalog;
 
@@ -38,28 +35,6 @@ public final class QuickActionPromptComposer {
                         "completeness", promptCatalog.get(PLAIN_LANGUAGE_REWRITE_COMPLETE),
                         "rules", promptCatalog.get(PLAIN_LANGUAGE_RULES),
                         "text", valueOrEmpty(text)
-                ))
-        );
-    }
-
-    public PromptMessages plainLanguageRetry(
-            String originalText,
-            String previousText,
-            double previousFleschScore,
-            String language
-    ) {
-        return new PromptMessages(
-                joinPrompts(
-                        promptCatalog.get(PLAIN_LANGUAGE_SYSTEM),
-                        renderLanguageAndOutputShell(language)
-                ),
-                promptCatalog.render(PLAIN_LANGUAGE_RETRY_TEMPLATE, Map.of(
-                        "completeness", promptCatalog.get(PLAIN_LANGUAGE_REWRITE_COMPLETE),
-                        "rules", promptCatalog.get(PLAIN_LANGUAGE_RULES),
-                        "original_text", valueOrEmpty(originalText),
-                        "previous_text", valueOrEmpty(previousText),
-                        "previous_flesch_score", formatDecimal(previousFleschScore),
-                        "target_flesch_score", formatDecimal(PLAIN_LANGUAGE_FLESCH_TARGET)
                 ))
         );
     }
@@ -215,9 +190,5 @@ public final class QuickActionPromptComposer {
 
     private String valueOrEmpty(String value) {
         return value == null ? "" : value;
-    }
-
-    private String formatDecimal(double value) {
-        return String.format(Locale.ROOT, "%.1f", value);
     }
 }

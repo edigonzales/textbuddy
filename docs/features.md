@@ -46,9 +46,7 @@ Verfügbare Textsprachen sind automatische Erkennung, Deutsch (Schweiz), Franzö
 
 Bei einem unveränderten Resultat erscheint **Keine Änderungen gefunden**. Nach einer Übernahme startet die automatische Korrektur erneut.
 
-Ist als Textsprache ausdrücklich **Deutsch (Schweiz)** gewählt, zeigt **Verständlicher schreiben** zusätzlich die Amstad-Flesch-Lesbarkeit des Originals und des vollständigen Vorschlags samt Differenz. Hat der erste Entwurf mindestens 20 Wörter und einen Wert unter 60, fordert Textbuddy genau eine gezielte Nachbesserung mit Original, Entwurf und Messwert an. Angezeigt wird der Entwurf mit dem höheren Flesch-Wert; bei Gleichstand oder einer fehlgeschlagenen Nachbesserung bleibt der erste Entwurf. Der Vergleich bleibt während einzelner Diff-Entscheidungen unverändert.
-
-Diese Nachbesserung kann Latenz und LLM-Kosten der Aktion ungefähr verdoppeln. Sie bewertet weiterhin nur die formale Lesbarkeit, nicht CEFR, Faktenvollständigkeit, Inhalt oder allgemeine Verständlichkeit. Der Diff-Review bleibt deshalb verbindlich.
+Ist als Textsprache ausdrücklich **Deutsch (Schweiz)** gewählt, zeigt **Verständlicher schreiben** zusätzlich die Amstad-Flesch-Lesbarkeit des Originals und des vollständigen Vorschlags samt Differenz. Der Vergleich bleibt während einzelner Diff-Entscheidungen unverändert. Er bewertet nur die formale Lesbarkeit, nicht CEFR, Inhalt oder allgemeine Verständlichkeit.
 
 ## Werkzeugleiste und Dokumente
 

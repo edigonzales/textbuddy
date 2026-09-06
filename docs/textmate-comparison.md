@@ -185,7 +185,7 @@ Im Gegensatz dazu enthält Text-Mate zwar eine IndexedDB-Implementierung und ein
 - OCR-Sprache wird aus der gewählten Textsprache abgeleitet; im lokalen Adapter ist ein einmaliger Sprach-Fallback möglich.
 - Importierte Formatierung wird auf Text und Absatzumbrüche reduziert.
 - DOCX-Export behandelt Markdown-Zeichen als literalen Text und verwendet das lokale Browserdatum.
-- Zeichen, Wörter, Silben, Sätze und Durchschnittswerte. Bei ausdrücklich gewähltem Deutsch (Schweiz) wird zusätzlich die deutsche Amstad-Flesch-Lesbarkeit clientseitig berechnet und bei **Verständlicher schreiben** vor und nach der Bearbeitung verglichen. Entwürfe ab 20 Wörtern unter dem Zielwert 60 werden einmal mit einem spezialisierten Prompt nachgebessert; der lesbarere Entwurf gewinnt. Das ist weiterhin keine CEFR- oder umfassende Verständlichkeitsbewertung.
+- Zeichen, Wörter, Silben, Sätze und Durchschnittswerte. Bei ausdrücklich gewähltem Deutsch (Schweiz) wird zusätzlich die deutsche Amstad-Flesch-Lesbarkeit clientseitig berechnet und bei **Verständlicher schreiben** vor und nach der Bearbeitung verglichen. Sie ist keine CEFR- oder umfassende Verständlichkeitsbewertung.
 
 ### Vorhandene Backend-Funktionen ohne sichtbares Frontend
 
@@ -224,7 +224,7 @@ Der Textbuddy-Advisor enthält fünf einzeln auswählbare Quelldokumente mit der
 | Text löschen | sichtbar | nur manuell im Editor | – | Kleine Komfortdifferenz zugunsten Text-Mate. |
 | Kontinuierliche Rechtschreib- und Grammatikprüfung | – | sichtbar | LanguageTool | Klare Stärke von Textbuddy; Text-Mate hat keinen entsprechenden Prüfzyklus. |
 | Persönliches Wörterbuch | dormant, ohne Wirkung auf Prüfungen | sichtbar und integriert | – | Textbuddy ist funktional weiter. |
-| Verständlicher schreiben | sichtbar | sichtbar | sichtbar | Beide begrenzen die qualitätsgesteuerte Nachbesserung auf einen Versuch und behalten den lesbareren Entwurf. Textbuddy tut dies nur für explizites `de-CH` und den Gesamttext; Text-Mate bleibt durch mehrsprachige Messung, CEFR, Chunking und problembezogene Einheiten weiter. |
+| Verständlicher schreiben | sichtbar | sichtbar | sichtbar | Textbuddy zeigt für explizit gewähltes Deutsch einen einfachen Flesch-Vorher-/Nachher-Vergleich. Text-Mate bleibt durch mehrsprachige Messung, CEFR, Retry, Chunking und Qualitätsanzeige deutlich weiter. |
 | Zusammenfassen | sichtbar, fünf Varianten | sichtbar, fünf Varianten | sichtbar | Gleicher Funktionsumfang; Text-Mate streamt, Textbuddy antwortet atomar. |
 | Aufzählungen | sichtbar | – | vorhanden | Bewusste UI-Lücke in Textbuddy. |
 | Kürzen | sichtbar | – | – | Echte funktionale Lücke in Textbuddy. |
@@ -257,8 +257,8 @@ Der Textbuddy-Advisor enthält fünf einzeln auswählbare Quelldokumente mit der
 
 ## Wo Text-Mate weiter ist
 
-1. **Einfache Sprache mit mehrsprachiger, feingranularer Zielerreichung**
-   Text-Mate misst sprachabhängig, führt die einmalige Nachbesserung auf problematischen Einheiten aus und zeigt verbleibende schwierige Passagen. Textbuddy misst und entscheidet nur für explizites `de-CH` auf dem vollständigen Entwurf; eine zweite Antwort kann deshalb bei langen Texten weniger gezielt sein.
+1. **Einfache Sprache mit messbarer Zielerreichung**
+   Text-Mate misst sprachabhängig, versucht schwierige Einheiten höchstens einmal erneut und zeigt verbleibende problematische Passagen. Textbuddy führt lediglich eine einzelne, promptbasierte Transformation aus.
 
 2. **Advisor als vollständiger Benutzerfluss**
    Text-Mate verbindet Dokumentauswahl, 65 Regeln, gestreamte Prüfung, Textmarkierung, Quellen-PDF und gemeinsame Korrektur. Textbuddy besitzt davon nur Katalog, zehn Regeln, PDF-Auslieferung und Validierungsstream im Backend.
@@ -301,13 +301,13 @@ Der Textbuddy-Advisor enthält fünf einzeln auswählbare Quelldokumente mit der
 
 | Priorität | Vorschlag | Begründung |
 | --- | --- | --- |
-| mittel | **Vereinfachung fachlich evaluieren** | Flesch prüft nur formale Lesbarkeit. Repräsentative Fälle sollten Informationsverlust, Regelbefolgung und Nutzen der einmaligen Nachbesserung messen, bevor weitere Automatik entsteht. |
+| mittel | **Höchstens einen qualitätsgesteuerten zweiten Versuch prüfen** | Nur wenn der erste Text das Ziel klar verfehlt. Keine allgemeine Agenten- oder Workflow-Plattform einführen. |
 | mittel | **Advisor nur als vollständigen vertikalen Schnitt exponieren** | Falls fachlich gewünscht: Dokumentwahl, Ergebnisse, Übernehmen und Quellenlink gemeinsam liefern. Keine erneut versteckte halbe UI. |
 | mittel | **Lesbarkeit nur bei echtem Bedarf mehrsprachig erweitern** | Der deutsche Vorher-/Nachher-Vergleich ist vorhanden. EN/FR/IT und CEFR rechtfertigen zusätzliche Formeln und Erkennung erst bei entsprechendem Nutzungsbedarf. |
 | niedrig | **Streaming nur bei nachgewiesenem Warteproblem** | Für zwei sichtbare LLM-Aktionen rechtfertigt einfaches Request/Response häufig die geringere Komplexität. |
 | niedrig | **Kürzen nur bei echtem Produktbedarf ergänzen** | Es ist die einzige wesentliche Text-Mate-Quick-Action, die auch im Textbuddy-Backend fehlt. |
 
-Nach Ockham sollte Textbuddy nicht versuchen, die gesamte Text-Mate-Oberfläche nachzubauen. Der deutsche Vorher-/Nachher-Wert und genau eine begrenzte Nachbesserung schliessen den naheliegenden Teil der Messlücke; weitere Formeln, Teiltext-Pipelines oder Qualitätsversuche sollten erst durch konkrete Evaluation und Produktbedarf begründet werden.
+Nach Ockham sollte Textbuddy nicht versuchen, die gesamte Text-Mate-Oberfläche nachzubauen. Mit dem deutschen Vorher-/Nachher-Wert ist die naheliegende kleine Messlücke geschlossen; weitere Formeln oder Qualitätsversuche sollten erst durch konkreten Produktbedarf begründet werden.
 
 ### Für Text-Mate
 

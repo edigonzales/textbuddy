@@ -5,9 +5,6 @@ import {
   calculateTextStatistics,
   countSyllablesInWord,
   describeFleschScoreKey,
-  GERMAN_FLESCH_RETRY_MIN_WORDS,
-  GERMAN_FLESCH_RETRY_TARGET,
-  shouldRetryGermanFlesch,
   splitWords,
   supportsGermanFlesch,
 } from "./text-statistics";
@@ -33,16 +30,6 @@ test("supportsGermanFlesch only enables the explicit German selection", () => {
   assert.equal(supportsGermanFlesch("it"), false);
   assert.equal(supportsGermanFlesch("en-US"), false);
   assert.equal(supportsGermanFlesch("en-GB"), false);
-});
-
-test("shouldRetryGermanFlesch uses the explicit language, word minimum and target boundary", () => {
-  assert.equal(GERMAN_FLESCH_RETRY_MIN_WORDS, 20);
-  assert.equal(GERMAN_FLESCH_RETRY_TARGET, 60);
-  assert.equal(shouldRetryGermanFlesch("de-CH", { words: 20, fleschScore: 59.9 }), true);
-  assert.equal(shouldRetryGermanFlesch("de-CH", { words: 19, fleschScore: 59.9 }), false);
-  assert.equal(shouldRetryGermanFlesch("de-CH", { words: 20, fleschScore: 60 }), false);
-  assert.equal(shouldRetryGermanFlesch("auto", { words: 20, fleschScore: 59.9 }), false);
-  assert.equal(shouldRetryGermanFlesch("fr", { words: 20, fleschScore: 59.9 }), false);
 });
 
 test("calculateTextStatistics computes counters and Flesch score", () => {
