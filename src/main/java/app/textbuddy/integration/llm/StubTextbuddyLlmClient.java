@@ -32,7 +32,10 @@ public final class StubTextbuddyLlmClient implements TextbuddyLlmClient {
         }
 
         return switch (action) {
-            case PLAIN_LANGUAGE -> plainLanguage(text, request.language());
+            case PLAIN_LANGUAGE -> plainLanguage(
+                    request.previousText() == null ? text : normalize(request.previousText()),
+                    request.language()
+            );
             case BULLET_POINTS -> items(text).stream().map(item -> "- " + item).collect(Collectors.joining("\n"));
             case PROOFREAD -> text
                     .replace("Teh", "The").replace("teh", "the")

@@ -27,6 +27,27 @@ class QuickActionPromptComposerTest {
     }
 
     @Test
+    void plainLanguageRetryUsesOriginalDraftScoreAndExistingRules() {
+        PromptMessages promptMessages = promptComposer.plainLanguageRetry(
+                "  Verbindlicher Originaltext.  ",
+                "  Erster schwieriger Entwurf.  ",
+                47.3,
+                "de-CH"
+        );
+
+        assertThat(promptMessages.systemPrompt()).contains("Du bist ein hilfreicher Assistent");
+        assertThat(promptMessages.userPrompt())
+                .contains("Verbindlicher Originaltext.")
+                .contains("Erster schwieriger Entwurf.")
+                .contains("47.3")
+                .contains("mindestens 60.0")
+                .contains("fachlich verbindliche Quelle")
+                .contains("ALLE Informationen")
+                .contains("höchstens 12 Wörter")
+                .contains("keine Markdown-Formatierung und kein HTML");
+    }
+
+    @Test
     void mediumEmailInjectsCurrentUserPlaceholdersOrRealValues() {
         PromptMessages promptMessages = promptComposer.medium(
                 "Projekt ist freigegeben.",

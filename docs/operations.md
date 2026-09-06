@@ -47,7 +47,7 @@ Stub-Modi dienen lokaler Entwicklung und reproduzierbaren Tests, nicht fachliche
 | `textbuddy.languagetool.timeout` | `10s` | Timeout im HTTP-Modus |
 | `textbuddy.document.timeout` | `45s` | Timeout der Dokumentverarbeitung |
 
-Textbuddy wiederholt fehlgeschlagene Provider- oder Netzwerkaufrufe nicht automatisch. Retries, falls fachlich gewünscht, müssen bewusst ausserhalb der Anwendung mit Idempotenz- und Kostenbetrachtung entworfen werden. Nur lokale OCR darf bei einem sprachbezogenen OCR-Fehler einmal mit der Standardsprache wiederholen.
+Textbuddy wiederholt fehlgeschlagene Provider- oder Netzwerkaufrufe nicht automatisch. Nur **Verständlicher schreiben** kann nach einer erfolgreichen, aber klar zu schwer lesbaren ersten Antwort genau einen neuen fachlichen Provider-Aufruf senden. Das gilt ausschliesslich für explizites `de-CH`, mindestens 20 Wörter im ersten Entwurf und einen deutschen Flesch-Wert unter 60. Der zweite Aufruf erfolgt seriell und kann Dauer sowie Kosten dieser Aktion ungefähr verdoppeln; scheitert er, verwendet der Browser die erste gültige Antwort. Original und erster Entwurf dürfen zusammen die konfigurierte maximale Textlänge nicht überschreiten. Die einzige technische Retry-Ausnahme bleibt der lokale OCR-Sprachfallback.
 
 ## Reverse Proxy
 

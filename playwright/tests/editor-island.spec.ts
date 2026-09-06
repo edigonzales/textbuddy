@@ -9,7 +9,17 @@ interface QuickActionRequestPayload {
   text: string;
   language: string;
   option?: string;
+  previousText?: string;
+  previousFleschScore?: number;
 }
+
+const RETRY_ORIGINAL = Array.from({ length: 20 }, () => "Ausgangsinformation").join(" ") + ".";
+const HARD_FIRST_DRAFT = Array.from({ length: 20 }, () => "Verantwortungsübertragung").join(" ") + ".";
+const HARDER_SECOND_DRAFT = Array.from(
+  { length: 20 },
+  () => "Internationalisierungsverantwortlichkeit",
+).join(" ") + ".";
+const EASY_SECOND_DRAFT = Array.from({ length: 10 }, () => "Das Haus ist gut.").join(" ");
 
 function correctionResponse(text: string) {
   const blocks = [];
@@ -472,6 +482,7 @@ test("unchanged and failed transformations never alter the editor", async ({ pag
   await expect(page.getByTestId("review-readability-before")).toHaveText("-55.0");
   await expect(page.getByTestId("review-readability-after")).toHaveText("-55.0");
   await expect(page.getByTestId("review-readability-difference")).toHaveText("(±0.0)");
+  expect(calls).toBe(1);
   await page.getByRole("button", { name: "Alle ablehnen" }).click();
   await page.getByTestId("mvp-action-plain-language").click();
   await expect(page.getByTestId("workspace-status")).toContainText(
@@ -503,11 +514,181 @@ test("plain-language retry recalculates readability from the new result", async 
   await expect(page.getByTestId("review-readability-difference")).toHaveText("(+12.7)");
 });
 
+test("plain-language makes one measured retry and selects the more readable draft", async ({
+  page,
+}) => {
+  await stubCorrection(page);
+  const payloads: QuickActionRequestPayload[] = [];
+  let releaseRetry = (): void => undefined;
+  const retryResponse = new Promise<void>((resolve) => {
+    releaseRetry = resolve;
+  });
+  await page.route("**/api/quick-actions/plain-language", async (route) => {
+    const payload = route.request().postDataJSON() as QuickActionRequestPayload;
+    payloads.push(payload);
+    if (payload.previousText === undefined) {
+      await route.fulfill({ json: { text: HARD_FIRST_DRAFT } });
+      return;
+    }
+    await retryResponse;
+    await route.fulfill({ json: { text: EASY_SECOND_DRAFT } });
+  });
+  await page.goto("/");
+  await enterText(page, RETRY_ORIGINAL);
+  await selectTextLanguage(page, "de-CH");
+
+  await page.getByTestId("mvp-action-plain-language").click();
+  await expect(page.getByTestId("workspace-status")).toHaveText(
+    "Lesbarkeit wird weiter verbessert...",
+  );
+  await expect.poll(() => payloads.length).toBe(2);
+  expect(payloads[0]).toEqual({ text: RETRY_ORIGINAL, language: "de-CH" });
+  expect(payloads[1]?.text).toBe(RETRY_ORIGINAL);
+  expect(payloads[1]?.language).toBe("de-CH");
+  expect(payloads[1]?.previousText).toBe(HARD_FIRST_DRAFT);
+  expect(payloads[1]?.previousFleschScore).toBeLessThan(60);
+  releaseRetry();
+
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+  await expect(page.getByTestId("review-readability-after")).toHaveText("117.5");
+  await page.getByRole("button", { name: "Alle annehmen" }).click();
+  await expect(page.getByTestId("editor-mirror")).toHaveValue(EASY_SECOND_DRAFT);
+  expect(payloads).toHaveLength(2);
+});
+
+for (const candidate of [
+  { label: "worse", text: HARDER_SECOND_DRAFT },
+  { label: "equally readable", text: HARD_FIRST_DRAFT },
+]) {
+  test(`plain-language keeps the first draft when the measured retry is ${candidate.label}`, async ({
+    page,
+  }) => {
+    await stubCorrection(page);
+    const payloads: QuickActionRequestPayload[] = [];
+    await page.route("**/api/quick-actions/plain-language", async (route) => {
+      const payload = route.request().postDataJSON() as QuickActionRequestPayload;
+      payloads.push(payload);
+      await route.fulfill({
+        json: { text: payload.previousText === undefined ? HARD_FIRST_DRAFT : candidate.text },
+      });
+    });
+    await page.goto("/");
+    await enterText(page, RETRY_ORIGINAL);
+    await selectTextLanguage(page, "de-CH");
+
+    await page.getByTestId("mvp-action-plain-language").click();
+    await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+    expect(payloads).toHaveLength(2);
+    await page.getByRole("button", { name: "Alle annehmen" }).click();
+    await expect(page.getByTestId("editor-mirror")).toHaveValue(HARD_FIRST_DRAFT);
+  });
+}
+
+test("plain-language falls back to the first draft after a failed measured retry", async ({
+  page,
+}) => {
+  await stubCorrection(page);
+  const payloads: QuickActionRequestPayload[] = [];
+  await page.route("**/api/quick-actions/plain-language", async (route) => {
+    const payload = route.request().postDataJSON() as QuickActionRequestPayload;
+    payloads.push(payload);
+    if (payload.previousText === undefined) {
+      await route.fulfill({ json: { text: HARD_FIRST_DRAFT } });
+      return;
+    }
+    await route.fulfill({ status: 500, json: { message: "Nachbesserung fehlgeschlagen" } });
+  });
+  await page.goto("/");
+  await enterText(page, RETRY_ORIGINAL);
+  await selectTextLanguage(page, "de-CH");
+
+  await page.getByTestId("mvp-action-plain-language").click();
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+  await expect(page.getByTestId("workspace-status")).toHaveText("Vereinfachen abgeschlossen.");
+  expect(payloads).toHaveLength(2);
+  await page.getByRole("button", { name: "Alle annehmen" }).click();
+  await expect(page.getByTestId("editor-mirror")).toHaveValue(HARD_FIRST_DRAFT);
+});
+
+test("plain-language falls back to the first draft after an empty measured retry", async ({
+  page,
+}) => {
+  await stubCorrection(page);
+  let calls = 0;
+  await page.route("**/api/quick-actions/plain-language", async (route) => {
+    calls += 1;
+    await route.fulfill({ json: { text: calls === 1 ? HARD_FIRST_DRAFT : "  " } });
+  });
+  await page.goto("/");
+  await enterText(page, RETRY_ORIGINAL);
+  await selectTextLanguage(page, "de-CH");
+
+  await page.getByTestId("mvp-action-plain-language").click();
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+  expect(calls).toBe(2);
+  await page.getByRole("button", { name: "Alle annehmen" }).click();
+  await expect(page.getByTestId("editor-mirror")).toHaveValue(HARD_FIRST_DRAFT);
+});
+
+test("plain-language run-again restarts the complete two-attempt flow from the original", async ({
+  page,
+}) => {
+  await stubCorrection(page);
+  const payloads: QuickActionRequestPayload[] = [];
+  await page.route("**/api/quick-actions/plain-language", async (route) => {
+    const payload = route.request().postDataJSON() as QuickActionRequestPayload;
+    payloads.push(payload);
+    await route.fulfill({
+      json: { text: payload.previousText === undefined ? HARD_FIRST_DRAFT : EASY_SECOND_DRAFT },
+    });
+  });
+  await page.goto("/");
+  await enterText(page, RETRY_ORIGINAL);
+  await selectTextLanguage(page, "de-CH");
+
+  await page.getByTestId("mvp-action-plain-language").click();
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+  await page.getByRole("button", { name: "Erneut ausführen" }).click();
+  await expect.poll(() => payloads.length).toBe(4);
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+
+  expect(payloads.map((payload) => payload.text)).toEqual([
+    RETRY_ORIGINAL,
+    RETRY_ORIGINAL,
+    RETRY_ORIGINAL,
+    RETRY_ORIGINAL,
+  ]);
+  expect(payloads.map((payload) => payload.previousText !== undefined)).toEqual([
+    false,
+    true,
+    false,
+    true,
+  ]);
+});
+
+test("plain-language skips the measured retry after reaching the target", async ({ page }) => {
+  await stubCorrection(page);
+  const payloads: QuickActionRequestPayload[] = [];
+  await page.route("**/api/quick-actions/plain-language", async (route) => {
+    payloads.push(route.request().postDataJSON() as QuickActionRequestPayload);
+    await route.fulfill({ json: { text: EASY_SECOND_DRAFT } });
+  });
+  await page.goto("/");
+  await enterText(page, RETRY_ORIGINAL);
+  await selectTextLanguage(page, "de-CH");
+
+  await page.getByTestId("mvp-action-plain-language").click();
+  await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
+  expect(payloads).toHaveLength(1);
+});
+
 test("plain-language readability stays hidden for automatic and non-German languages", async ({
   page,
 }) => {
   await stubCorrection(page);
+  let calls = 0;
   await page.route("**/api/quick-actions/plain-language", async (route) => {
+    calls += 1;
     await route.fulfill({ json: { text: "Das neue Haus ist gross." } });
   });
   await page.goto("/");
@@ -515,11 +696,13 @@ test("plain-language readability stays hidden for automatic and non-German langu
 
   await page.getByTestId("mvp-action-plain-language").click();
   await expect(page.getByTestId("review-readability")).toBeHidden();
+  expect(calls).toBe(1);
   await page.getByRole("button", { name: "Alle ablehnen" }).click();
 
   await selectTextLanguage(page, "fr");
   await page.getByTestId("mvp-action-plain-language").click();
   await expect(page.getByTestId("review-readability")).toBeHidden();
+  expect(calls).toBe(2);
 });
 
 test("toolbar copies, downloads DOCX and opens the live statistics popover", async ({
