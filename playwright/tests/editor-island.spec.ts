@@ -390,10 +390,19 @@ test("advisor validates bundled guidelines, reviews selected fixes and preserves
   await page.getByTestId("editor-undo").click();
   await expect(page.getByTestId("editor-mirror")).toHaveValue("Bitte downloaden Sie per sofort.");
 
+  await page.getByTestId("advisor-start").click();
+  await expect(page.getByTestId("advisor-finding")).toHaveCount(2);
+  const editedText = "Bitte downloaden Sie per sofort. Die Gemeinde entscheidet morgen.";
+  await enterText(page, editedText);
+  await expect(page.getByTestId("advisor-finding")).toHaveCount(0);
+  await expect(page.getByTestId("advisor-fix")).toBeDisabled();
+  await expect(page.getByTestId("editor-mirror")).toHaveValue(editedText);
+
   finishValidation = false;
   await page.getByTestId("advisor-start").click();
   await expect(page.getByTestId("advisor-status")).toHaveText("Richtlinienprüfung konnte nicht abgeschlossen werden.");
   await expect(page.getByTestId("advisor-finding")).toHaveCount(0);
+  await expect(page.getByTestId("editor-mirror")).toHaveValue(editedText);
 });
 
 test("correction sends one request for a 50000-character document", async ({ page }) => {
@@ -554,7 +563,11 @@ test("summary keeps option values, supports split review, reject-all and retry",
   await page.goto("/");
   await enterText(page, "Ein langer Ausgangstext.");
   await selectTextLanguage(page, "de-CH");
-  await page.getByTestId("mvp-summary-option").selectOption("management_summary");
+  const summary = page.getByTestId("mvp-summary-option");
+  expect(await summary.locator("option").evaluateAll(options =>
+    options.map(option => (option as HTMLOptionElement).value),
+  )).toEqual(["", "sentence", "three_sentence", "paragraph", "page", "management_summary"]);
+  await summary.selectOption("management_summary");
 
   await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
   await expect(page.getByTestId("review-readability")).toBeHidden();

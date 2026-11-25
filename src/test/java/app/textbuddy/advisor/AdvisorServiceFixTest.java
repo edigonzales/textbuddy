@@ -58,6 +58,9 @@ class AdvisorServiceFixTest {
                 new AdvisorFixRequest.Finding("unbekannt", "regel", 9, 19, "per sofort", "ab sofort")
         ))));
         assertBadRequest(() -> service.fix(new AdvisorFixRequest(text, List.of(
+                new AdvisorFixRequest.Finding("schreibweisungen", "unbekannte-regel", 9, 19, "per sofort", "ab sofort")
+        ))));
+        assertBadRequest(() -> service.fix(new AdvisorFixRequest(text, List.of(
                 new AdvisorFixRequest.Finding("schreibweisungen", "per-sofort-vermeiden", 0, 3, "per sofort", "ab sofort")
         ))));
         AdvisorFixRequest.Finding valid = new AdvisorFixRequest.Finding(
@@ -99,19 +102,27 @@ class AdvisorServiceFixTest {
         );
 
         verify(client).validate(org.mockito.ArgumentMatchers.eq(text), anyList());
-        assertThat(handler.events).extracting(AdvisorValidationEvent::start).containsExactly(text.lastIndexOf("per sofort"));
-        assertThat(handler.events).extracting(AdvisorValidationEvent::end).containsExactly(text.lastIndexOf("per sofort") + 10);
+        assertThat(handler.events).singleElement().satisfies(event -> {
+            assertThat(event.start()).isEqualTo(text.lastIndexOf("per sofort"));
+            assertThat(event.end()).isEqualTo(event.start() + "per sofort".length());
+            assertThat(text.substring(event.start(), event.end())).isEqualTo("per sofort");
+            assertThat(event.ruleId()).isEqualTo("per-sofort-vermeiden");
+            assertThat(event.message()).isEqualTo("Die Formulierung ist intern.");
+            assertThat(event.referenceUrl()).isEqualTo("/api/advisor/doc/schreibweisungen#page=1");
+        });
         assertThat(handler.progress).containsExactly(new AdvisorProgressEvent(1, 1));
     }
 
     @Test
-    void validationDiscardsProviderTextOutsideTheCanonicalMatchTerms() {
+    void validationDiscardsUnknownRulesAndUnlocatableOrNoncanonicalText() {
         AdvisorDocument document = document();
         AdvisorCatalog catalog = mock(AdvisorCatalog.class);
         when(catalog.documents()).thenReturn(List.of(document));
         when(catalog.find("schreibweisungen")).thenReturn(Optional.of(document));
         TextbuddyLlmClient client = mock(TextbuddyLlmClient.class);
         when(client.validate(anyString(), anyList())).thenReturn(List.of(
+                new AdvisorRuleMatch("schreibweisungen", "unbekannte-regel", "per sofort", "", "", ""),
+                new AdvisorRuleMatch("schreibweisungen", "per-sofort-vermeiden", "Per sofort", "", "", ""),
                 new AdvisorRuleMatch("schreibweisungen", "per-sofort-vermeiden", "Das", "", "", "")
         ));
         RecordingHandler handler = new RecordingHandler();
