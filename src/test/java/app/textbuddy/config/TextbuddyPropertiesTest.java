@@ -22,15 +22,9 @@ class TextbuddyPropertiesTest {
     }
 
     @Test
-    void validatesRequiredExternalAdapterUrls() {
+    void validatesRequiredLlmUrl() {
         TextbuddyProperties.Llm llm = new TextbuddyProperties.Llm();
-        TextbuddyProperties.LanguageTool languageTool = new TextbuddyProperties.LanguageTool();
-        TextbuddyProperties.Document document = new TextbuddyProperties.Document();
-        languageTool.setMode(TextbuddyProperties.LanguageTool.Mode.HTTP);
-        document.setMode(TextbuddyProperties.Document.Mode.HTTP);
 
         assertThatThrownBy(llm::validateForProvider).hasMessageContaining("textbuddy.llm.base-url");
-        assertThatThrownBy(languageTool::validateForHttp).hasMessageContaining("languagetool.base-url");
-        assertThatThrownBy(document::validateForHttp).hasMessageContaining("document.base-url");
     }
 }

@@ -72,7 +72,7 @@ class ProtectedApiAuthSmokeMvcTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.blocks[0].shortMessage").value("Spelling"));
+                .andExpect(jsonPath("$.blocks[0].replacements[0]").value("the"));
 
         mockMvc.perform(get("/api/advisor/docs")
                         .with(oauth2Login().authorities(new SimpleGrantedAuthority("ROLE_ADVISOR_INTERNAL"))))

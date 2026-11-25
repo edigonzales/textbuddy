@@ -17,7 +17,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(properties = {
-        "textbuddy.document.mode=stub",
         "textbuddy.document.max-upload-size=10B",
         "spring.servlet.multipart.max-file-size=10B",
         "spring.servlet.multipart.max-request-size=10B"

@@ -1,6 +1,6 @@
 # Textbuddy
 
-Textbuddy ist eine serverbasierte Schreibassistenz mit vier bewusst sichtbaren Abläufen: Textkorrektur, Richtlinien-Advisor, verständlicher schreiben und zusammenfassen. Der Advisor demonstriert mit fünf projektinternen Demo-Regelwerken, wie später eigene gebündelte Richtlinien eingesetzt werden können. Das Backend enthält zusätzlich bestehende, derzeit nicht exponierte Fachfunktionen und den Dokumentimport. Die Anwendung besteht aus Spring Boot MVC und einer kleinen TypeScript-/Tiptap-Insel in serverseitig gerendertem JTE-HTML.
+Textbuddy ist eine serverbasierte Schreibassistenz mit vier bewusst sichtbaren Abläufen: Textkorrektur, Richtlinien-Advisor, verständlicher schreiben und zusammenfassen. Der Advisor demonstriert mit fünf projektinternen Demo-Regelwerken, wie später eigene gebündelte Richtlinien eingesetzt werden können. Der Editor bietet ausserdem Dokumentimport und DOCX-Export. Die Anwendung besteht aus Spring Boot MVC und einer kleinen TypeScript-/Tiptap-Insel in serverseitig gerendertem JTE-HTML.
 
 Der Editor verwendet Plaintext als verbindliches Inhaltsmodell. Importierte Formatierungen werden auf Text und Absatzumbrüche reduziert; KI-Ergebnisse und DOCX-Exporte interpretieren Zeichen wie `#`, `*` oder `1.` nicht als Formatierungsanweisung.
 
@@ -12,7 +12,7 @@ Der Editor verwendet Plaintext als verbindliches Inhaltsmodell. Importierte Form
 
 ## Lokal entwickeln
 
-Der ungeschützte Modus ist ausschliesslich an einer expliziten Loopback-Adresse erlaubt. Die Stub-Adapter benötigen keine externen Dienste:
+Der ungeschützte Modus ist ausschliesslich an einer expliziten Loopback-Adresse erlaubt. Der LLM-Stub, LanguageTool und der Dokumentimport laufen lokal.
 
 ```bash
 ./dev.sh
@@ -25,7 +25,7 @@ Das Skript startet Spring Boot und den Frontend-Watcher gemeinsam. Änderungen u
 Wenn kein Frontend-Watcher benötigt wird, kann das Backend weiterhin direkt gestartet werden:
 
 ```bash
-./gradlew bootRun --args='--server.address=127.0.0.1 --textbuddy.auth.enabled=false --textbuddy.llm.mode=stub --textbuddy.languagetool.mode=stub --textbuddy.document.mode=stub'
+./gradlew bootRun --args='--server.address=127.0.0.1 --textbuddy.auth.enabled=false --textbuddy.llm.mode=stub'
 ```
 
 ## Prüfen und bauen
@@ -42,7 +42,7 @@ Das Release-Bundle liegt danach unter `build/release/`. Die CI führt Java-, Fro
 
 ## Produktion
 
-Authentifizierung ist standardmässig aktiv und erfordert eine OIDC-Client-Konfiguration. LLM-Zugriff benötigt einen OpenAI-kompatiblen Provider. LanguageTool und Dokumentimport können eingebettet oder über HTTP betrieben werden. Konkrete Beispiele liegen unter `config/examples/`.
+Authentifizierung ist standardmässig aktiv und erfordert eine OIDC-Client-Konfiguration. LLM-Zugriff benötigt einen OpenAI-kompatiblen Provider. LanguageTool und Kreuzberg verarbeiten Korrekturen und Dokumente lokal. Konkrete Beispiele liegen unter `config/examples/`.
 
 Eine `.env`-Datei wird nicht automatisch geladen. Vor einem Start mit dem Beispiel muss sie explizit in die Shell übernommen werden:
 
@@ -54,12 +54,11 @@ java --enable-native-access=ALL-UNNAMED -jar build/libs/textbuddy.jar \
   --spring.config.additional-location=file:config/examples/application-production.properties.example
 ```
 
+Der [Archivtag](https://github.com/edigonzales/textbuddy/tree/archive/pre-rrb-cleanup-2026-11-25) sichert den Stand vor der Bereinigung.
+
 Weitere Dokumentation:
 
 - [Funktionsübersicht](docs/features.md)
-- [Vergleich mit Text-Mate](docs/textmate-comparison.md)
-- [ZIX-/LanguageTool-Kompatibilität](docs/zix-compatibility.md)
-- [wordhoard-/LanguageTool-Experiment](docs/wordhoard-experiment.md)
 - [Getting Started](docs/getting-started.md)
 - [Architektur](docs/architecture.md)
 - [Betrieb und Konfiguration](docs/operations.md)

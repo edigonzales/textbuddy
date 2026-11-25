@@ -31,20 +31,19 @@ Ohne explizite Loopback-Adresse verweigert die Anwendung diesen Start. Diese Ein
 ### Adapter
 
 - `textbuddy.llm.mode=provider|stub`: Produktion verwendet normalerweise `provider` und verlangt Base-URL, API-Key und Modell-ID.
-- `textbuddy.languagetool.mode=embedded|http|stub`: `embedded` benötigt keinen Sidecar; ein optionaler N-Gram-Pfad verbessert bestimmte Regeln.
-- `textbuddy.document.mode=kreuzberg|http|stub`: `kreuzberg` verarbeitet lokal. OCR benötigt eine auf der Zielplattform funktionierende Kreuzberg-OCR-Laufzeit und passende Sprachdaten.
+- LanguageTool ist eingebettet. Ein optionaler N-Gram-Pfad verbessert bestimmte Regeln.
+- Kreuzberg verarbeitet Dokumente lokal. OCR benötigt eine auf der Zielplattform funktionierende Kreuzberg-OCR-Laufzeit und passende Sprachdaten.
 
-Stub-Modi dienen lokaler Entwicklung und reproduzierbaren Tests, nicht fachlicher Abnahme.
+Der LLM-Stub liefert für Entwicklung und Tests reproduzierbare Demo-Antworten.
 
 ## Grenzen und Timeouts
 
 | Einstellung | Standard | Bedeutung |
 | --- | ---: | --- |
 | `textbuddy.input.max-text-length` | `50000` | maximale Zeichen pro Textanfrage |
-| `textbuddy.input.max-prompt-length` | `2000` | maximale Zeichen eines eigenen Auftrags |
+| `textbuddy.input.max-prompt-length` | `2000` | Grenze für die Summe der ausgewählten Advisor-Vorschläge |
 | `textbuddy.document.max-upload-size` | `20MB` | Multipart- und fachliche Uploadgrenze |
 | `textbuddy.llm.timeout` | `30s` | Timeout einer LLM-Anfrage |
-| `textbuddy.languagetool.timeout` | `10s` | Timeout im HTTP-Modus |
 | `textbuddy.document.timeout` | `45s` | Timeout der Dokumentverarbeitung |
 
 Textbuddy wiederholt fehlgeschlagene Provider- oder Netzwerkaufrufe nicht automatisch. Retries, falls fachlich gewünscht, müssen bewusst ausserhalb der Anwendung mit Idempotenz- und Kostenbetrachtung entworfen werden. Nur lokale OCR darf bei einem sprachbezogenen OCR-Fehler einmal mit der Standardsprache wiederholen.

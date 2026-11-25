@@ -68,8 +68,6 @@ final class JarProcessHarness implements AutoCloseable {
         command.add("--server.address=127.0.0.1");
         command.add("--textbuddy.auth.enabled=false");
         command.add("--textbuddy.llm.mode=stub");
-        command.add("--textbuddy.languagetool.mode=embedded");
-        command.add("--textbuddy.document.mode=kreuzberg");
 
         Process process = new ProcessBuilder(command)
                 .redirectErrorStream(true)

@@ -40,28 +40,7 @@ class CoreFlowsSmokeMvcTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.blocks[0].shortMessage").value("Spelling"));
-
-        mockMvc.perform(post("/api/word-synonym")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "word": "holprig",
-                                  "context": "Dieser Satz ist etwas holprig."
-                                }
-                                """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.synonyms[0]").value("hakelig"));
-
-        mockMvc.perform(post("/api/sentence-rewrite")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "sentence": "Dieser Satz ist etwas holprig."
-                                }
-                                """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.options[0]").value(containsString("Kurz gesagt")));
+                .andExpect(jsonPath("$.blocks[0].replacements[0]").value("the"));
     }
 
     @Test
@@ -86,6 +65,6 @@ class CoreFlowsSmokeMvcTest {
 
         mockMvc.perform(multipart("/api/convert/doc").file(file))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.html").value(containsString("<h1>Import Titel</h1>")));
+                .andExpect(jsonPath("$.html").value("<p># Import Titel</p><p>Erste Zeile</p>"));
     }
 }

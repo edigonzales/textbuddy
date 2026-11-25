@@ -93,11 +93,10 @@ class DocumentConversionServiceTest {
             return "<p>ignored</p>";
         };
         TextbuddyProperties properties = new TextbuddyProperties();
-        properties.getDocument().setMode(TextbuddyProperties.Document.Mode.STUB);
         properties.getDocument().setMaxUploadSize(DataSize.ofBytes(4));
         DocumentConversionService service = new DocumentConversionService(
                 doclingClient,
-                new DocumentImportFormatCatalog(properties),
+                new DocumentImportFormatCatalog(),
                 properties,
                 new EditorFriendlyHtmlPostProcessor()
         );
@@ -115,11 +114,10 @@ class DocumentConversionServiceTest {
 
     private DocumentConversionService createService(DoclingClient doclingClient) {
         TextbuddyProperties properties = new TextbuddyProperties();
-        properties.getDocument().setMode(TextbuddyProperties.Document.Mode.STUB);
 
         return new DocumentConversionService(
                 doclingClient,
-                new DocumentImportFormatCatalog(properties),
+                new DocumentImportFormatCatalog(),
                 properties,
                 new EditorFriendlyHtmlPostProcessor()
         );

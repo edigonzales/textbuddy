@@ -4,14 +4,12 @@ Der Textbuddy-MVP verwendet eine breite, TextMate-artige Arbeitsfläche. Farben,
 
 ## Sichtbare MVP-Werkzeuge
 
-Textbuddy startet bei jedem Aufruf im Modus **Überarbeiten**. In der normalen Oberfläche sind vier bewusst begrenzte Abläufe freigeschaltet:
+Textbuddy startet bei jedem Aufruf im Modus **Überarbeiten**. In der normalen Oberfläche sind vier bewusst begrenzte Abläufe verfügbar:
 
 - **Korrektur** prüft den vollständigen Text nach einer kurzen Eingabepause mit genau einer abbrechbaren Anfrage.
 - **Verständlicher schreiben** bearbeitet den vollständigen Text.
 - **Zusammenfassen** bietet die Varianten ein Satz, drei Sätze, ein Absatz, eine Seite und Management Summary.
 - **Richtlinien-Advisor** prüft Text gegen ausgewählte, gebündelte Demo-Regelwerke und führt ausgewählte Vorschläge über den gemeinsamen Diff-Review zurück.
-
-Die vorhandenen Backend-Funktionen und HTTP-Schnittstellen für Synonyme, Satzvarianten, Aufzählungen, Proofread, Formalität, Social Media, Medium, Figurenrede und eigene Aktionen bleiben bewusst erhalten. Zugehörige, nicht erreichbare Frontend-Module und versteckte DOM-Bereiche werden dagegen nicht mit ausgeliefert.
 
 ## Überarbeiten
 
@@ -82,14 +80,14 @@ Der Editor ist absichtlich ein Plaintext-Editor: Import behält Text und Absatzu
 | Bereich | Benötigte Anbindung |
 | --- | --- |
 | Editor, Undo/Redo, Statistik, Kopieren und DOCX | keine externe Anbindung |
-| Korrektur und Vorschläge | LanguageTool, eingebettet oder über HTTP |
+| Korrektur und Vorschläge | eingebettetes LanguageTool |
 | Verständlicher schreiben und Zusammenfassen | LLM-Provider |
 | Richtlinien prüfen und ausgewählte Vorschläge anwenden | LLM-Provider; gebündelte JSON-/PDF-Regelwerke |
-| Dokumentimport | lokaler Kreuzberg-Adapter oder HTTP-Dokumentdienst |
+| Dokumentimport | lokaler Kreuzberg-Adapter |
 | OCR | passende OCR-Laufzeit und Sprachdaten |
 | zentraler Betrieb | OIDC-Provider |
 
-Für Entwicklung und Tests stehen Stub-Adapter zur Verfügung; ihre Antworten sind keine fachliche Prüfung. Text und Uploads werden von Textbuddy nicht dauerhaft serverseitig gespeichert. Bei externen LLM-, Korrektur- oder Dokumentdiensten verlassen die verarbeiteten Inhalte den Textbuddy-Prozess. LLM-Ergebnisse sollten fachlich geprüft werden.
+Der LLM-Stub liefert für Entwicklung und Tests reproduzierbare Demo-Antworten. Text und Uploads werden von Textbuddy nicht dauerhaft serverseitig gespeichert. Bei Nutzung des konfigurierten LLM-Providers verlassen die dafür benötigten Texte den Textbuddy-Prozess. LLM-Ergebnisse sollten fachlich geprüft werden.
 
 ## Weiterführende Dokumentation
 

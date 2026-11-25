@@ -124,8 +124,6 @@ jobs:
             --server.address=127.0.0.1 \
             --textbuddy.auth.enabled=false \
             --textbuddy.llm.mode=stub \
-            --textbuddy.languagetool.mode=stub \
-            --textbuddy.document.mode=stub \
             > app.log 2>&1 &
           APP_PID=$!
 

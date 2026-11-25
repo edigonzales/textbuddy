@@ -36,7 +36,7 @@ class TextCorrectionControllerMvcTest {
                 .andExpect(jsonPath("$.original").value("This is teh text."))
                 .andExpect(jsonPath("$.blocks[0].offset").value(8))
                 .andExpect(jsonPath("$.blocks[0].length").value(3))
-                .andExpect(jsonPath("$.blocks[0].shortMessage").value("Spelling"))
+                .andExpect(jsonPath("$.blocks[0].shortMessage").value("Spelling mistake"))
                 .andExpect(jsonPath("$.blocks[0].replacements[0]").value("the"));
     }
 }

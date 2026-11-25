@@ -45,19 +45,13 @@ class QuickActionControllerMvcTest {
     }
 
     @Test
-    void rejectsOversizedTextAndCustomPromptBeforeCallingTheAdapter() throws Exception {
+    void rejectsOversizedTextBeforeCallingTheAdapter() throws Exception {
         MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
         String oversizedText = "{\"text\":\"" + "x".repeat(50_001) + "\",\"language\":\"de\"}";
-        String oversizedPrompt = "{\"text\":\"Text\",\"language\":\"de\",\"prompt\":\""
-                + "x".repeat(2_001) + "\"}";
 
         mockMvc.perform(post("/api/quick-actions/plain-language")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(oversizedText))
-                .andExpect(status().isBadRequest());
-        mockMvc.perform(post("/api/quick-actions/custom")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(oversizedPrompt))
                 .andExpect(status().isBadRequest());
     }
 }

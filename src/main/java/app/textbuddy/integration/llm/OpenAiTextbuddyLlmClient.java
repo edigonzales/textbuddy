@@ -3,13 +3,8 @@ package app.textbuddy.integration.llm;
 import app.textbuddy.advisor.AdvisorFixFinding;
 import app.textbuddy.advisor.AdvisorRuleCheck;
 import app.textbuddy.advisor.AdvisorRuleMatch;
-import app.textbuddy.quickaction.CharacterSpeechPrompt;
-import app.textbuddy.quickaction.FormalityPrompt;
-import app.textbuddy.quickaction.MediumCurrentUser;
-import app.textbuddy.quickaction.MediumPrompt;
 import app.textbuddy.quickaction.QuickActionRequest;
 import app.textbuddy.quickaction.QuickActionType;
-import app.textbuddy.quickaction.SocialMediaPrompt;
 import app.textbuddy.quickaction.SummarizePrompt;
 import tools.jackson.databind.JsonNode;
 
@@ -34,55 +29,17 @@ public final class OpenAiTextbuddyLlmClient implements TextbuddyLlmClient {
     }
 
     @Override
-    public String rewrite(QuickActionType action, QuickActionRequest request, MediumCurrentUser currentUser) {
+    public String rewrite(QuickActionType action, QuickActionRequest request) {
         PromptMessages prompts = switch (action) {
             case PLAIN_LANGUAGE -> quickActionPrompts.plainLanguage(request.text(), request.language());
-            case BULLET_POINTS -> quickActionPrompts.bulletPoints(request.text(), request.language());
-            case PROOFREAD -> quickActionPrompts.proofread(request.text(), request.language());
             case SUMMARIZE -> quickActionPrompts.summarize(
                     request.text(),
                     request.language(),
                     SummarizePrompt.fromOption(request.option()).orElseThrow()
             );
-            case FORMALITY -> quickActionPrompts.formality(
-                    request.text(),
-                    request.language(),
-                    FormalityPrompt.fromOption(request.option()).orElseThrow()
-            );
-            case SOCIAL_MEDIA -> quickActionPrompts.socialMedia(
-                    request.text(),
-                    request.language(),
-                    SocialMediaPrompt.fromOption(request.option()).orElseThrow()
-            );
-            case MEDIUM -> quickActionPrompts.medium(
-                    request.text(),
-                    request.language(),
-                    MediumPrompt.fromOption(request.option()).orElseThrow(),
-                    currentUser
-            );
-            case CHARACTER_SPEECH -> quickActionPrompts.characterSpeech(
-                    request.text(),
-                    request.language(),
-                    CharacterSpeechPrompt.fromOption(request.option()).orElseThrow()
-            );
-            case CUSTOM -> quickActionPrompts.custom(request.text(), request.language(), request.prompt());
         };
 
         return chatClient.completeText(prompts.systemPrompt(), prompts.userPrompt());
-    }
-
-    @Override
-    public List<String> rewriteSentence(String sentence, String context) {
-        PromptMessages prompts = structuredPrompts.sentenceRewrite(sentence, context);
-        JsonNode root = chatClient.completeJson(prompts.systemPrompt(), prompts.userPrompt());
-        return readStringArray(root.path("options"), root.path("alternatives"));
-    }
-
-    @Override
-    public List<String> suggestSynonyms(String word, String context) {
-        PromptMessages prompts = structuredPrompts.wordSynonym(word, context);
-        JsonNode root = chatClient.completeJson(prompts.systemPrompt(), prompts.userPrompt());
-        return root.isArray() ? readStringArray(root) : readStringArray(root.path("synonyms"));
     }
 
     @Override
@@ -115,28 +72,6 @@ public final class OpenAiTextbuddyLlmClient implements TextbuddyLlmClient {
     public String fixAdvisor(String text, List<AdvisorFixFinding> findings) {
         PromptMessages prompts = structuredPrompts.advisorFix(text, findings);
         return chatClient.completeText(prompts.systemPrompt(), prompts.userPrompt());
-    }
-
-    private List<String> readStringArray(JsonNode... candidates) {
-        for (JsonNode candidate : candidates) {
-            if (candidate != null && candidate.isArray()) {
-                List<String> values = new ArrayList<>();
-
-                for (JsonNode item : candidate) {
-                    if (item != null && item.isString()) {
-                        String value = normalize(item.asString(""));
-
-                        if (!value.isBlank()) {
-                            values.add(value);
-                        }
-                    }
-                }
-
-                return List.copyOf(values);
-            }
-        }
-
-        return List.of();
     }
 
     private String text(JsonNode node, String field) {

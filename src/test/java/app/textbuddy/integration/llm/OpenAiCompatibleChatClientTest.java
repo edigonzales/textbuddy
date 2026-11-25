@@ -56,12 +56,12 @@ class OpenAiCompatibleChatClientTest {
         AtomicInteger requestCount = new AtomicInteger();
         startServer(exchange -> {
             requestCount.incrementAndGet();
-            writeJson(exchange, 200, "{\"choices\":[{\"message\":{\"content\":\"```json\\n{\\\"synonyms\\\":[\\\"rasch\\\"]}\\n```\"}}]}");
+            writeJson(exchange, 200, "{\"choices\":[{\"message\":{\"content\":\"```json\\n{\\\"matches\\\":[{\\\"ruleId\\\":\\\"rule-1\\\"}]}\\n```\"}}]}");
         });
 
         JsonNode response = newClient().completeJson("System", "User");
 
-        assertThat(response.path("synonyms").path(0).asString()).isEqualTo("rasch");
+        assertThat(response.path("matches").path(0).path("ruleId").asString()).isEqualTo("rule-1");
         assertThat(requestCount).hasValue(1);
     }
 

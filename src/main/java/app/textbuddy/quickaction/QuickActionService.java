@@ -13,8 +13,6 @@ public final class QuickActionService {
 
     private static final String REQUIRED_OPTION = "Option ist erforderlich.";
     private static final String INVALID_OPTION = "Option ist ungültig.";
-    private static final String REQUIRED_PROMPT = "Custom-Prompt ist erforderlich.";
-    private static final String INVALID_PROMPT = "Custom-Prompt ist ungültig.";
 
     private final TextbuddyLlmClient llmClient;
 
@@ -24,8 +22,7 @@ public final class QuickActionService {
 
     public QuickActionResponse execute(
             QuickActionType action,
-            QuickActionRequest request,
-            MediumCurrentUser currentUser
+            QuickActionRequest request
     ) {
         QuickActionRequest normalized = normalize(request);
 
@@ -34,7 +31,7 @@ public final class QuickActionService {
         }
 
         validate(action, normalized);
-        String rewritten = Objects.requireNonNullElse(llmClient.rewrite(action, normalized, currentUser), "");
+        String rewritten = Objects.requireNonNullElse(llmClient.rewrite(action, normalized), "");
         if (rewritten.isBlank()) {
             throw new LlmProviderException("LLM-Provider lieferte keinen Antworttext.");
         }
@@ -42,19 +39,8 @@ public final class QuickActionService {
     }
 
     private void validate(QuickActionType action, QuickActionRequest request) {
-        switch (action) {
-            case SUMMARIZE -> requireOption(request.option(), SummarizePrompt.fromOption(request.option()).isPresent());
-            case FORMALITY -> requireOption(request.option(), FormalityPrompt.fromOption(request.option()).isPresent());
-            case SOCIAL_MEDIA -> requireOption(request.option(), SocialMediaPrompt.fromOption(request.option()).isPresent());
-            case MEDIUM -> requireOption(request.option(), MediumPrompt.fromOption(request.option()).isPresent());
-            case CHARACTER_SPEECH -> requireOption(
-                    request.option(),
-                    CharacterSpeechPrompt.fromOption(request.option()).isPresent()
-            );
-            case CUSTOM -> validatePrompt(request.prompt());
-            default -> {
-                // No action-specific input.
-            }
+        if (action == QuickActionType.SUMMARIZE) {
+            requireOption(request.option(), SummarizePrompt.fromOption(request.option()).isPresent());
         }
     }
 
@@ -67,24 +53,11 @@ public final class QuickActionService {
         }
     }
 
-    private void validatePrompt(String prompt) {
-        String normalized = normalize(prompt);
-
-        if (normalized.isBlank()) {
-            badRequest(REQUIRED_PROMPT);
-        }
-        if (normalized.codePoints().anyMatch(codePoint -> Character.isISOControl(codePoint)
-                && codePoint != '\n' && codePoint != '\r' && codePoint != '\t')) {
-            badRequest(INVALID_PROMPT);
-        }
-    }
-
     private QuickActionRequest normalize(QuickActionRequest request) {
         return new QuickActionRequest(
                 Objects.requireNonNullElse(request == null ? null : request.text(), ""),
                 normalize(request == null ? null : request.language()),
-                normalize(request == null ? null : request.option()),
-                normalize(request == null ? null : request.prompt())
+                normalize(request == null ? null : request.option())
         );
     }
 

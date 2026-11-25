@@ -194,12 +194,8 @@ test("starts with a wide editor and only the three MVP tools", async ({ page }) 
       return { actionBottom: actions?.bottom ?? 0, titleTop: title?.top ?? 0 };
     });
   expect(firstRibbonGroupPosition.titleTop).toBeGreaterThan(firstRibbonGroupPosition.actionBottom);
-  await expect(page.getByTestId("quick-action-proofread")).toHaveCount(0);
-  await expect(page.getByTestId("quick-action-bullet-points")).toHaveCount(0);
-  await expect(page.getByTestId("quick-action-formality")).toHaveCount(0);
   await expect(page.getByTestId("advisor-toggle")).toBeHidden();
   await expect(page.getByTestId("advisor-panel")).toBeHidden();
-  await expect(page.getByTestId("rewrite-bubble")).toHaveCount(0);
 
   const widths = await page.evaluate(() => ({
     viewport: document.documentElement.clientWidth,

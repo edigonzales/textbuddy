@@ -24,20 +24,19 @@ class DocumentConversionControllerMvcTest {
     private WebApplicationContext webApplicationContext;
 
     @Test
-    void postConvertDocReturnsHtmlForSupportedFiles() throws Exception {
+    void postConvertDocImportsAsciiDocSource() throws Exception {
         MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         MockMultipartFile file = new MockMultipartFile(
                 "file",
-                "import.md",
-                "text/markdown",
-                "# Import Titel\n\nErste Zeile".getBytes(StandardCharsets.UTF_8)
+                "import.adoc",
+                "text/asciidoc",
+                "= Import Titel\n\nErste Zeile".getBytes(StandardCharsets.UTF_8)
         );
 
         mockMvc.perform(multipart("/api/convert/doc").file(file))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.html").value(containsString("<h1>Import Titel</h1>")))
-                .andExpect(jsonPath("$.html").value(containsString("<p>Erste Zeile</p>")));
+                .andExpect(jsonPath("$.html").value("<p>= Import Titel</p><p>Erste Zeile</p>"));
     }
 
     @Test

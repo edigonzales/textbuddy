@@ -193,33 +193,7 @@ public class TextbuddyProperties {
 
     public static class LanguageTool {
 
-        public enum Mode {
-            EMBEDDED,
-            HTTP,
-            STUB
-        }
-
-        private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(10);
-        private Mode mode = Mode.EMBEDDED;
-        private String baseUrl = "";
         private String ngramPath = "";
-        private Duration timeout = DEFAULT_TIMEOUT;
-
-        public Mode getMode() {
-            return mode;
-        }
-
-        public void setMode(Mode mode) {
-            this.mode = mode == null ? Mode.EMBEDDED : mode;
-        }
-
-        public String getBaseUrl() {
-            return baseUrl;
-        }
-
-        public void setBaseUrl(String baseUrl) {
-            this.baseUrl = normalize(baseUrl);
-        }
 
         public String getNgramPath() {
             return ngramPath;
@@ -227,30 +201,6 @@ public class TextbuddyProperties {
 
         public void setNgramPath(String ngramPath) {
             this.ngramPath = normalize(ngramPath);
-        }
-
-        public Duration getTimeout() {
-            return timeout;
-        }
-
-        public void setTimeout(Duration timeout) {
-            this.timeout = timeout == null ? DEFAULT_TIMEOUT : timeout;
-        }
-
-        public boolean isEmbeddedMode() {
-            return mode == Mode.EMBEDDED;
-        }
-
-        public boolean isHttpMode() {
-            return mode == Mode.HTTP;
-        }
-
-        public boolean isStubMode() {
-            return mode == Mode.STUB;
-        }
-
-        public String normalizedBaseUrl() {
-            return normalize(baseUrl);
         }
 
         public Optional<Path> normalizedNgramPath() {
@@ -264,59 +214,14 @@ public class TextbuddyProperties {
                 throw new IllegalStateException("textbuddy.languagetool.ngram-path ist kein gültiger Pfad.", exception);
             }
         }
-
-        public Duration normalizedTimeout() {
-            return timeout == null || timeout.isZero() || timeout.isNegative() ? DEFAULT_TIMEOUT : timeout;
-        }
-
-        public void validateForHttp() {
-            if (isHttpMode() && normalizedBaseUrl().isBlank()) {
-                throw new IllegalStateException(
-                        "LanguageTool-HTTP-Modus ist aktiv, aber textbuddy.languagetool.base-url fehlt."
-                );
-            }
-        }
     }
 
     public static class Document {
 
-        public enum Mode {
-            KREUZBERG,
-            HTTP,
-            STUB
-        }
-
         private static final DataSize DEFAULT_MAX_UPLOAD_SIZE = DataSize.ofMegabytes(20);
         private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(45);
-        private Mode mode = Mode.KREUZBERG;
-        private String baseUrl = "";
-        private String apiKey = "";
         private DataSize maxUploadSize = DEFAULT_MAX_UPLOAD_SIZE;
         private Duration timeout = DEFAULT_TIMEOUT;
-
-        public Mode getMode() {
-            return mode;
-        }
-
-        public void setMode(Mode mode) {
-            this.mode = mode == null ? Mode.KREUZBERG : mode;
-        }
-
-        public String getBaseUrl() {
-            return baseUrl;
-        }
-
-        public void setBaseUrl(String baseUrl) {
-            this.baseUrl = normalize(baseUrl);
-        }
-
-        public String getApiKey() {
-            return apiKey;
-        }
-
-        public void setApiKey(String apiKey) {
-            this.apiKey = normalize(apiKey);
-        }
 
         public DataSize getMaxUploadSize() {
             return maxUploadSize;
@@ -334,22 +239,6 @@ public class TextbuddyProperties {
             this.timeout = timeout == null ? DEFAULT_TIMEOUT : timeout;
         }
 
-        public boolean isKreuzbergMode() {
-            return mode == Mode.KREUZBERG;
-        }
-
-        public boolean isHttpMode() {
-            return mode == Mode.HTTP;
-        }
-
-        public boolean isStubMode() {
-            return mode == Mode.STUB;
-        }
-
-        public String normalizedBaseUrl() {
-            return normalize(baseUrl);
-        }
-
         public long normalizedMaxUploadSizeBytes() {
             return maxUploadSize == null || maxUploadSize.toBytes() <= 0
                     ? DEFAULT_MAX_UPLOAD_SIZE.toBytes()
@@ -365,13 +254,6 @@ public class TextbuddyProperties {
         public String describeMaxUploadSize() {
             long mebibytes = normalizedMaxUploadSizeBytes() / (1024L * 1024L);
             return mebibytes <= 0 ? normalizedMaxUploadSizeBytes() + " Bytes" : mebibytes + " MB";
-        }
-        public void validateForHttp() {
-            if (isHttpMode() && normalizedBaseUrl().isBlank()) {
-                throw new IllegalStateException(
-                        "Dokumentimport-HTTP-Modus ist aktiv, aber textbuddy.document.base-url fehlt."
-                );
-            }
         }
     }
 

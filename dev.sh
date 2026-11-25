@@ -34,7 +34,7 @@ trap 'exit 130' INT TERM
 npm run watch --prefix frontend &
 dev_pids+=("$!")
 
-./gradlew bootRun --args='--server.address=127.0.0.1 --textbuddy.auth.enabled=false --textbuddy.llm.mode=stub --textbuddy.languagetool.mode=stub --textbuddy.document.mode=stub' &
+./gradlew bootRun --args='--server.address=127.0.0.1 --textbuddy.auth.enabled=false --textbuddy.llm.mode=stub' &
 dev_pids+=("$!")
 
 while kill -0 "${dev_pids[0]}" 2>/dev/null && kill -0 "${dev_pids[1]}" 2>/dev/null; do

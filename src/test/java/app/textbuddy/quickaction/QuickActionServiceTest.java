@@ -23,16 +23,15 @@ class QuickActionServiceTest {
 
     @ParameterizedTest
     @MethodSource("validActions")
-    void executesEveryQuickAction(QuickActionType action, String option, String prompt) {
+    void executesEveryQuickAction(QuickActionType action, String option) {
         TextbuddyLlmClient llmClient = mock(TextbuddyLlmClient.class);
-        QuickActionRequest request = new QuickActionRequest("Ausgangstext", "de-CH", option, prompt);
-        MediumCurrentUser user = MediumCurrentUser.placeholder();
-        when(llmClient.rewrite(eq(action), any(QuickActionRequest.class), eq(user))).thenReturn("Ergebnis");
+        QuickActionRequest request = new QuickActionRequest("Ausgangstext", "de-CH", option);
+        when(llmClient.rewrite(eq(action), any(QuickActionRequest.class))).thenReturn("Ergebnis");
 
-        QuickActionResponse response = new QuickActionService(llmClient).execute(action, request, user);
+        QuickActionResponse response = new QuickActionService(llmClient).execute(action, request);
 
         assertThat(response.text()).isEqualTo("Ergebnis");
-        verify(llmClient).rewrite(eq(action), any(QuickActionRequest.class), eq(user));
+        verify(llmClient).rewrite(eq(action), any(QuickActionRequest.class));
     }
 
     @Test
@@ -41,8 +40,7 @@ class QuickActionServiceTest {
 
         QuickActionResponse response = new QuickActionService(llmClient).execute(
                 QuickActionType.PLAIN_LANGUAGE,
-                new QuickActionRequest("  ", "de", null, null),
-                MediumCurrentUser.placeholder()
+                new QuickActionRequest("  ", "de", null)
         );
 
         assertThat(response.text()).isEmpty();
@@ -52,16 +50,15 @@ class QuickActionServiceTest {
     @Test
     void preservesOuterWhitespaceInInputAndOutput() {
         TextbuddyLlmClient llmClient = mock(TextbuddyLlmClient.class);
-        when(llmClient.rewrite(eq(QuickActionType.PLAIN_LANGUAGE), any(), any())).thenReturn("  Ergebnis  ");
+        when(llmClient.rewrite(eq(QuickActionType.PLAIN_LANGUAGE), any())).thenReturn("  Ergebnis  ");
 
         QuickActionResponse response = new QuickActionService(llmClient).execute(
                 QuickActionType.PLAIN_LANGUAGE,
-                new QuickActionRequest("  Ausgangstext  ", " de ", null, null),
-                MediumCurrentUser.placeholder()
+                new QuickActionRequest("  Ausgangstext  ", " de ", null)
         );
 
         ArgumentCaptor<QuickActionRequest> request = ArgumentCaptor.forClass(QuickActionRequest.class);
-        verify(llmClient).rewrite(eq(QuickActionType.PLAIN_LANGUAGE), request.capture(), any());
+        verify(llmClient).rewrite(eq(QuickActionType.PLAIN_LANGUAGE), request.capture());
         assertThat(request.getValue().text()).isEqualTo("  Ausgangstext  ");
         assertThat(response.text()).isEqualTo("  Ergebnis  ");
     }
@@ -69,26 +66,18 @@ class QuickActionServiceTest {
     @Test
     void rejectsBlankProviderOutput() {
         TextbuddyLlmClient llmClient = mock(TextbuddyLlmClient.class);
-        when(llmClient.rewrite(eq(QuickActionType.PLAIN_LANGUAGE), any(), any())).thenReturn("  ");
+        when(llmClient.rewrite(eq(QuickActionType.PLAIN_LANGUAGE), any())).thenReturn("  ");
 
         assertThatThrownBy(() -> new QuickActionService(llmClient).execute(
                 QuickActionType.PLAIN_LANGUAGE,
-                new QuickActionRequest("Ausgangstext", "de", null, null),
-                MediumCurrentUser.placeholder()
+                new QuickActionRequest("Ausgangstext", "de", null)
         )).isInstanceOf(LlmProviderException.class);
     }
 
     private static Stream<Arguments> validActions() {
         return Stream.of(
-                Arguments.of(QuickActionType.PLAIN_LANGUAGE, null, null),
-                Arguments.of(QuickActionType.BULLET_POINTS, null, null),
-                Arguments.of(QuickActionType.PROOFREAD, null, null),
-                Arguments.of(QuickActionType.SUMMARIZE, "sentence", null),
-                Arguments.of(QuickActionType.FORMALITY, "formal", null),
-                Arguments.of(QuickActionType.SOCIAL_MEDIA, "linkedin", null),
-                Arguments.of(QuickActionType.MEDIUM, "report", null),
-                Arguments.of(QuickActionType.CHARACTER_SPEECH, "direct_speech", null),
-                Arguments.of(QuickActionType.CUSTOM, null, "Kürzen")
+                Arguments.of(QuickActionType.PLAIN_LANGUAGE, null),
+                Arguments.of(QuickActionType.SUMMARIZE, "sentence")
         );
     }
 }

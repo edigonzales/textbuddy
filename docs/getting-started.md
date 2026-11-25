@@ -12,7 +12,7 @@ Diese Anleitung bringt dich von einem frisch ausgecheckten Repository zu einer l
 - Node.js 20.19 oder neuer und npm
 - Git
 
-Für lokale OCR von Bildern und Scan-PDFs werden zusätzlich eine von Kreuzberg unterstützte OCR-Laufzeit und passende Sprachdaten benötigt. Für den ersten Start verwenden wir stattdessen den Stub-Dokumentimport.
+Für lokale OCR von Bildern und Scan-PDFs werden zusätzlich eine von Kreuzberg unterstützte OCR-Laufzeit und passende Sprachdaten benötigt. Textdateien und Dokumente mit Textebene lassen sich auch ohne OCR importieren.
 
 ## 2. Repository holen
 
@@ -25,13 +25,11 @@ Textbuddy benötigt keine externe Datenbank. Beim ersten Build laden Gradle und 
 
 ## 3. Textbuddy ohne externe Dienste kennenlernen
 
-Starte alle externen Anbindungen zunächst im Stub-Modus:
+Starte Textbuddy mit dem LLM-Stub.
 
 ```bash
 TEXTBUDDY_AUTH_ENABLED=false \
 TEXTBUDDY_LLM_MODE=stub \
-TEXTBUDDY_LANGUAGETOOL_MODE=stub \
-TEXTBUDDY_DOCUMENT_MODE=stub \
 ./gradlew bootRun --args='--server.address=127.0.0.1'
 ```
 
@@ -42,12 +40,10 @@ Die Werte vor `./gradlew` gelten nur für diesen Start und verändern deine Shel
 | Einstellung | Wirkung in diesem Einstieg |
 | --- | --- |
 | `TEXTBUDDY_AUTH_ENABLED=false` | Textbuddy verlangt lokal keine Anmeldung. |
-| `TEXTBUDDY_LLM_MODE=stub` | Quick Actions, Satzalternativen, Synonyme und Advisor verwenden reproduzierbare Demo-Antworten. |
-| `TEXTBUDDY_LANGUAGETOOL_MODE=stub` | Die Korrektur erkennt nur einige fest eingebaute Testfehler. |
-| `TEXTBUDDY_DOCUMENT_MODE=stub` | Textdateien werden vereinfacht importiert; für binäre Dokumente gibt es nur einen Platzhalter. |
+| `TEXTBUDDY_LLM_MODE=stub` | Verständlicher schreiben, Zusammenfassungen und Advisor verwenden reproduzierbare Demo-Antworten. |
 | `server.address=127.0.0.1` | Der Server ist nur über die Loopback-Adresse des eigenen Rechners erreichbar. |
 
-Damit kannst du die Oberfläche und die Abläufe ausprobieren. Die Ergebnisse eignen sich nicht zur Beurteilung der fachlichen Qualität von LLM, Korrektur oder Dokumentimport.
+Die Korrektur mit LanguageTool und der Dokumentimport mit Kreuzberg laufen im Textbuddy-Prozess.
 
 ## 4. Einen echten LLM-Provider lokal testen
 
@@ -59,13 +55,11 @@ export TEXTBUDDY_LLM_API_KEY='dein-api-key'
 export TEXTBUDDY_LLM_MODEL='dein-modell'
 ```
 
-Starte Textbuddy nun mit dem echten LLM, aber weiterhin mit den lokalen Stub-Adaptern für Korrektur und Dokumentimport:
+Starte Textbuddy nun mit dem konfigurierten LLM-Provider.
 
 ```bash
 TEXTBUDDY_AUTH_ENABLED=false \
 TEXTBUDDY_LLM_MODE=provider \
-TEXTBUDDY_LANGUAGETOOL_MODE=stub \
-TEXTBUDDY_DOCUMENT_MODE=stub \
 ./gradlew bootRun --args='--server.address=127.0.0.1'
 ```
 
@@ -193,11 +187,11 @@ Der Standard beträgt 30 Sekunden. Prüfe zuerst Erreichbarkeit und Provider-Aus
 
 ### Der Provider liefert keinen nutzbaren Antworttext
 
-Prüfe, ob die Antwort dem Chat-Completions-Format entspricht und `choices[0].message.content` enthält. Strukturierte Funktionen wie Synonyme, Satzalternativen und Advisor benötigen darin zusätzlich das angeforderte JSON. Textbuddy gibt Provider-Antwortkörper absichtlich nicht in Fehlermeldungen aus.
+Prüfe, ob die Antwort dem Chat-Completions-Format entspricht und `choices[0].message.content` enthält. Die Advisor-Regelprüfung benötigt darin zusätzlich das angeforderte JSON. Textbuddy gibt Provider-Antwortkörper absichtlich nicht in Fehlermeldungen aus.
 
 ### OCR funktioniert nicht
 
-Der Stub-Dokumentimport funktioniert ohne OCR. Für echte Scan-Erkennung müssen die OCR-Laufzeit und die benötigten Sprachdaten auf dem Zielsystem installiert sein. Die CI prüft diesen Pfad separat.
+Für echte Scan-Erkennung müssen die OCR-Laufzeit und die benötigten Sprachdaten auf dem Zielsystem installiert sein. Die CI prüft diesen Pfad separat.
 
 ## Optional: Tests und Release-Build für Mitentwickelnde
 

@@ -29,9 +29,9 @@ class JarPerformanceSmokeTest {
             assertThat(correction.response().statusCode()).isEqualTo(200);
             assertThat(correction.durationMs()).isLessThan(CORRECTION_LIMIT_MS);
 
-            MeasuredResponse rewrite = measure(() -> harness.postJson("/api/sentence-rewrite", """
+            MeasuredResponse rewrite = measure(() -> harness.postJson("/api/quick-actions/plain-language", """
                     {
-                      "sentence": "Dieser Satz ist etwas holprig."
+                      "text": "Dieser Satz ist etwas holprig."
                     }
                     """));
             assertThat(rewrite.response().statusCode()).isEqualTo(200);

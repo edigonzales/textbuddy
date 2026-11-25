@@ -19,25 +19,7 @@ class PromptSourceGoldenTest {
     }
 
     @Test
-    void mediumEmailPromptContainsOriginalGuidelineMarkers() {
-        String prompt = promptCatalog.get("source/quick-actions/medium-email.system.txt");
-
-        assertThat(prompt).contains("KISS-Prinzip");
-        assertThat(prompt).contains("Betreff: [Optimierter Betreff]");
-    }
-
-    @Test
-    void officialLetterPromptContainsOriginalCitizenCentricPrinciples() {
-        String prompt = promptCatalog.get("source/quick-actions/medium-official-letter.system.txt");
-
-        assertThat(prompt).contains("Persönlich, Sachgerecht, Verständlich");
-        assertThat(prompt).contains("Brückenschlag");
-    }
-
-    @Test
     void structuredPromptsContainOriginalInstructionFragments() {
-        assertThat(promptCatalog.get("source/structured/sentence-rewrite.user.txt"))
-                .contains("Generate at least 1 but maximum of 5 alternative rewrites");
         assertThat(promptCatalog.get("source/structured/advisor.user.txt"))
                 .contains("Review only the given rules")
                 .contains("matchedText` must be copied exactly");

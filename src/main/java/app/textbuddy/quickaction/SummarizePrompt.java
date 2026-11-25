@@ -18,10 +18,6 @@ public enum SummarizePrompt {
         this.option = option;
     }
 
-    public String option() {
-        return option;
-    }
-
     public static Optional<SummarizePrompt> fromOption(String value) {
         String normalized = value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
 

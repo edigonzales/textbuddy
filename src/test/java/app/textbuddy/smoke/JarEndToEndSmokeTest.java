@@ -24,23 +24,6 @@ class JarEndToEndSmokeTest {
             assertThat(correction.statusCode()).isEqualTo(200);
             assertThat(correction.body()).contains("Spelling");
 
-            HttpResponse<String> synonym = harness.postJson("/api/word-synonym", """
-                    {
-                      "word": "holprig",
-                      "context": "Dieser Satz ist etwas holprig."
-                    }
-                    """);
-            assertThat(synonym.statusCode()).isEqualTo(200);
-            assertThat(synonym.body()).contains("hakelig");
-
-            HttpResponse<String> rewrite = harness.postJson("/api/sentence-rewrite", """
-                    {
-                      "sentence": "Dieser Satz ist etwas holprig."
-                    }
-                    """);
-            assertThat(rewrite.statusCode()).isEqualTo(200);
-            assertThat(rewrite.body()).contains("Kurz gesagt");
-
             HttpResponse<String> quickAction = harness.postJson("/api/quick-actions/plain-language", """
                     {
                       "text": "Der komplizierte Sachverhalt ist relevant.",

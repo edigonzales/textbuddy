@@ -18,18 +18,6 @@ class StructuredPromptComposerTest {
     );
 
     @Test
-    void sentenceRewriteIncludesSentenceAndContext() {
-        PromptMessages promptMessages = promptComposer.sentenceRewrite(
-                "Dieser Satz ist holprig.",
-                "Der Absatz gibt weitere Hintergründe."
-        );
-
-        assertThat(promptMessages.systemPrompt()).contains("valid JSON only");
-        assertThat(promptMessages.userPrompt()).contains("Dieser Satz ist holprig.");
-        assertThat(promptMessages.userPrompt()).contains("Der Absatz gibt weitere Hintergründe.");
-    }
-
-    @Test
     void advisorIncludesOriginalRuleInstructionAndSerializedRules() {
         PromptMessages promptMessages = promptComposer.advisor(
                 "Bitte downloaden Sie das Formular.",

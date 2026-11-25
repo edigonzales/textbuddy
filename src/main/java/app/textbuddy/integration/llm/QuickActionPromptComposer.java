@@ -1,10 +1,5 @@
 package app.textbuddy.integration.llm;
 
-import app.textbuddy.quickaction.CharacterSpeechPrompt;
-import app.textbuddy.quickaction.FormalityPrompt;
-import app.textbuddy.quickaction.MediumCurrentUser;
-import app.textbuddy.quickaction.MediumPrompt;
-import app.textbuddy.quickaction.SocialMediaPrompt;
 import app.textbuddy.quickaction.SummarizePrompt;
 
 import java.util.Map;
@@ -39,58 +34,9 @@ public final class QuickActionPromptComposer {
         );
     }
 
-    public PromptMessages bulletPoints(String text, String language) {
-        return quickAction("source/quick-actions/bullet-points.system.txt", text, language, Map.of());
-    }
-
-    public PromptMessages proofread(String text, String language) {
-        return quickAction("source/quick-actions/proofread.system.txt", text, language, Map.of());
-    }
-
     public PromptMessages summarize(String text, String language, SummarizePrompt prompt) {
         return quickAction("source/quick-actions/summarize.system.txt", text, language, Map.of(
                 "summary_requirement", summarizeRequirement(prompt)
-        ));
-    }
-
-    public PromptMessages formality(String text, String language, FormalityPrompt prompt) {
-        return quickAction("source/quick-actions/formality.system.txt", text, language, Map.of(
-                "formality_instruction", formalityInstruction(prompt)
-        ));
-    }
-
-    public PromptMessages socialMedia(String text, String language, SocialMediaPrompt prompt) {
-        return quickAction("source/quick-actions/social-media.system.txt", text, language, Map.of(
-                "platform", socialPlatform(prompt)
-        ));
-    }
-
-    public PromptMessages medium(
-            String text,
-            String language,
-            MediumPrompt prompt,
-            MediumCurrentUser currentUser
-    ) {
-        MediumCurrentUser resolvedCurrentUser = currentUser == null ? MediumCurrentUser.placeholder() : currentUser;
-
-        return quickAction(mediumSourceKey(prompt), text, language, Map.of(
-                "given_name", resolvedCurrentUser.givenName(),
-                "family_name", resolvedCurrentUser.familyName(),
-                "email", resolvedCurrentUser.email()
-        ));
-    }
-
-    public PromptMessages characterSpeech(String text, String language, CharacterSpeechPrompt prompt) {
-        return quickAction("source/quick-actions/character-speech.system.txt", text, language, Map.of(
-                "sub_instructions", prompt == CharacterSpeechPrompt.DIRECT_SPEECH
-                        ? promptCatalog.get("source/quick-actions/character-speech.direct.txt")
-                        : promptCatalog.get("source/quick-actions/character-speech.indirect.txt")
-        ));
-    }
-
-    public PromptMessages custom(String text, String language, String prompt) {
-        return quickAction("source/quick-actions/custom.system.txt", text, language, Map.of(
-                "custom_instruction", normalize(prompt)
         ));
     }
 
@@ -137,30 +83,6 @@ public final class QuickActionPromptComposer {
                     A management summary is a summary of the key points of a text for the management team.
                     A management summary's length should be one paragraph up to one page long, depending on the length of the text.
                     """.strip();
-        };
-    }
-
-    private String formalityInstruction(FormalityPrompt prompt) {
-        return switch (prompt) {
-            case FORMAL -> "formal";
-            case INFORMAL -> "informal";
-        };
-    }
-
-    private String socialPlatform(SocialMediaPrompt prompt) {
-        return switch (prompt) {
-            case BLUESKY -> "Bluesky";
-            case INSTAGRAM -> "Instagram";
-            case LINKEDIN -> "LinkedIn";
-        };
-    }
-
-    private String mediumSourceKey(MediumPrompt prompt) {
-        return switch (prompt) {
-            case EMAIL -> "source/quick-actions/medium-email.system.txt";
-            case OFFICIAL_LETTER -> "source/quick-actions/medium-official-letter.system.txt";
-            case PRESENTATION -> "source/quick-actions/medium-presentation.system.txt";
-            case REPORT -> "source/quick-actions/medium-report.system.txt";
         };
     }
 

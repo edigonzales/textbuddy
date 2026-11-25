@@ -11,7 +11,7 @@ export default defineConfig({
   },
   webServer: {
     command:
-      "./gradlew bootRun --args='--server.address=127.0.0.1 --server.port=4174 --textbuddy.auth.enabled=false --textbuddy.llm.mode=stub --textbuddy.languagetool.mode=stub --textbuddy.document.mode=stub'",
+      "./gradlew bootRun --args='--server.address=127.0.0.1 --server.port=4174 --textbuddy.auth.enabled=false --textbuddy.llm.mode=stub'",
     cwd: resolve(__dirname, ".."),
     reuseExistingServer: false,
     timeout: 120_000,

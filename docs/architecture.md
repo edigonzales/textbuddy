@@ -8,8 +8,8 @@ Textbuddy ist eine einzelne Spring-Boot-Anwendung für einen zentral betriebenen
 flowchart LR
     Browser["Browser: JTE + Tiptap"] -->|"JSON / Multipart / SSE"| App["Textbuddy Spring Boot"]
     App --> LLM["OpenAI-kompatibles LLM"]
-    App --> LT["LanguageTool eingebettet oder HTTP"]
-    App --> Doc["Kreuzberg eingebettet oder Dokument-HTTP-API"]
+    App --> LT["LanguageTool eingebettet"]
+    App --> Doc["Kreuzberg lokal"]
     App --> Advisor["Advisor-Metadaten und PDFs im JAR"]
 ```
 
@@ -28,8 +28,6 @@ Neue Abstraktionen sollen nur entstehen, wenn es tatsächlich mehrere Implementi
 | Endpoint | Format | Zweck |
 | --- | --- | --- |
 | `POST /api/text-correction` | JSON | Rechtschreib- und Stilhinweise |
-| `POST /api/sentence-rewrite` | JSON | Satzalternativen |
-| `POST /api/word-synonym` | JSON | Synonyme im Kontext |
 | `POST /api/quick-actions/{action}` | JSON | Volltext-Aktionen; eine abschliessende Antwort |
 | `GET /api/advisor/docs` | JSON | Statischer Advisor-Katalog |
 | `GET /api/advisor/doc/{name}` | PDF | Referenzdokument für einen neuen Browser-Tab |
@@ -53,4 +51,4 @@ Advisor-Befunde verwenden halb offene UTF-16-Indizes in den unveränderten Reque
 
 Im Produktionsmodus sind nur Login, Fehlerseite und statische Assets öffentlich; alle übrigen Routen verlangen eine OIDC-Anmeldung. Zustandsändernde Browseranfragen tragen ein CSRF-Token. Ein ungeschützter Start ist nur bei expliziter Loopback-Bindung möglich. Upload-, Text- und Promptgrössen werden vor teurer Verarbeitung geprüft. CSP und `X-Frame-Options: SAMEORIGIN` erlauben eigene PDF-Ressourcen, aber keine fremde Einbettung.
 
-Externe Provider sind eine eigene Datenschutzgrenze: LLM-Texte beziehungsweise Dokumente im HTTP-Modus verlassen den Textbuddy-Prozess. Die Entscheidung dafür und die Aufbewahrungsregeln des Providers gehören zur Betriebskonfiguration.
+Externe Provider sind eine eigene Datenschutzgrenze: Für LLM-Funktionen erforderliche Texte verlassen den Textbuddy-Prozess. Die Entscheidung dafür und die Aufbewahrungsregeln des Providers gehören zur Betriebskonfiguration.
