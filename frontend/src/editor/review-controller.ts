@@ -1,9 +1,9 @@
 import type { Editor } from "@tiptap/core";
 import { closeHistory } from "@tiptap/pm/history";
 
-import { setEditorPlainText } from "./editor-content";
+import { getPlainText, plainTextDocument } from "./plain-text";
 import { dispatchWorkspaceBusy } from "./events";
-import { createRewriteDiff, resolveRewriteDiff, rewriteDiffHunks } from "./rewrite-diff";
+import { resolveRewriteDiff, rewriteDiffHunks } from "./rewrite-diff";
 import type { RewriteDiffHunk, RewriteDiffHunkStatus, RewriteDiffSegment } from "./types";
 import { t } from "./ui-i18n";
 
@@ -15,28 +15,21 @@ export interface ReadabilityComparison {
   difference: number;
 }
 
-export interface ReviewResult {
-  committed: boolean;
-  changed: boolean;
-}
-
 export interface ReviewOptions {
   source: string;
   title: string;
   original: string;
-  rewritten: string;
+  segments: RewriteDiffSegment[];
   readability?: ReadabilityComparison | null;
   retry?: () => void;
-  onClose?: (result: ReviewResult) => void;
+  onClose?: (changed: boolean) => void;
 }
 
 export interface ReviewController {
-  isOpen(): boolean;
   open(options: ReviewOptions): boolean;
 }
 
 interface ReviewState extends ReviewOptions {
-  segments: RewriteDiffSegment[];
   statuses: Record<string, RewriteDiffHunkStatus>;
 }
 
@@ -95,6 +88,21 @@ function textSpan(text: string, className = ""): HTMLSpanElement {
   return span;
 }
 
+function changedText(text: string, className = ""): HTMLSpanElement {
+  const visible = text.replace(/[ \t\n\u00a0\u202f]/gu, (character) => {
+    switch (character) {
+      case " ": return "·";
+      case "\t": return "⇥";
+      case "\n": return "↵\n";
+      case "\u00a0": return "⍽";
+      default: return "␣";
+    }
+  });
+  const span = textSpan(visible, className);
+  if (visible !== text) span.title = t("review.whitespace");
+  return span;
+}
+
 export function formatReviewDifference(value: number): string {
   if (value === 0) return "±0.0";
   return `${value > 0 ? "+" : "−"}${Math.abs(value).toFixed(1)}`;
@@ -133,13 +141,13 @@ export function createReviewController(editor: Editor, root: HTMLElement): Revie
     wrapper.className = "diff-hunk-inline";
     wrapper.dataset.diffStatus = status;
     if (status === "accepted") {
-      wrapper.append(textSpan(hunk.addedText, "diff-added"));
+      wrapper.append(changedText(hunk.addedText, "diff-added"));
     } else if (status === "rejected") {
-      wrapper.append(textSpan(hunk.removedText, "diff-rejected"));
+      wrapper.append(changedText(hunk.removedText, "diff-rejected"));
     } else {
-      if (hunk.removedText) wrapper.append(textSpan(hunk.removedText, "diff-removed"));
+      if (hunk.removedText) wrapper.append(changedText(hunk.removedText, "diff-removed"));
       if (hunk.removedText && hunk.addedText) wrapper.append(textSpan(" → ", "diff-arrow"));
-      if (hunk.addedText) wrapper.append(textSpan(hunk.addedText, "diff-added"));
+      if (hunk.addedText) wrapper.append(changedText(hunk.addedText, "diff-added"));
       const actions = document.createElement("span");
       actions.className = "diff-hunk-actions";
       actions.append(decisionButton(hunk, "accepted"), decisionButton(hunk, "rejected"));
@@ -155,9 +163,9 @@ export function createReviewController(editor: Editor, root: HTMLElement): Revie
       return;
     }
     const status = review?.statuses[segment.hunk.key] ?? "pending";
-    before.append(textSpan(segment.hunk.removedText,
+    before.append(changedText(segment.hunk.removedText,
       status === "accepted" ? "diff-rejected" : status === "pending" ? "diff-removed" : ""));
-    after.append(textSpan(segment.hunk.addedText,
+    after.append(changedText(segment.hunk.addedText,
       status === "rejected" ? "diff-rejected" : "diff-added"));
     if (status === "pending") {
       const beforeActions = document.createElement("span");
@@ -202,25 +210,29 @@ export function createReviewController(editor: Editor, root: HTMLElement): Revie
     controls.splitMode.setAttribute("aria-pressed", mode === "split" ? "true" : "false");
   }
 
-  function close(result: ReviewResult): void {
+  function close(changed: boolean): void {
     const finished = review;
     review = null;
     delete root.dataset.reviewSource;
     setView("editor");
     dispatchWorkspaceBusy(root, false, "editor");
-    finished?.onClose?.(result);
+    finished?.onClose?.(changed);
     editor.commands.focus();
   }
 
   function commit(): void {
     if (!review) return;
+    if (getPlainText(editor) !== review.original) {
+      if (controls) controls.progress.textContent = t("review.stale");
+      return;
+    }
     const resolvedText = resolveRewriteDiff(review.segments, review.statuses);
     const changed = resolvedText !== review.original;
     if (changed) {
       editor.view.dispatch(closeHistory(editor.state.tr));
-      setEditorPlainText(editor, resolvedText, { emitUpdate: true });
+      editor.commands.setContent(plainTextDocument(resolvedText));
     }
-    close({ committed: true, changed });
+    close(changed);
   }
 
   function decide(key: string, status: RewriteDiffHunkStatus): void {
@@ -235,10 +247,10 @@ export function createReviewController(editor: Editor, root: HTMLElement): Revie
     rewriteDiffHunks(review.segments).forEach((hunk) => { review!.statuses[hunk.key] = "accepted"; });
     commit();
   });
-  controls?.rejectAll.addEventListener("click", () => close({ committed: false, changed: false }));
+  controls?.rejectAll.addEventListener("click", () => close(false));
   controls?.retry.addEventListener("click", () => {
     const retry = review?.retry;
-    close({ committed: false, changed: false });
+    close(false);
     retry?.();
   });
   controls?.inlineMode.addEventListener("click", () => { mode = "inline"; render(); });
@@ -246,22 +258,20 @@ export function createReviewController(editor: Editor, root: HTMLElement): Revie
 
   setView("editor");
   return {
-    isOpen: () => review !== null,
     open(options) {
-      if (!controls || review) return false;
-      const diff = createRewriteDiff(options.original, options.rewritten);
+      if (!controls || review || getPlainText(editor) !== options.original) return false;
+      const hunks = rewriteDiffHunks(options.segments);
       review = {
         ...options,
         readability: options.readability ?? null,
-        segments: diff.segments,
-        statuses: Object.fromEntries(rewriteDiffHunks(diff.segments).map((hunk) => [hunk.key, "pending"])),
+        statuses: Object.fromEntries(hunks.map((hunk) => [hunk.key, "pending"])),
       };
       mode = "inline";
       root.dataset.reviewSource = options.source;
       setView("diff-review");
       dispatchWorkspaceBusy(root, true, "diff-review", "review");
       render();
-      (diff.hasChanges ? controls.acceptAll : (options.retry ? controls.retry : controls.rejectAll)).focus();
+      (hunks.length ? controls.acceptAll : (options.retry ? controls.retry : controls.rejectAll)).focus();
       return true;
     },
   };

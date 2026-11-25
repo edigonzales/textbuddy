@@ -13,6 +13,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -47,6 +48,8 @@ class AdvisorValidationControllerMvcTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM))
                 .andExpect(content().string(containsString("event:validation")))
                 .andExpect(content().string(containsString("event:progress")))
+                .andExpect(content().string(containsString("event:complete")))
+                .andExpect(content().string(containsString("\"truncated\":false")))
                 .andExpect(content().string(containsString("\"checked\":3")))
                 .andExpect(content().string(containsString("\"checked\":4")))
                 .andExpect(content().string(containsString("\"documentName\":\"empfehlungen-anglizismen-maerz-2020\"")))
@@ -60,7 +63,7 @@ class AdvisorValidationControllerMvcTest {
     }
 
     @Test
-    void postAdvisorFixReturnsAnAtomicCorrectedText() throws Exception {
+    void postAdvisorFixReturnsOnlySelectedReplacements() throws Exception {
         MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
 
         mockMvc.perform(post("/api/advisor/fix")
@@ -73,13 +76,15 @@ class AdvisorValidationControllerMvcTest {
                                     "ruleId": "per-sofort-vermeiden",
                                     "start": 11,
                                     "end": 21,
+                                    "matchedText": "per sofort",
                                     "suggestion": "ab sofort"
                                   }]
                                 }
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(content().string(containsString("  Das gilt ab sofort.  ")));
+                .andExpect(jsonPath("$[0]").value("ab sofort"))
+                .andExpect(jsonPath("$.length()").value(1));
     }
 
     @Test
@@ -96,6 +101,7 @@ class AdvisorValidationControllerMvcTest {
                                     "ruleId": "per-sofort-vermeiden",
                                     "start": 0,
                                     "end": 3,
+                                    "matchedText": "per sofort",
                                     "suggestion": "ab sofort"
                                   }]
                                 }

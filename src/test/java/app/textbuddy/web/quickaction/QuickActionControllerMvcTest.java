@@ -39,7 +39,7 @@ class QuickActionControllerMvcTest {
         String body = "{\"text\":\"Text\",\"language\":\"de\",\"option\":\"unbekannt\"}";
 
         mockMvc.perform(post("/api/quick-actions/unbekannt").contentType(MediaType.APPLICATION_JSON).content(body))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isNotFound());
         mockMvc.perform(post("/api/quick-actions/summarize").contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isBadRequest());
     }

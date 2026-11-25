@@ -16,7 +16,10 @@ test("parses validation, progress and error SSE events", () => {
     data: { checked: 3, total: 10 },
   });
   assert.equal(parseAdvisorSseBlock("event:unknown\ndata:{}"), null);
-  assert.equal(parseAdvisorSseBlock("event:error\ndata:not-json"), null);
+  assert.throws(() => parseAdvisorSseBlock("event:error\ndata:not-json"), SyntaxError);
+  assert.deepEqual(parseAdvisorSseBlock('event:complete\ndata:{"truncated":true}'), {
+    event: "complete", data: { truncated: true },
+  });
 });
 
 test("consumes fragmented and coalesced SSE blocks", async () => {

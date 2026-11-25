@@ -6,12 +6,13 @@ import { shouldTriggerCorrectionImmediately } from "./correction-scheduling";
 import { plainTextRangeToDocumentRange, setTextCorrections } from "./correction-mark-extension";
 import { extractErrorMessage } from "./http-error";
 import {
-  createLocalDictionaryStore,
+  loadDictionaryWords,
+  saveDictionaryWords,
   filterCorrectionBlocksByDictionary,
   isDictionaryWord,
   normalizeDictionaryWord,
 } from "./local-dictionary";
-import { getPlainText, plainTextToHtml } from "./plain-text";
+import { getPlainText, plainTextDocument } from "./plain-text";
 import { normalizeRequestedLanguage } from "./request-language";
 import type {
   CorrectionElements,
@@ -28,7 +29,6 @@ const DEBOUNCE_MESSAGE = t("correction.status.debounce");
 const LOADING_MESSAGE = t("correction.status.loading");
 const ERROR_MESSAGE = t("correction.status.error");
 const AUTH_REQUIRED_MESSAGE = t("correction.status.authRequired");
-const RUNNING_MESSAGE = t("correction.status.running");
 
 function createProblemBadge(index: number): HTMLElement {
   const badge = document.createElement("span");
@@ -40,10 +40,6 @@ function createProblemBadge(index: number): HTMLElement {
 function extractProblemText(original: string, block: TextCorrectionBlock): string {
   return original.slice(block.offset, block.offset + block.length) ||
     t("correction.problem.emptyFragment");
-}
-
-function cloneBlock(block: TextCorrectionBlock): TextCorrectionBlock {
-  return { ...block, replacements: [...block.replacements] };
 }
 
 function isAbortError(error: unknown): boolean {
@@ -74,13 +70,8 @@ export function mountTextCorrectionBridge(
   let currentBlocks: TextCorrectionBlock[] = [];
   let panelState: "idle" | "loading" | "success" | "error" = "idle";
   let panelMessage = IDLE_MESSAGE;
-  let dictionaryWords = new Set<string>();
+  const dictionaryWords = new Set(loadDictionaryWords());
   let visibleBlockCount = 0;
-  const dictionaryStore = createLocalDictionaryStore();
-
-  function isMutatingActionRunning(): boolean {
-    return root.dataset.quickActionRunning === "true" || root.dataset.advisorRunning === "true";
-  }
 
   function setPanelState(
     state: "idle" | "loading" | "success" | "error",
@@ -121,14 +112,14 @@ export function mountTextCorrectionBridge(
     }
   }
 
-  function applySuggestion(block: TextCorrectionBlock, replacement: string): void {
+  function applySuggestion(original: string, block: TextCorrectionBlock, replacement: string): void {
     const activeText = getPlainText(editor);
-    if (block.offset < 0 || block.offset + block.length > activeText.length) {
+    if (activeText !== original || !currentBlocks.includes(block)) {
       return;
     }
     const nextText = activeText.slice(0, block.offset) + replacement +
       activeText.slice(block.offset + block.length);
-    editor.commands.setContent(plainTextToHtml(nextText), { emitUpdate: true });
+    editor.commands.setContent(plainTextDocument(nextText));
     editor.commands.focus();
   }
 
@@ -140,22 +131,21 @@ export function mountTextCorrectionBridge(
       return;
     }
 
-    dictionaryWords = new Set([...dictionaryWords, normalizedWord]);
+    dictionaryWords.add(normalizedWord);
     elements.dictionaryInput.value = "";
     elements.dictionaryInput.setCustomValidity("");
     renderDictionaryWords();
     refreshRenderedState();
-    void dictionaryStore.save([...dictionaryWords]);
+    saveDictionaryWords([...dictionaryWords]);
   }
 
   function removeDictionaryWord(word: string): void {
     if (!dictionaryWords.delete(word)) {
       return;
     }
-    dictionaryWords = new Set(dictionaryWords);
     renderDictionaryWords();
     refreshRenderedState();
-    void dictionaryStore.save([...dictionaryWords]);
+    saveDictionaryWords([...dictionaryWords]);
   }
 
   function createProblemItem(
@@ -200,10 +190,11 @@ export function mountTextCorrectionBridge(
         button.type = "button";
         button.className = "suggestion-button";
         button.dataset.testid = "correction-suggestion";
-        button.textContent = replacement;
+        button.textContent = replacement === "" ? t("correction.suggestion.delete")
+          : replacement.trim() ? replacement : t("correction.suggestion.whitespace");
         button.addEventListener("click", (event) => {
           event.stopPropagation();
-          applySuggestion(block, replacement);
+          applySuggestion(original, block, replacement);
         });
         suggestions.append(button);
       });
@@ -309,7 +300,10 @@ export function mountTextCorrectionBridge(
       ) {
         return;
       }
-      currentBlocks = (payload.blocks ?? []).map(cloneBlock);
+      if (payload.original !== originalText || !Array.isArray(payload.blocks)) {
+        throw new Error(ERROR_MESSAGE);
+      }
+      currentBlocks = payload.blocks;
       renderProblems(originalText, "success");
     } catch (error) {
       if (isAbortError(error) || requestId !== latestRequestId) {
@@ -403,17 +397,6 @@ export function mountTextCorrectionBridge(
     const nextText = (event as CustomEvent<EditorTextChangedDetail>).detail.text;
     const previousText = currentText;
     currentText = nextText;
-    if (isMutatingActionRunning()) {
-      latestRequestId += 1;
-      if (typeof debounceHandle === "number") {
-        window.clearTimeout(debounceHandle);
-        debounceHandle = undefined;
-      }
-      abortActiveRequest();
-      clearCorrections();
-      setPanelState("idle", RUNNING_MESSAGE);
-      return;
-    }
     scheduleCorrection(previousText, nextText);
   });
 
@@ -423,11 +406,6 @@ export function mountTextCorrectionBridge(
     }
   });
 
-  void dictionaryStore.load().then((words) => {
-    dictionaryWords = new Set(words);
-    renderDictionaryWords();
-    refreshRenderedState();
-  });
   renderDictionaryWords();
   setPanelState("idle", isApiLocked(root) ? AUTH_REQUIRED_MESSAGE : IDLE_MESSAGE);
 }

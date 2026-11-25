@@ -3,9 +3,9 @@ package app.textbuddy.integration.llm;
 import app.textbuddy.advisor.AdvisorFixFinding;
 import app.textbuddy.advisor.AdvisorRuleCheck;
 import app.textbuddy.advisor.AdvisorRuleMatch;
-import app.textbuddy.quickaction.QuickActionRequest;
-import app.textbuddy.quickaction.QuickActionType;
 import app.textbuddy.quickaction.SummarizePrompt;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -13,20 +13,15 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
+@Component
+@ConditionalOnProperty(prefix = "textbuddy.llm", name = "mode", havingValue = "stub")
 public final class StubTextbuddyLlmClient implements TextbuddyLlmClient {
 
     @Override
-    public String rewrite(QuickActionType action, QuickActionRequest request) {
-        String text = normalize(request.text());
-
-        if (text.isBlank()) {
-            return "";
-        }
-
-        return switch (action) {
-            case PLAIN_LANGUAGE -> plainLanguage(text, request.language());
-            case SUMMARIZE -> summarize(text, SummarizePrompt.fromOption(request.option()).orElseThrow());
-        };
+    public String rewrite(String text, String language, SummarizePrompt summary) {
+        String content = normalize(text);
+        if (content.isBlank()) return "";
+        return summary == null ? plainLanguage(content, language) : summarize(content, summary);
     }
 
     @Override
@@ -54,18 +49,8 @@ public final class StubTextbuddyLlmClient implements TextbuddyLlmClient {
     }
 
     @Override
-    public String fixAdvisor(String text, List<AdvisorFixFinding> findings) {
-        String result = text == null ? "" : text;
-        List<AdvisorFixFinding> ordered = findings == null ? List.of() : findings.stream()
-                .sorted(Comparator.comparingInt(AdvisorFixFinding::start).reversed())
-                .toList();
-        for (AdvisorFixFinding finding : ordered) {
-            if (finding.start() >= 0 && finding.end() <= result.length()
-                    && result.substring(finding.start(), finding.end()).equals(finding.matchedText())) {
-                result = result.substring(0, finding.start()) + finding.suggestion() + result.substring(finding.end());
-            }
-        }
-        return result;
+    public List<String> fixAdvisor(List<AdvisorFixFinding> findings) {
+        return findings.stream().map(AdvisorFixFinding::suggestion).toList();
     }
 
     private String plainLanguage(String text, String language) {

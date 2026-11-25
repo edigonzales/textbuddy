@@ -7,7 +7,6 @@ import {
 import { t } from "./ui-i18n";
 
 interface TextStatisticsElements {
-  panel: HTMLElement;
   characters: HTMLElement;
   words: HTMLElement;
   syllables: HTMLElement;
@@ -18,14 +17,6 @@ interface TextStatisticsElements {
   flesch: HTMLElement;
   fleschLabel: HTMLElement;
   fleschFill: HTMLElement;
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max);
-}
-
-function formatDecimal(value: number, digits: number): string {
-  return value.toFixed(digits);
 }
 
 function findElements(): TextStatisticsElements | null {
@@ -66,7 +57,6 @@ function findElements(): TextStatisticsElements | null {
   }
 
   return {
-    panel,
     characters,
     words,
     syllables,
@@ -95,16 +85,16 @@ export function mountTextStatisticsPanel(): void {
 
   function render(text: string): void {
     const stats = calculateTextStatistics(text);
-    const normalizedFlesch = clamp((stats.fleschScore / 120) * 100, 0, 100);
+    const normalizedFlesch = Math.min(100, Math.max(0, (stats.fleschScore / 120) * 100));
 
     resolvedElements.characters.textContent = String(stats.characters);
     resolvedElements.words.textContent = String(stats.words);
     resolvedElements.syllables.textContent = String(stats.syllables);
     resolvedElements.sentences.textContent = String(stats.sentences);
-    resolvedElements.averageSentenceLength.textContent = formatDecimal(stats.averageSentenceLength, 1);
-    resolvedElements.averageSyllablesPerWord.textContent = formatDecimal(stats.averageSyllablesPerWord, 2);
+    resolvedElements.averageSentenceLength.textContent = stats.averageSentenceLength.toFixed(1);
+    resolvedElements.averageSyllablesPerWord.textContent = stats.averageSyllablesPerWord.toFixed(2);
     resolvedElements.fleschSection.hidden = !supportsGermanFlesch(resolvedLanguage.value);
-    resolvedElements.flesch.textContent = formatDecimal(stats.fleschScore, 1);
+    resolvedElements.flesch.textContent = stats.fleschScore.toFixed(1);
     resolvedElements.fleschLabel.textContent = t(
       describeFleschScoreKey(stats.fleschScore, stats.words > 0),
     );

@@ -66,6 +66,16 @@ class OpenAiCompatibleChatClientTest {
     }
 
     @Test
+    void rejectsATruncatedProviderResponseEvenWhenItsContentIsValidJson() throws Exception {
+        startServer(exchange -> writeJson(exchange, 200,
+                "{\"choices\":[{\"finish_reason\":\"length\",\"message\":{\"content\":\"[]\"}}]}"));
+
+        assertThatThrownBy(() -> newClient().completeJson("System", "User"))
+                .isInstanceOf(LlmProviderException.class)
+                .hasMessageContaining("unvollständige Antwort");
+    }
+
+    @Test
     void doesNotRetryInvalidJson() throws Exception {
         AtomicInteger requestCount = new AtomicInteger();
         startServer(exchange -> {

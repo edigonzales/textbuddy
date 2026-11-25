@@ -2,11 +2,10 @@ package app.textbuddy.integration.llm;
 
 import app.textbuddy.config.TextbuddyProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.core.JacksonException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
@@ -18,8 +17,6 @@ import java.util.List;
 import java.util.Objects;
 
 public final class OpenAiCompatibleChatClient {
-
-    private static final Logger log = LoggerFactory.getLogger(OpenAiCompatibleChatClient.class);
 
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
@@ -34,11 +31,6 @@ public final class OpenAiCompatibleChatClient {
         this.objectMapper = Objects.requireNonNull(objectMapper);
         this.properties = Objects.requireNonNull(properties);
 
-        log.info(
-                "LLM client: provider mode ({}, model={})",
-                properties.normalizedBaseUrl(),
-                properties.getModel()
-        );
     }
 
     public String completeText(String systemPrompt, String userPrompt) {
@@ -57,7 +49,7 @@ public final class OpenAiCompatibleChatClient {
 
             return content;
         } catch (JacksonException exception) {
-            throw new LlmProviderException("LLM-Antwort konnte nicht gelesen werden.", exception);
+            throw new LlmProviderException("LLM-Antwort konnte nicht gelesen werden.");
         } catch (IOException exception) {
             throw new LlmProviderException("LLM-Antwort konnte nicht gelesen werden.", exception);
         } catch (InterruptedException exception) {
@@ -72,9 +64,7 @@ public final class OpenAiCompatibleChatClient {
         try {
             return parseEmbeddedJson(response);
         } catch (JacksonException exception) {
-            throw new LlmProviderException("LLM-Antwort enthielt kein gültiges JSON.", exception);
-        } catch (IOException exception) {
-            throw new LlmProviderException("LLM-Antwort enthielt kein gültiges JSON.", exception);
+            throw new LlmProviderException("LLM-Antwort enthielt kein gültiges JSON.");
         }
     }
 
@@ -118,8 +108,12 @@ public final class OpenAiCompatibleChatClient {
     }
 
     private String extractMessageContent(JsonNode root) throws IOException {
-        JsonNode contentNode = root.path("choices").path(0).path("message").path("content");
-        return extractContentValue(contentNode);
+        JsonNode choice = root.path("choices").path(0);
+        String reason = choice.path("finish_reason").asString("");
+        if ("length".equals(reason) || "content_filter".equals(reason)) {
+            throw new LlmProviderException("LLM-Provider lieferte eine unvollständige Antwort.");
+        }
+        return extractContentValue(choice.path("message").path("content"));
     }
 
     private String extractContentValue(JsonNode contentNode) throws IOException {
@@ -152,44 +146,12 @@ public final class OpenAiCompatibleChatClient {
         throw new IOException("Unbekanntes LLM-Content-Format.");
     }
 
-    private JsonNode parseEmbeddedJson(String response) throws IOException {
-        String trimmed = normalize(response);
-
-        if (trimmed.startsWith("```")) {
-            trimmed = stripCodeFence(trimmed);
+    private JsonNode parseEmbeddedJson(String response) {
+        String json = response.strip();
+        if (json.startsWith("```") && json.endsWith("```")) {
+            json = stripCodeFence(json);
         }
-
-        if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
-            return objectMapper.readTree(trimmed);
-        }
-
-        int objectStart = trimmed.indexOf('{');
-        int arrayStart = trimmed.indexOf('[');
-        int start = resolveJsonStart(objectStart, arrayStart);
-
-        if (start >= 0) {
-            char open = trimmed.charAt(start);
-            char close = open == '{' ? '}' : ']';
-            int end = trimmed.lastIndexOf(close);
-
-            if (end > start) {
-                return objectMapper.readTree(trimmed.substring(start, end + 1));
-            }
-        }
-
-        return objectMapper.readTree(trimmed);
-    }
-
-    private int resolveJsonStart(int objectStart, int arrayStart) {
-        if (objectStart < 0) {
-            return arrayStart;
-        }
-
-        if (arrayStart < 0) {
-            return objectStart;
-        }
-
-        return Math.min(objectStart, arrayStart);
+        return objectMapper.reader().with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS).readTree(json);
     }
 
     private String stripCodeFence(String value) {

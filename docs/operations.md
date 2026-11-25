@@ -31,7 +31,7 @@ Ohne explizite Loopback-Adresse verweigert die Anwendung diesen Start. Diese Ein
 ### Adapter
 
 - `textbuddy.llm.mode=provider|stub`: Produktion verwendet normalerweise `provider` und verlangt Base-URL, API-Key und Modell-ID.
-- LanguageTool ist eingebettet. Ein optionaler N-Gram-Pfad verbessert bestimmte Regeln.
+- LanguageTool prüft Texte im Anwendungsprozess.
 - Kreuzberg verarbeitet Dokumente lokal. OCR benötigt eine auf der Zielplattform funktionierende Kreuzberg-OCR-Laufzeit und passende Sprachdaten.
 
 Der LLM-Stub liefert für Entwicklung und Tests reproduzierbare Demo-Antworten.
@@ -48,7 +48,7 @@ Der LLM-Stub liefert für Entwicklung und Tests reproduzierbare Demo-Antworten.
 
 Textbuddy wiederholt fehlgeschlagene Provider- oder Netzwerkaufrufe nicht automatisch. Retries, falls fachlich gewünscht, müssen bewusst ausserhalb der Anwendung mit Idempotenz- und Kostenbetrachtung entworfen werden. Nur lokale OCR darf bei einem sprachbezogenen OCR-Fehler einmal mit der Standardsprache wiederholen.
 
-Eine Advisor-Prüfung verarbeitet maximal fünf Dokumente und zwanzig Regeln. Beim aktuellen Katalog mit zehn Regeln sind das vier serielle LLM-Aufrufe in Dreierbatches; das SSE-Timeout wird aus der maximalen Batchzahl und dem LLM-Timeout abgeleitet. Das Anwenden ausgewählter Befunde verursacht genau einen zusätzlichen atomaren LLM-Aufruf. Die Summe der angezeigten Vorschläge ist durch `textbuddy.input.max-prompt-length` begrenzt.
+Eine Advisor-Prüfung verarbeitet maximal fünf Dokumente und zwanzig Regeln. Beim aktuellen Katalog mit zehn Regeln sind das vier serielle LLM-Aufrufe in Dreierbatches; das SSE-Timeout wird aus der maximalen Batchzahl und dem LLM-Timeout abgeleitet. Das Anwenden ausgewählter Befunde verursacht genau einen zusätzlichen atomaren LLM-Aufruf. Die Summe der ausgewählten Vorschläge ist durch `textbuddy.input.max-prompt-length` begrenzt.
 
 ## Reverse Proxy
 
@@ -72,8 +72,7 @@ Jede Anfrage erhält eine `X-Trace-ID`. Eine gültige eingehende ID darf maximal
 Textbuddy hält keine serverseitigen Nutzdaten dauerhaft. Zu sichern sind daher nur:
 
 - Deployment- und Secret-Konfiguration,
-- das veröffentlichte JAR beziehungsweise Installer-ZIP,
-- gegebenenfalls externe LanguageTool-N-Gram-Daten.
+- das veröffentlichte JAR beziehungsweise Installer-ZIP.
 
 Das browserlokale Wörterbuch kann nicht serverseitig wiederhergestellt werden. Advisor-Dokumente sind Bestandteil des JARs und werden durch ein neues Release aktualisiert.
 

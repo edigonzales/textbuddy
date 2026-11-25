@@ -26,18 +26,11 @@ class StubTextbuddyLlmClientAdvisorTest {
     }
 
     @Test
-    void advisorFixAppliesSelectedSuggestionsFromRightToLeft() {
-        String text = "Bitte downloaden und per sofort lesen.";
+    void advisorFixReturnsTheSelectedSuggestionsInOrder() {
         List<AdvisorFixFinding> findings = List.of(
-                finding("downloaden-statt-herunterladen", 6, 16, "downloaden", "herunterladen"),
-                finding("per-sofort-vermeiden", 21, 31, "per sofort", "ab sofort")
+                new AdvisorFixFinding("downloaden", "Bitte downloaden.", "Prüfen", "herunterladen"),
+                new AdvisorFixFinding("per sofort", "Per sofort lesen.", "Prüfen", "ab sofort")
         );
-
-        assertThat(client.fixAdvisor(text, findings)).isEqualTo("Bitte herunterladen und ab sofort lesen.");
-    }
-
-    private AdvisorFixFinding finding(String id, int start, int end, String matched, String suggestion) {
-        return new AdvisorFixFinding("doc", "Dokument", id, "Regel", "Prüfen", suggestion,
-                start, end, matched, suggestion);
+        assertThat(client.fixAdvisor(findings)).containsExactly("herunterladen", "ab sofort");
     }
 }

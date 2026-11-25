@@ -7,7 +7,6 @@ public record AdvisorValidationEvent(
         String ruleId,
         String ruleTitle,
         int page,
-        String pageLabel,
         String message,
         String matchedText,
         String excerpt,

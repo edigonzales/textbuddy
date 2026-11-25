@@ -24,7 +24,7 @@ class KreuzbergDoclingClientOcrFallbackTest {
             throw new KreuzbergException("OCR failed", ErrorCode.OCR_ERROR);
         });
 
-        assertThatThrownBy(() -> client.convertToHtml(
+        assertThatThrownBy(() -> client.extractText(
                 new DocumentUpload("scan.png", "image/png", "noop".getBytes(StandardCharsets.UTF_8)),
                 "fr"
         ))
@@ -42,7 +42,7 @@ class KreuzbergDoclingClientOcrFallbackTest {
             throw new KreuzbergException("OCR failed", ErrorCode.OCR_ERROR);
         });
 
-        assertThatThrownBy(() -> client.convertToHtml(
+        assertThatThrownBy(() -> client.extractText(
                 new DocumentUpload("scan.png", "image/png", "noop".getBytes(StandardCharsets.UTF_8)),
                 "de"
         ))
@@ -58,7 +58,7 @@ class KreuzbergDoclingClientOcrFallbackTest {
             throw new KreuzbergException("extraction timeout reached", ErrorCode.GENERIC_ERROR);
         });
 
-        assertThatThrownBy(() -> client.convertToHtml(
+        assertThatThrownBy(() -> client.extractText(
                 new DocumentUpload("scan.pdf", "application/pdf", "noop".getBytes(StandardCharsets.UTF_8)),
                 "en"
         ))
@@ -72,7 +72,7 @@ class KreuzbergDoclingClientOcrFallbackTest {
             throw new KreuzbergException("cannot parse", ErrorCode.PARSING_ERROR);
         });
 
-        assertThatThrownBy(() -> client.convertToHtml(
+        assertThatThrownBy(() -> client.extractText(
                 new DocumentUpload("kaputt.pdf", "application/pdf", "noop".getBytes(StandardCharsets.UTF_8)),
                 "de"
         ))

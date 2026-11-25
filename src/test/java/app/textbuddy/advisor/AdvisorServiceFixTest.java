@@ -21,27 +21,28 @@ import static org.mockito.Mockito.when;
 class AdvisorServiceFixTest {
 
     @Test
-    void fixValidatesCanonicalFindingAndPreservesOuterWhitespace() {
+    void fixSendsOnlyVerifiedFindingsToTheProvider() {
         AdvisorDocument document = document();
         AdvisorCatalog catalog = mock(AdvisorCatalog.class);
         when(catalog.find("schreibweisungen")).thenReturn(Optional.of(document));
         TextbuddyLlmClient client = mock(TextbuddyLlmClient.class);
-        when(client.fixAdvisor(anyString(), anyList())).thenReturn("Das gilt ab sofort.");
-        AdvisorService service = new AdvisorService(catalog, client, 3);
+        when(client.fixAdvisor(anyList())).thenReturn(List.of(""));
+        AdvisorService service = new AdvisorService(catalog, client);
         String original = "  Das gilt per sofort.  ";
 
-        AdvisorFixResponse response = service.fix(new AdvisorFixRequest(original, List.of(
-                new AdvisorFixRequest.Finding("schreibweisungen", "per-sofort-vermeiden", 11, 21, "ab sofort")
+        List<String> response = service.fix(new AdvisorFixRequest(original, List.of(
+                new AdvisorFixRequest.Finding("schreibweisungen", "per-sofort-vermeiden", 11, 21, "per sofort", " ")
         )));
 
-        assertThat(response.text()).isEqualTo("  Das gilt ab sofort.  ");
+        assertThat(response).containsExactly("");
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<AdvisorFixFinding>> captor = ArgumentCaptor.forClass(List.class);
-        verify(client).fixAdvisor(org.mockito.ArgumentMatchers.eq(original), captor.capture());
+        verify(client).fixAdvisor(captor.capture());
         assertThat(captor.getValue()).singleElement().satisfies(finding -> {
             assertThat(finding.matchedText()).isEqualTo("per sofort");
             assertThat(finding.instructions()).isEqualTo("Prüfe die Formulierung.");
-            assertThat(finding.suggestion()).isEqualTo("ab sofort");
+            assertThat(finding.suggestion()).isEqualTo(" ");
+            assertThat(finding.context()).isEqualTo(original);
         });
     }
 
@@ -49,18 +50,18 @@ class AdvisorServiceFixTest {
     void fixRejectsEmptyUnknownDuplicateAndMismatchedFindings() {
         AdvisorCatalog catalog = mock(AdvisorCatalog.class);
         when(catalog.find("schreibweisungen")).thenReturn(Optional.of(document()));
-        AdvisorService service = new AdvisorService(catalog, mock(TextbuddyLlmClient.class), 3);
+        AdvisorService service = new AdvisorService(catalog, mock(TextbuddyLlmClient.class));
         String text = "Das gilt per sofort.";
 
         assertBadRequest(() -> service.fix(new AdvisorFixRequest(text, List.of())));
         assertBadRequest(() -> service.fix(new AdvisorFixRequest(text, List.of(
-                new AdvisorFixRequest.Finding("unbekannt", "regel", 9, 19, "ab sofort")
+                new AdvisorFixRequest.Finding("unbekannt", "regel", 9, 19, "per sofort", "ab sofort")
         ))));
         assertBadRequest(() -> service.fix(new AdvisorFixRequest(text, List.of(
-                new AdvisorFixRequest.Finding("schreibweisungen", "per-sofort-vermeiden", 0, 3, "ab sofort")
+                new AdvisorFixRequest.Finding("schreibweisungen", "per-sofort-vermeiden", 0, 3, "per sofort", "ab sofort")
         ))));
         AdvisorFixRequest.Finding valid = new AdvisorFixRequest.Finding(
-                "schreibweisungen", "per-sofort-vermeiden", 9, 19, "ab sofort"
+                "schreibweisungen", "per-sofort-vermeiden", 9, 19, "per sofort", "ab sofort"
         );
         assertBadRequest(() -> service.fix(new AdvisorFixRequest(text, List.of(valid, valid))));
         assertBadRequest(() -> service.fix(new AdvisorFixRequest(text, Collections.nCopies(21, valid))));
@@ -71,16 +72,16 @@ class AdvisorServiceFixTest {
         AdvisorCatalog catalog = mock(AdvisorCatalog.class);
         when(catalog.find("schreibweisungen")).thenReturn(Optional.of(document()));
         TextbuddyLlmClient client = mock(TextbuddyLlmClient.class);
-        when(client.fixAdvisor(anyString(), anyList())).thenReturn("   ");
-        AdvisorService service = new AdvisorService(catalog, client, 3);
+        when(client.fixAdvisor(anyList())).thenReturn(List.of());
+        AdvisorService service = new AdvisorService(catalog, client);
 
         assertThatThrownBy(() -> service.fix(new AdvisorFixRequest("Das gilt per sofort.", List.of(
-                new AdvisorFixRequest.Finding("schreibweisungen", "per-sofort-vermeiden", 9, 19, "ab sofort")
+                new AdvisorFixRequest.Finding("schreibweisungen", "per-sofort-vermeiden", 9, 19, "per sofort", "ab sofort")
         )))).isInstanceOf(LlmProviderException.class);
     }
 
     @Test
-    void validationLocatesRepeatedUnicodeTextWithoutTrimmingTheRequest() {
+    void validationUsesExactContextToLocateTheSecondOccurrence() {
         AdvisorDocument document = document();
         AdvisorCatalog catalog = mock(AdvisorCatalog.class);
         when(catalog.documents()).thenReturn(List.of(document));
@@ -88,18 +89,18 @@ class AdvisorServiceFixTest {
         TextbuddyLlmClient client = mock(TextbuddyLlmClient.class);
         when(client.validate(anyString(), anyList())).thenReturn(List.of(
                 new AdvisorRuleMatch("schreibweisungen", "per-sofort-vermeiden", "per sofort", "", "", ""),
-                new AdvisorRuleMatch("schreibweisungen", "per-sofort-vermeiden", "per sofort", "", "", "")
+                new AdvisorRuleMatch("schreibweisungen", "per-sofort-vermeiden", "per sofort", "später per sofort.", "", "")
         ));
         RecordingHandler handler = new RecordingHandler();
-        String text = "  Ä: per sofort – später per sofort.  ";
+        String text = "  🌱: per sofort – später per sofort.  ";
 
-        new AdvisorService(catalog, client, 3).validate(
+        new AdvisorService(catalog, client).validate(
                 new AdvisorValidateRequest(text, List.of("schreibweisungen")), handler
         );
 
         verify(client).validate(org.mockito.ArgumentMatchers.eq(text), anyList());
-        assertThat(handler.events).extracting(AdvisorValidationEvent::start).containsExactly(5, 25);
-        assertThat(handler.events).extracting(AdvisorValidationEvent::end).containsExactly(15, 35);
+        assertThat(handler.events).extracting(AdvisorValidationEvent::start).containsExactly(text.lastIndexOf("per sofort"));
+        assertThat(handler.events).extracting(AdvisorValidationEvent::end).containsExactly(text.lastIndexOf("per sofort") + 10);
         assertThat(handler.progress).containsExactly(new AdvisorProgressEvent(1, 1));
     }
 
@@ -115,7 +116,7 @@ class AdvisorServiceFixTest {
         ));
         RecordingHandler handler = new RecordingHandler();
 
-        new AdvisorService(catalog, client, 3).validate(
+        new AdvisorService(catalog, client).validate(
                 new AdvisorValidateRequest("Das gilt per sofort.", List.of("schreibweisungen")), handler
         );
 
@@ -141,7 +142,6 @@ class AdvisorServiceFixTest {
         private final java.util.ArrayList<AdvisorProgressEvent> progress = new java.util.ArrayList<>();
         @Override public void validation(AdvisorValidationEvent event) { events.add(event); }
         @Override public void progress(AdvisorProgressEvent event) { progress.add(event); }
-        @Override public void complete() { }
-        @Override public void error(String message) { }
+        @Override public void complete(boolean truncated) { }
     }
 }

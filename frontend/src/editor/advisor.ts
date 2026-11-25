@@ -7,6 +7,7 @@ import { dispatchWorkspaceBusy } from "./events";
 import { extractErrorMessage } from "./http-error";
 import { getPlainText } from "./plain-text";
 import type { ReviewController } from "./review-controller";
+import type { RewriteDiffSegment } from "./types";
 import { t } from "./ui-i18n";
 
 export interface AdvisorDocument {
@@ -15,21 +16,17 @@ export interface AdvisorDocument {
 
 export interface AdvisorFinding {
   stableKey: string; documentName: string; documentTitle: string; ruleId: string; ruleTitle: string;
-  page: number; pageLabel: string; message: string; matchedText: string; excerpt: string;
+  page: number; message: string; matchedText: string; excerpt: string;
   suggestion: string; referenceUrl: string; start: number; end: number;
 }
 
 export type AdvisorSseEvent =
   | { event: "validation"; data: AdvisorFinding }
   | { event: "progress"; data: { checked: number; total: number } }
+  | { event: "complete"; data: { truncated: boolean } }
   | { event: "error"; data: { message?: string } };
 
 interface FindingState extends AdvisorFinding { decision: "fix" | "skip"; }
-
-function isAbortError(error: unknown): boolean {
-  return error instanceof DOMException ? error.name === "AbortError"
-    : error instanceof Error && error.name === "AbortError";
-}
 
 export function parseAdvisorSseBlock(block: string): AdvisorSseEvent | null {
   let eventName = "message";
@@ -38,12 +35,8 @@ export function parseAdvisorSseBlock(block: string): AdvisorSseEvent | null {
     if (line.startsWith("event:")) eventName = line.slice(6).trim();
     if (line.startsWith("data:")) data.push(line.slice(5).trimStart());
   });
-  if (!data.length || !["validation", "progress", "error"].includes(eventName)) return null;
-  try {
-    return { event: eventName, data: JSON.parse(data.join("\n")) } as AdvisorSseEvent;
-  } catch {
-    return null;
-  }
+  if (!["validation", "progress", "complete", "error"].includes(eventName)) return null;
+  return { event: eventName, data: JSON.parse(data.join("\n")) } as AdvisorSseEvent;
 }
 
 export async function consumeAdvisorSse(
@@ -65,8 +58,6 @@ export async function consumeAdvisorSse(
       });
       if (done) break;
     }
-    const finalEvent = parseAdvisorSseBlock(buffer);
-    if (finalEvent) onEvent(finalEvent);
   } finally {
     reader.releaseLock();
   }
@@ -96,7 +87,7 @@ export function mountAdvisor(editor: Editor, root: HTMLElement, review: ReviewCo
   let originalText: string | null = null;
   let activeController: AbortController | null = null;
   let activePhase: "validate" | "fix" | null = null;
-  let operationId = 0;
+  let truncated = false;
 
   function setStatus(message: string, error = false): void {
     status.textContent = message;
@@ -105,7 +96,6 @@ export function mountAdvisor(editor: Editor, root: HTMLElement, review: ReviewCo
   }
 
   function setBusy(busy: boolean): void {
-    root.dataset.advisorRunning = busy ? "true" : "false";
     documentsElement.querySelectorAll<HTMLInputElement>("input").forEach((input) => {
       input.disabled = busy || (!input.checked && selectedDocuments.size >= 5);
     });
@@ -119,11 +109,11 @@ export function mountAdvisor(editor: Editor, root: HTMLElement, review: ReviewCo
   const selectedCount = (): number => findings.filter((finding) => finding.decision === "fix").length;
 
   function syncActions(): void {
-    const locked = isApiLocked(root);
+    const locked = isApiLocked(root) || root.dataset.workspaceBusy === "true";
     startButton.disabled = locked || selectedDocuments.size === 0 || !getPlainText(editor).trim()
-      || activeController !== null || review.isOpen();
+      || activeController !== null;
     fixButton.hidden = findings.length === 0;
-    fixButton.disabled = locked || selectedCount() === 0 || activeController !== null || review.isOpen();
+    fixButton.disabled = locked || selectedCount() === 0 || activeController !== null;
   }
 
   function clearFindingState(message = ""): void {
@@ -131,6 +121,7 @@ export function mountAdvisor(editor: Editor, root: HTMLElement, review: ReviewCo
     checked = 0;
     total = 0;
     originalText = null;
+    truncated = false;
     findingsElement.replaceChildren();
     fixButton.hidden = true;
     setTextCorrections(editor, []);
@@ -262,28 +253,29 @@ export function mountAdvisor(editor: Editor, root: HTMLElement, review: ReviewCo
     }
   }
 
-  function finishOperation(controller: AbortController): void {
+  function finishOperation(controller: AbortController, reviewOpened = false): void {
     if (activeController !== controller) return;
     activeController = null;
     activePhase = null;
     setBusy(false);
-    dispatchWorkspaceBusy(root, false, "editor");
+    if (!reviewOpened) dispatchWorkspaceBusy(root, false, "editor");
     syncActions();
   }
 
   async function validate(): Promise<void> {
+    if (activeController || root.dataset.workspaceBusy === "true") return;
     const text = getPlainText(editor);
     if (isApiLocked(root)) { setStatus(t("advisor.authRequired"), true); return; }
     if (!text.trim()) { setStatus(t("advisor.emptyText"), true); return; }
     if (!selectedDocuments.size) { setStatus(t("advisor.selectDocument"), true); return; }
     const controller = new AbortController();
-    const requestId = ++operationId;
     activeController = controller;
     activePhase = "validate";
     findings = [];
     checked = 0;
     total = 0;
     originalText = text;
+    truncated = false;
     renderFindings();
     setBusy(true);
     setStatus(t("advisor.progress", { checked: 0, total: 0, count: 0 }));
@@ -295,9 +287,14 @@ export function mountAdvisor(editor: Editor, root: HTMLElement, review: ReviewCo
         signal: controller.signal,
       });
       if (!response.ok || !response.body) throw new Error(await extractErrorMessage(response, t("advisor.error")));
+      let completion: boolean | undefined;
       await consumeAdvisorSse(response.body, (event) => {
-        if (requestId !== operationId || activeController !== controller) return;
+        if (activeController !== controller || originalText !== text) return;
         if (event.event === "error") throw new Error(event.data.message || t("advisor.error"));
+        if (event.event === "complete") {
+          completion = event.data.truncated;
+          return;
+        }
         if (event.event === "progress") {
           checked = event.data.checked;
           total = event.data.total;
@@ -307,70 +304,96 @@ export function mountAdvisor(editor: Editor, root: HTMLElement, review: ReviewCo
         }
         setStatus(t("advisor.progress", { checked, total, count: findings.length }));
       });
-      if (requestId !== operationId) return;
-      setStatus(t("advisor.complete", { count: findings.length }));
+      if (activeController !== controller) return;
+      if (typeof completion !== "boolean" || originalText !== text || getPlainText(editor) !== text) {
+        throw new Error(t("advisor.error"));
+      }
+      truncated = completion;
+      reportResults();
     } catch (error) {
-      if (isAbortError(error) || requestId !== operationId) return;
-      findings = [];
-      originalText = null;
-      renderFindings();
+      if (controller.signal.aborted || activeController !== controller) return;
+      clearFindingState();
       setStatus(error instanceof Error && error.message.trim() ? error.message : t("advisor.error"), true);
     } finally {
       finishOperation(controller);
     }
   }
 
+  function reportResults(): void {
+    setStatus(t(truncated ? "advisor.incomplete" : "advisor.complete", { count: findings.length }));
+  }
+
   async function fix(): Promise<void> {
-    if (!originalText || originalText !== getPlainText(editor)) { clearFindingState(); return; }
-    const selected = findings.filter((finding) => finding.decision === "fix");
+    if (activeController || root.dataset.workspaceBusy === "true") return;
+    const text = originalText;
+    if (!text || text !== getPlainText(editor)) { clearFindingState(); return; }
+    const selected = findings.filter((finding) => finding.decision === "fix")
+      .sort((left, right) => left.start - right.start);
     if (!selected.length) return;
     const controller = new AbortController();
-    const requestId = ++operationId;
     activeController = controller;
     activePhase = "fix";
     setBusy(true);
     setStatus(t("advisor.fix.running"));
+    let reviewOpened = false;
     try {
       const response = await apiFetch("/api/advisor/fix", {
         method: "POST",
         headers: { Accept: "application/json", "Content-Type": "application/json" },
         body: JSON.stringify({
-          text: originalText,
-          findings: selected.map(({ documentName, ruleId, start, end, suggestion }) => ({
-            documentName, ruleId, start, end, suggestion,
+          text,
+          findings: selected.map(({ documentName, ruleId, start, end, matchedText, suggestion }) => ({
+            documentName, ruleId, start, end, matchedText, suggestion,
           })),
         }),
         signal: controller.signal,
       });
       if (!response.ok) throw new Error(await extractErrorMessage(response, t("advisor.fix.error")));
-      const payload = (await response.json()) as { text?: unknown };
-      if (requestId !== operationId) return;
-      if (typeof payload.text !== "string" || !payload.text.trim()) throw new Error(t("advisor.fix.error"));
-      activeController = null;
-      activePhase = null;
-      setBusy(false);
-      setStatus(t("advisor.complete", { count: findings.length }));
-      const sourceText = originalText;
-      review.open({
+      const replacements: unknown = await response.json();
+      if (activeController !== controller) return;
+      if (!Array.isArray(replacements) || replacements.length !== selected.length
+        || replacements.some((replacement) => typeof replacement !== "string")) {
+        throw new Error(t("advisor.fix.error"));
+      }
+
+      const segments: RewriteDiffSegment[] = [];
+      let cursor = 0;
+      selected.forEach(({ start, end, matchedText }, index) => {
+        if (start < cursor || end <= start || end > text.length || text.slice(start, end) !== matchedText) {
+          throw new Error(t("review.stale"));
+        }
+        const replacement = replacements[index].replace(/\r\n?/g, "\n");
+        if (replacement === matchedText) return;
+        if (start > cursor) segments.push({ kind: "text", value: text.slice(cursor, start) });
+        segments.push({
+          kind: "change",
+          hunk: { key: `hunk-${index}`, removedText: matchedText, addedText: replacement },
+        });
+        cursor = end;
+      });
+      if (cursor < text.length) segments.push({ kind: "text", value: text.slice(cursor) });
+      reviewOpened = review.open({
         source: "advisor",
         title: t("advisor.review.title"),
-        original: sourceText,
-        rewritten: payload.text,
-        onClose: ({ changed }) => {
+        original: text,
+        segments,
+        onClose: (changed) => {
           if (changed) clearFindingState();
-          else { renderFindings(); syncActions(); }
+          else renderFindings();
         },
       });
+      if (!reviewOpened) throw new Error(t("review.stale"));
+      reportResults();
     } catch (error) {
-      if (isAbortError(error) || requestId !== operationId) return;
+      if (controller.signal.aborted || activeController !== controller) return;
       setStatus(error instanceof Error && error.message.trim() ? error.message : t("advisor.fix.error"), true);
-      finishOperation(controller);
+    } finally {
+      finishOperation(controller, reviewOpened);
     }
   }
 
   function cancel(): void {
     if (!activeController) return;
-    operationId += 1;
     const controller = activeController;
     const phase = activePhase;
     controller.abort();
@@ -383,6 +406,7 @@ export function mountAdvisor(editor: Editor, root: HTMLElement, review: ReviewCo
   cancelButton.addEventListener("click", cancel);
   reloadButton.addEventListener("click", () => void loadDocuments());
   fixButton.addEventListener("click", () => void fix());
+  root.addEventListener("workspace:busy-changed", syncActions);
   root.addEventListener("advisor:opened", () => {
     setTextCorrections(editor, []);
     if (isApiLocked(root)) setStatus(t("advisor.authRequired"), true);

@@ -6,7 +6,6 @@ export function mountEditorToolbar(): void {
   const root = document.querySelector<HTMLElement>("#editor-island-root");
   const copyButton = root?.querySelector<HTMLButtonElement>("[data-editor-action='copy']");
   const downloadButton = root?.querySelector<HTMLButtonElement>("[data-editor-action='download']");
-  const uploadButton = root?.querySelector<HTMLButtonElement>("[data-editor-action='upload']");
   const statsButton = root?.querySelector<HTMLButtonElement>("[data-editor-action='stats']");
   const statsPopover = root?.querySelector<HTMLElement>("[data-stats-popover]");
   const toolbarStatus = root?.querySelector<HTMLElement>("[data-editor-toolbar-status]");
@@ -16,7 +15,6 @@ export function mountEditorToolbar(): void {
     !root ||
     !copyButton ||
     !downloadButton ||
-    !uploadButton ||
     !statsButton ||
     !statsPopover ||
     !toolbarStatus ||
@@ -28,13 +26,12 @@ export function mountEditorToolbar(): void {
   const resolvedRoot = root;
   const resolvedCopyButton = copyButton;
   const resolvedDownloadButton = downloadButton;
-  const resolvedUploadButton = uploadButton;
   const resolvedStatsButton = statsButton;
   const resolvedStatsPopover = statsPopover;
   const resolvedToolbarStatus = toolbarStatus;
   const resolvedMirror = mirror;
 
-  let busy = false;
+  let downloading = false;
 
   function announce(state: "success" | "error", message: string): void {
     resolvedToolbarStatus.dataset.state = state;
@@ -48,10 +45,10 @@ export function mountEditorToolbar(): void {
   }
 
   function syncAvailability(text = resolvedMirror.value): void {
+    const busy = resolvedRoot.dataset.workspaceBusy === "true";
     const hasText = text.trim().length > 0;
     resolvedCopyButton.disabled = busy || !hasText;
-    resolvedDownloadButton.disabled = busy || !hasText;
-    resolvedUploadButton.disabled = busy;
+    resolvedDownloadButton.disabled = busy || downloading || !hasText;
   }
 
   function closeStats(restoreFocus = false): void {
@@ -72,8 +69,10 @@ export function mountEditorToolbar(): void {
   });
 
   resolvedDownloadButton.addEventListener("click", async () => {
+    if (downloading) return;
+    downloading = true;
+    syncAvailability();
     try {
-      resolvedDownloadButton.disabled = true;
       const blob = await createDocxBlob(resolvedMirror.value);
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -87,6 +86,7 @@ export function mountEditorToolbar(): void {
     } catch {
       announce("error", t("toolbar.downloadError"));
     } finally {
+      downloading = false;
       syncAvailability();
     }
   });
@@ -120,7 +120,7 @@ export function mountEditorToolbar(): void {
     syncAvailability(detail.text);
   });
   resolvedRoot.addEventListener("workspace:busy-changed", (event) => {
-    busy = (event as CustomEvent<WorkspaceBusyChangedDetail>).detail.busy;
+    const { busy } = (event as CustomEvent<WorkspaceBusyChangedDetail>).detail;
     syncAvailability();
     if (busy) {
       closeStats();

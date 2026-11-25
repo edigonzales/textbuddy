@@ -4,12 +4,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.util.unit.DataSize;
 
 import java.net.URI;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @ConfigurationProperties(prefix = "textbuddy")
 public class TextbuddyProperties {
@@ -17,7 +14,6 @@ public class TextbuddyProperties {
     private final Auth auth = new Auth();
     private final Input input = new Input();
     private final Llm llm = new Llm();
-    private final LanguageTool languagetool = new LanguageTool();
     private final Document document = new Document();
 
     public Auth getAuth() {
@@ -30,10 +26,6 @@ public class TextbuddyProperties {
 
     public Llm getLlm() {
         return llm;
-    }
-
-    public LanguageTool getLanguagetool() {
-        return languagetool;
     }
 
     public Document getDocument() {
@@ -188,31 +180,6 @@ public class TextbuddyProperties {
                         + String.join(", ", missing));
             }
             normalizedBaseUri();
-        }
-    }
-
-    public static class LanguageTool {
-
-        private String ngramPath = "";
-
-        public String getNgramPath() {
-            return ngramPath;
-        }
-
-        public void setNgramPath(String ngramPath) {
-            this.ngramPath = normalize(ngramPath);
-        }
-
-        public Optional<Path> normalizedNgramPath() {
-            String value = normalize(ngramPath);
-            if (value.isBlank()) {
-                return Optional.empty();
-            }
-            try {
-                return Optional.of(Path.of(value));
-            } catch (InvalidPathException exception) {
-                throw new IllegalStateException("textbuddy.languagetool.ngram-path ist kein gültiger Pfad.", exception);
-            }
         }
     }
 

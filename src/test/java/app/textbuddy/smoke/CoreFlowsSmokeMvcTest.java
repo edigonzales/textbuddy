@@ -65,6 +65,6 @@ class CoreFlowsSmokeMvcTest {
 
         mockMvc.perform(multipart("/api/convert/doc").file(file))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.html").value("<p># Import Titel</p><p>Erste Zeile</p>"));
+                .andExpect(jsonPath("$.text").value("# Import Titel\n\nErste Zeile"));
     }
 }

@@ -1,7 +1,6 @@
 package app.textbuddy.web.advisor;
 
 import app.textbuddy.advisor.AdvisorFixRequest;
-import app.textbuddy.advisor.AdvisorFixResponse;
 import app.textbuddy.advisor.AdvisorService;
 import app.textbuddy.advisor.AdvisorValidateRequest;
 import app.textbuddy.config.TextbuddyProperties;
@@ -18,11 +17,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import jakarta.annotation.PreDestroy;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicReference;
 
 @RestController
 @RequestMapping("/api/advisor")
@@ -57,23 +57,18 @@ public class AdvisorValidationController {
         String traceId = TraceIdSupport.resolve(httpServletRequest);
         SseEmitter emitter = new SseEmitter(streamTimeoutMillis);
         AdvisorValidationSseEmitterWriter writer = new AdvisorValidationSseEmitterWriter(emitter, traceId);
-        AtomicReference<Future<?>> task = new AtomicReference<>();
 
         Future<?> future = executor.submit(() -> {
             try {
                 advisorService.validate(request, writer);
             } catch (RuntimeException exception) {
-                log.error("[{}] Advisor validation stream failed.", traceId, exception);
+                if (Thread.currentThread().isInterrupted()) return;
+                log.warn("[{}] Advisor validation stream failed ({}).", traceId, exception.getClass().getSimpleName());
                 writer.error(DEFAULT_ERROR_MESSAGE);
             }
         });
-        task.set(future);
-
         Runnable cancel = () -> {
-            Future<?> runningTask = task.get();
-            if (runningTask != null && !runningTask.isDone()) {
-                runningTask.cancel(true);
-            }
+            if (!future.isDone()) future.cancel(true);
         };
         emitter.onCompletion(cancel);
         emitter.onTimeout(cancel);
@@ -83,14 +78,14 @@ public class AdvisorValidationController {
     }
 
     @PostMapping(path = "/fix", produces = MediaType.APPLICATION_JSON_VALUE)
-    public AdvisorFixResponse fix(@RequestBody AdvisorFixRequest request) {
+    public List<String> fix(@RequestBody AdvisorFixRequest request) {
         inputValidator.text(request == null ? null : request.text());
         String suggestions = request == null || request.findings() == null
                 ? ""
                 : request.findings().stream()
                         .filter(Objects::nonNull)
                         .map(finding -> Objects.requireNonNullElse(finding.suggestion(), ""))
-                        .reduce("", (left, right) -> left + right);
+                        .collect(Collectors.joining());
         inputValidator.prompt(suggestions);
         return advisorService.fix(request);
     }

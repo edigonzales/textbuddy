@@ -11,7 +11,7 @@
 - Java 25, Spring Boot MVC und JTE liefern eine Anwendung mit TypeScript/Tiptap im Browser. Gradle Groovy und npm/Vite bauen dieselbe Anwendung. Advisor-Regeln und PDF-Quellen sind gebündelt, das Wörterbuch liegt im Browser. Der Server speichert bearbeitete Texte und Uploads nicht dauerhaft.
 - Eingebettetes LanguageTool und lokales Kreuzberg prüfen und importieren Texte im Textbuddy-Prozess. Für LLM-Funktionen gibt es einen OpenAI-kompatiblen Adapter und einen kontrollierten Stub.
 - Erhalte OIDC, Autorisierung, CSRF, explizite Loopback-Bindung bei ausgeschalteter Anmeldung, Text- und Uploadgrenzen sowie sichere Fehlerausgaben. Behandle die LLM-Anbindung als externe Vertrauensgrenze. Verwende synthetische Testdaten. Produktive Texte, Provider-Antwortkörper und Zugangsdaten gehören weder in Logs noch in Tests, Reviews oder Git.
-- Der unveränderte Plaintext ist die Referenz für Fundstellen. HTTP-Bereiche sind halb offen und in UTF-16. Prüfe die Abbildung auf Tiptap-Positionen bei Absätzen, Leerraum und Unicode. Verwirf veraltete oder mehrdeutige Ergebnisse und begrenze Advisor-Korrekturen auf die ausgewählten Fundstellen.
+- Der unveränderte Plaintext ist die Referenz für Fundstellen. HTTP-Bereiche sind halb offen und in UTF-16. Prüfe die Abbildung auf Tiptap-Positionen bei Absätzen, Leerraum und Unicode. Verwirf veraltete oder mehrdeutige Ergebnisse. Advisor-Korrekturen verwenden Ersatztexte für verifizierte, disjunkte Fundstellen. Der Dokumentimport liefert Plaintext, den der Editor als Textknoten einsetzt.
 
 ## Änderungen und Prüfungen
 

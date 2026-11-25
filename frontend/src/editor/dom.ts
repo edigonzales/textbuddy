@@ -12,7 +12,6 @@ export function findEditorElements(): EditorElements | null {
 
   const elements = {
     root,
-    canvas: query<HTMLElement>(root, "[data-editor-canvas]"),
     surface: query<HTMLElement>(root, "[data-editor-surface]"),
     mirror: query<HTMLTextAreaElement>(root, "[data-editor-mirror]"),
     characterCount: query<HTMLElement>(root, "[data-editor-count='characters']"),

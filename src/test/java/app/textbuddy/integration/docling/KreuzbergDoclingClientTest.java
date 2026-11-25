@@ -31,8 +31,8 @@ class KreuzbergDoclingClientTest {
 
     @ParameterizedTest
     @MethodSource("supportedUploads")
-    void convertsSupportedFormatsToHtml(DocumentUpload upload, String expectedFragment) {
-        assertThat(client.convertToHtml(upload, "de")).contains(expectedFragment);
+    void extractsTextFromSupportedFormats(DocumentUpload upload, String expectedFragment) {
+        assertThat(client.extractText(upload, "de")).contains(expectedFragment);
     }
 
     @Test
@@ -41,7 +41,7 @@ class KreuzbergDoclingClientTest {
         requireOrAssumeOcr(isOcrRuntimeReady("en"), "Lokale OCR ist vorhanden, aber nicht betriebsbereit.");
 
         byte[] image = createScannedPng("HELLO OCR");
-        String html = client.convertToHtml(new DocumentUpload("scan.png", "image/png", image), "en");
+        String html = client.extractText(new DocumentUpload("scan.png", "image/png", image), "en");
         String normalized = normalizeLetters(html);
 
         assertThat(normalized).contains("hello");
@@ -53,7 +53,7 @@ class KreuzbergDoclingClientTest {
         requireOrAssumeOcr(isOcrRuntimeReady("de"), "Lokale OCR ist vorhanden, aber nicht betriebsbereit.");
 
         byte[] scannedPdf = createScannedPdf("OCR PDF");
-        String html = client.convertToHtml(new DocumentUpload("scan.pdf", "application/pdf", scannedPdf), "de");
+        String html = client.extractText(new DocumentUpload("scan.pdf", "application/pdf", scannedPdf), "de");
         String normalized = normalizeLetters(html);
 
         assertThat(normalized).contains("ocr");
@@ -75,7 +75,7 @@ class KreuzbergDoclingClientTest {
                                 "application/octet-stream",
                                 createDocx("DOCX Import Titel", "Zweite Zeile")
                         ),
-                        "DOCX Import Titel"
+                        "DOCX Import Titel\n\nZweite Zeile"
                 },
                 new Object[]{
                         new DocumentUpload(
@@ -215,7 +215,7 @@ class KreuzbergDoclingClientTest {
     private boolean isOcrRuntimeReady(String language) {
         try {
             byte[] image = createScannedPng("OCR READY");
-            String html = client.convertToHtml(
+            String html = client.extractText(
                     new DocumentUpload("ocr-health.png", "image/png", image),
                     language
             );

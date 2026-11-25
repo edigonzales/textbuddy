@@ -3,63 +3,51 @@ package app.textbuddy.integration.llm;
 import app.textbuddy.advisor.AdvisorFixFinding;
 import app.textbuddy.advisor.AdvisorRuleCheck;
 import app.textbuddy.advisor.AdvisorRuleMatch;
-import app.textbuddy.quickaction.QuickActionRequest;
-import app.textbuddy.quickaction.QuickActionType;
 import app.textbuddy.quickaction.SummarizePrompt;
 import tools.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public final class OpenAiTextbuddyLlmClient implements TextbuddyLlmClient {
 
     private final OpenAiCompatibleChatClient chatClient;
-    private final QuickActionPromptComposer quickActionPrompts;
-    private final StructuredPromptComposer structuredPrompts;
+    private final LlmPrompts prompts;
 
-    public OpenAiTextbuddyLlmClient(
-            OpenAiCompatibleChatClient chatClient,
-            QuickActionPromptComposer quickActionPrompts,
-            StructuredPromptComposer structuredPrompts
-    ) {
-        this.chatClient = Objects.requireNonNull(chatClient);
-        this.quickActionPrompts = Objects.requireNonNull(quickActionPrompts);
-        this.structuredPrompts = Objects.requireNonNull(structuredPrompts);
+    public OpenAiTextbuddyLlmClient(OpenAiCompatibleChatClient chatClient, LlmPrompts prompts) {
+        this.chatClient = chatClient;
+        this.prompts = prompts;
     }
 
     @Override
-    public String rewrite(QuickActionType action, QuickActionRequest request) {
-        PromptMessages prompts = switch (action) {
-            case PLAIN_LANGUAGE -> quickActionPrompts.plainLanguage(request.text(), request.language());
-            case SUMMARIZE -> quickActionPrompts.summarize(
-                    request.text(),
-                    request.language(),
-                    SummarizePrompt.fromOption(request.option()).orElseThrow()
-            );
-        };
-
-        return chatClient.completeText(prompts.systemPrompt(), prompts.userPrompt());
+    public String rewrite(String text, String language, SummarizePrompt summary) {
+        PromptMessages prompt = summary == null ? prompts.plainLanguage(text, language)
+                : prompts.summarize(text, language, summary);
+        return chatClient.completeText(prompt.systemPrompt(), prompt.userPrompt());
     }
 
     @Override
     public List<AdvisorRuleMatch> validate(String text, List<AdvisorRuleCheck> ruleChecks) {
-        PromptMessages prompts = structuredPrompts.advisor(text, ruleChecks);
-        JsonNode root = chatClient.completeJson(prompts.systemPrompt(), prompts.userPrompt());
+        PromptMessages prompt = prompts.advisor(text, ruleChecks);
+        JsonNode root = chatClient.completeJson(prompt.systemPrompt(), prompt.userPrompt());
         JsonNode matchesNode = root.isArray() ? root : root.path("matches");
 
         if (!matchesNode.isArray()) {
-            return List.of();
+            throw new LlmProviderException("LLM-Provider lieferte keine gültigen Advisor-Befunde.");
         }
 
         List<AdvisorRuleMatch> matches = new ArrayList<>();
 
         for (JsonNode node : matchesNode) {
+            if (text(node, "documentName").isBlank() || text(node, "ruleId").isBlank()
+                    || !node.path("matchedText").isString() || rawText(node, "matchedText").isBlank()) {
+                throw new LlmProviderException("LLM-Provider lieferte unvollständige Advisor-Befunde.");
+            }
             matches.add(new AdvisorRuleMatch(
                     text(node, "documentName"),
                     text(node, "ruleId"),
                     rawText(node, "matchedText"),
-                    text(node, "excerpt"),
+                    rawText(node, "excerpt"),
                     text(node, "message"),
                     text(node, "suggestion")
             ));
@@ -69,9 +57,20 @@ public final class OpenAiTextbuddyLlmClient implements TextbuddyLlmClient {
     }
 
     @Override
-    public String fixAdvisor(String text, List<AdvisorFixFinding> findings) {
-        PromptMessages prompts = structuredPrompts.advisorFix(text, findings);
-        return chatClient.completeText(prompts.systemPrompt(), prompts.userPrompt());
+    public List<String> fixAdvisor(List<AdvisorFixFinding> findings) {
+        PromptMessages prompt = prompts.advisorFix(findings);
+        JsonNode root = chatClient.completeJson(prompt.systemPrompt(), prompt.userPrompt());
+        if (!root.isArray() || root.size() != findings.size()) {
+            throw new LlmProviderException("LLM-Provider lieferte keine gültigen Advisor-Korrekturen.");
+        }
+        List<String> replacements = new ArrayList<>(root.size());
+        for (JsonNode item : root) {
+            if (!item.isString()) {
+                throw new LlmProviderException("LLM-Provider lieferte keine gültigen Advisor-Korrekturen.");
+            }
+            replacements.add(item.asString());
+        }
+        return replacements;
     }
 
     private String text(JsonNode node, String field) {

@@ -36,7 +36,7 @@ class DocumentConversionControllerMvcTest {
         mockMvc.perform(multipart("/api/convert/doc").file(file))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.html").value("<p>= Import Titel</p><p>Erste Zeile</p>"));
+                .andExpect(jsonPath("$.text").value("= Import Titel\n\nErste Zeile"));
     }
 
     @Test
@@ -72,6 +72,6 @@ class DocumentConversionControllerMvcTest {
                         .param("ocrLanguage", "zz"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.html").isString());
+                .andExpect(jsonPath("$.text").isString());
     }
 }

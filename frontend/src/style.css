@@ -865,13 +865,7 @@ body[data-correction-slideover-open="true"] {
   color: var(--textbuddy-color-success-text);
 }
 
-#editor-island-root .diff-removed {
-  background: var(--textbuddy-neutral-subtle);
-  color: var(--textbuddy-neutral-muted);
-  text-decoration: line-through;
-  text-decoration-color: var(--textbuddy-neutral-muted);
-}
-
+#editor-island-root .diff-removed,
 #editor-island-root .diff-rejected {
   background: var(--textbuddy-neutral-subtle);
   color: var(--textbuddy-neutral-muted);
@@ -980,6 +974,14 @@ body[data-correction-slideover-open="true"] {
   text-decoration-style: wavy;
   text-decoration-color: var(--textbuddy-color-danger);
   text-decoration-thickness: 2px;
+}
+
+.textbuddy-correction-insertion {
+  display: inline-block;
+  width: 0.45em;
+  height: 0.8em;
+  border-inline-start: 2px solid var(--textbuddy-color-danger);
+  background: var(--textbuddy-color-danger-bg);
 }
 
 @media (max-width: 900px) {

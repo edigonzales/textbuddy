@@ -1,6 +1,6 @@
 package app.textbuddy.config;
 
-import app.textbuddy.integration.llm.OpenAiCompatibleChatClient;
+import app.textbuddy.integration.llm.OpenAiTextbuddyLlmClient;
 import app.textbuddy.integration.llm.TextbuddyLlmClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -31,14 +31,14 @@ class LlmConfigurationTest {
         contextRunner
                 .withPropertyValues(
                         "textbuddy.llm.mode=provider",
-                        "textbuddy.llm.base-url=https://api.infomaniak.com/2/ai/103965/openai/v1/models",
+                        "textbuddy.llm.base-url=https://provider.example.test/v1/models",
                         "textbuddy.llm.api-key=test-token",
                         "textbuddy.llm.model=qwen3"
                 )
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     assertThat(context).hasSingleBean(TextbuddyLlmClient.class);
-                    assertThat(context).hasSingleBean(OpenAiCompatibleChatClient.class);
+                    assertThat(context.getBean(TextbuddyLlmClient.class)).isInstanceOf(OpenAiTextbuddyLlmClient.class);
                 });
     }
 }

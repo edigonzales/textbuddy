@@ -10,7 +10,7 @@ import {
 } from "./dom";
 import { mountDocumentImport } from "./document-import";
 import { dispatchTextChanged } from "./events";
-import { countWords, getPlainText, plainTextToHtml } from "./plain-text";
+import { countWords, getPlainText, plainTextDocument } from "./plain-text";
 import { mountQuickActions } from "./quick-actions";
 import { createReviewController } from "./review-controller";
 import { mountTextCorrectionBridge } from "./text-correction";
@@ -34,11 +34,7 @@ function syncTextState(elements: EditorElements, editor: Editor): void {
   elements.wordCount.textContent = String(wordCount);
   elements.surface.dataset.editorEmpty = text.length === 0 ? "true" : "false";
 
-  dispatchTextChanged(elements.root, {
-    text,
-    characters: text.length,
-    words: wordCount,
-  });
+  dispatchTextChanged(elements.root, { text });
 }
 
 export function mountEditorIsland(): void {
@@ -66,7 +62,7 @@ export function mountEditorIsland(): void {
       }),
       TextCorrectionDecorationExtension,
     ],
-    content: plainTextToHtml(initialText),
+    content: plainTextDocument(initialText),
     editorProps: {
       attributes: {
         "aria-label": t("editor.ariaLabel"),

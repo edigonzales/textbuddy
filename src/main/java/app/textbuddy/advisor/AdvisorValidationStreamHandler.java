@@ -6,7 +6,5 @@ public interface AdvisorValidationStreamHandler {
 
     void progress(AdvisorProgressEvent event);
 
-    void complete();
-
-    void error(String message);
+    void complete(boolean truncated);
 }

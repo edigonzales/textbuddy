@@ -273,7 +273,13 @@ test("correction stays compact in transform mode and rail opens only in validate
 test("clicking a correction mark switches mode and focuses its finding", async ({ page }) => {
   await stubCorrection(page);
   await page.goto("/");
-  await enterText(page, "Das ist teh Text.");
+  await enterText(page, "Vorwort");
+  const editor = page.getByTestId("editor-input");
+  await editor.press("End");
+  await editor.press("Shift+Enter");
+  await editor.pressSequentially("Das ist teh Text.");
+  await expect(page.getByTestId("editor-mirror")).toHaveValue("Vorwort\nDas ist teh Text.");
+  await expect(page.getByTestId("correction-mark")).toHaveText("teh");
   await expect(page.locator("[data-correction-index='0']")).toBeVisible();
 
   await page.locator("[data-correction-index='0']").click();
@@ -307,6 +313,7 @@ test("advisor validates bundled guidelines, reviews selected fixes and preserves
     },
   ];
   let validateBody: unknown;
+  let finishValidation = true;
   let fixBody: { text: string; findings: Array<{ ruleId: string }> } | undefined;
   await page.route("**/api/advisor/docs", async (route) => route.fulfill({ json: documents }));
   await page.route("**/api/advisor/validate", async (route) => {
@@ -314,7 +321,7 @@ test("advisor validates bundled guidelines, reviews selected fixes and preserves
     const validation = (stableKey: string, documentName: string, documentTitle: string,
       ruleId: string, ruleTitle: string, matchedText: string, suggestion: string,
       start: number, end: number) => `event:validation\ndata:${JSON.stringify({
-        stableKey, documentName, documentTitle, ruleId, ruleTitle, page: 1, pageLabel: "Seite 1",
+        stableKey, documentName, documentTitle, ruleId, ruleTitle, page: 1,
         message: "Diese Formulierung entspricht nicht der Demo-Regel.", matchedText,
         excerpt: `…${matchedText}…`, suggestion,
         referenceUrl: `/api/advisor/doc/${documentName}#page=1`, start, end,
@@ -326,12 +333,13 @@ test("advisor validates bundled guidelines, reviews selected fixes and preserves
         + 'event:progress\ndata:{"checked":2,"total":4}\n\n'
         + validation("schreib::sofort::21:31", documents[1]!.name, documents[1]!.title,
           "per-sofort-vermeiden", "Per sofort ersetzen", "per sofort", "ab sofort", 21, 31)
-        + 'event:progress\ndata:{"checked":4,"total":4}\n\n',
+        + 'event:progress\ndata:{"checked":4,"total":4}\n\n'
+        + (finishValidation ? 'event:complete\ndata:{"truncated":false}\n\n' : ""),
     });
   });
   await page.route("**/api/advisor/fix", async (route) => {
     fixBody = route.request().postDataJSON() as typeof fixBody;
-    await route.fulfill({ json: { text: "Bitte herunterladen Sie per sofort." } });
+    await route.fulfill({ json: ["herunterladen"] });
   });
   await page.goto("/");
   await enterText(page, "Bitte downloaden Sie per sofort.");
@@ -376,6 +384,11 @@ test("advisor validates bundled guidelines, reviews selected fixes and preserves
   await expect(page.getByTestId("advisor-finding")).toHaveCount(0);
   await page.getByTestId("editor-undo").click();
   await expect(page.getByTestId("editor-mirror")).toHaveValue("Bitte downloaden Sie per sofort.");
+
+  finishValidation = false;
+  await page.getByTestId("advisor-start").click();
+  await expect(page.getByTestId("advisor-status")).toHaveText("Richtlinienprüfung konnte nicht abgeschlossen werden.");
+  await expect(page.getByTestId("advisor-finding")).toHaveCount(0);
 });
 
 test("correction sends one request for a 50000-character document", async ({ page }) => {
@@ -506,6 +519,23 @@ test("plain-language review preserves the original and commits as one undoable t
   await expect(page.getByTestId("editor-mirror")).toHaveValue("Das neue Haus ist klein.");
   await page.getByTestId("editor-undo").click();
   await expect(page.getByTestId("editor-mirror")).toHaveValue("Das alte Haus ist klein.");
+});
+
+test("the review shows a non-breaking space and keeps undo exact", async ({ page }) => {
+  await stubCorrection(page);
+  await page.route("**/api/quick-actions/plain-language", (route) =>
+    route.fulfill({ json: { text: "Der Betrag beträgt CHF\u00a020." } }));
+  await page.goto("/");
+  await enterText(page, "Der Betrag beträgt CHF 20.");
+  await page.getByTestId("mvp-action-plain-language").click();
+
+  const diff = page.locator("[data-review-inline]");
+  await expect(diff.locator(".diff-removed")).toHaveText("·");
+  await expect(diff.locator(".diff-added")).toHaveText("⍽");
+  await page.getByRole("button", { name: "Alle annehmen" }).click();
+  expect(await page.getByTestId("editor-mirror").inputValue()).toBe("Der Betrag beträgt CHF\u00a020.");
+  await page.getByTestId("editor-undo").click();
+  expect(await page.getByTestId("editor-mirror").inputValue()).toBe("Der Betrag beträgt CHF 20.");
 });
 
 test("summary keeps option values, supports split review, reject-all and retry", async ({ page }) => {
@@ -661,7 +691,7 @@ test("upload uses the shared text language for OCR and imports into the full edi
     requestUrl = route.request().url();
     await route.fulfill({
       json: {
-        html: "<h2># Import <em>Titel</em></h2><script>nicht übernehmen</script><p>* Importierter Text.</p>",
+        text: "# Import Titel\n* <script>Importierter Text.</script>",
       },
     });
   });
@@ -677,15 +707,16 @@ test("upload uses the shared text language for OCR and imports into the full edi
   });
 
   await expect(page.getByTestId("editor-mirror")).toHaveValue(
-    "# Import Titel\n* Importierter Text.",
+    "# Import Titel\n* <script>Importierter Text.</script>",
   );
+  await expect(page.getByTestId("editor-input").locator("script")).toHaveCount(0);
   expect(requestUrl).toContain("ocrLanguage=fr");
 });
 
 test("the full editor accepts document drag and drop", async ({ page }) => {
   await stubCorrection(page);
   await page.route("**/api/convert/doc**", async (route) => {
-    await route.fulfill({ json: { html: "<p>Per Drop importiert.</p>" } });
+    await route.fulfill({ json: { text: "Per Drop importiert." } });
   });
   await page.goto("/");
 

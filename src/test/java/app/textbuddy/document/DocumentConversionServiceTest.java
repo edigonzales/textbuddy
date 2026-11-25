@@ -7,7 +7,6 @@ import org.springframework.util.unit.DataSize;
 
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -19,7 +18,7 @@ class DocumentConversionServiceTest {
         AtomicBoolean called = new AtomicBoolean(false);
         DoclingClient doclingClient = (upload, ocrLanguage) -> {
             called.set(true);
-            return "<h1>Import</h1><p>Dokument</p>";
+            return "Import\nDokument";
         };
         DocumentConversionService service = createService(doclingClient);
 
@@ -30,7 +29,7 @@ class DocumentConversionServiceTest {
         ), "en");
 
         assertThat(called).isTrue();
-        assertThat(response.html()).contains("<h1>Import</h1>");
+        assertThat(response.text()).isEqualTo("Import\nDokument");
     }
 
     @Test
@@ -68,24 +67,6 @@ class DocumentConversionServiceTest {
     }
 
     @Test
-    void normalizesUnsupportedOcrLanguagesToDefault() {
-        AtomicReference<String> capturedLanguage = new AtomicReference<>();
-        DoclingClient doclingClient = (upload, ocrLanguage) -> {
-            capturedLanguage.set(ocrLanguage);
-            return "<p>Import</p>";
-        };
-        DocumentConversionService service = createService(doclingClient);
-
-        service.convert(new DocumentUpload(
-                "scan.png",
-                "image/png",
-                "dummy".getBytes(StandardCharsets.UTF_8)
-        ), "xx");
-
-        assertThat(capturedLanguage.get()).isEqualTo("de");
-    }
-
-    @Test
     void rejectsUploadsAboveConfiguredLimit() {
         AtomicBoolean called = new AtomicBoolean(false);
         DoclingClient doclingClient = (upload, ocrLanguage) -> {
@@ -97,8 +78,7 @@ class DocumentConversionServiceTest {
         DocumentConversionService service = new DocumentConversionService(
                 doclingClient,
                 new DocumentImportFormatCatalog(),
-                properties,
-                new EditorFriendlyHtmlPostProcessor()
+                properties
         );
 
         assertThatThrownBy(() -> service.convert(new DocumentUpload(
@@ -118,8 +98,7 @@ class DocumentConversionServiceTest {
         return new DocumentConversionService(
                 doclingClient,
                 new DocumentImportFormatCatalog(),
-                properties,
-                new EditorFriendlyHtmlPostProcessor()
+                properties
         );
     }
 }

@@ -186,7 +186,7 @@
                     </div>
 
                     <div class="editor-view" data-editor-view>
-                        <div class="editor-canvas" data-testid="editor-canvas" data-editor-canvas data-editor-import-drop-target data-dragging="false">
+                        <div class="editor-canvas" data-testid="editor-canvas" data-editor-import-drop-target data-dragging="false">
                             <div class="editor-surface" data-editor-surface data-editor-placeholder="${page.t("editor.placeholder")}"></div>
                             <textarea hidden name="text" data-editor-mirror data-testid="editor-mirror"></textarea>
 

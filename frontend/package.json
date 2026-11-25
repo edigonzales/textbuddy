@@ -10,14 +10,15 @@
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
+    "jszip": "3.10.1",
     "tsx": "^4.23.13",
     "typescript": "6.0.2",
     "vite": "^8.2.2"
   },
   "dependencies": {
-    "@mohtasham/md-to-docx": "3.0.1",
     "@tiptap/core": "^3.30.4",
     "@tiptap/starter-kit": "^3.30.4",
-    "diff": "9.0.0"
+    "diff": "9.0.0",
+    "docx": "9.7.1"
   }
 }

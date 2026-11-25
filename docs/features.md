@@ -30,9 +30,9 @@ Die Korrekturleiste existiert nur bei mindestens einem LanguageTool-Befund. Der 
 
 ### Richtlinien-Advisor
 
-Der Advisor lädt beim ersten Öffnen fünf gebündelte, ausdrücklich projektinterne Demo-Regelwerke mit je zwei Regeln. Anfangs ist keines ausgewählt; pro Prüfung können höchstens fünf gewählt werden. Der LLM-Adapter prüft die Regeln seriell in Dreierbatches. Bei allen zehn Regeln entstehen deshalb vier Provider-Aufrufe. Fortschritt und Befunde werden als SSE übertragen.
+Der Advisor lädt beim ersten Öffnen fünf gebündelte, ausdrücklich projektinterne Demo-Regelwerke mit je zwei Regeln. Anfangs ist keines ausgewählt; pro Prüfung können höchstens fünf gewählt werden. Der LLM-Adapter prüft die Regeln seriell in Dreierbatches. Bei allen zehn Regeln entstehen deshalb vier Provider-Aufrufe. Fortschritt und Befunde werden während der Prüfung angezeigt. Die Oberfläche meldet eine erreichte Prüfgrenze ausdrücklich.
 
-Ein Befund enthält die exakte Fundstelle, Regel, Demo-Dokument, Seite, Begründung, Vorschlag und einen Link zum PDF in einem neuen Tab. Alle Befunde stehen zunächst auf **Korrigieren** und können auf **Überspringen** gesetzt werden. Ein anschliessender, atomarer LLM-Aufruf wendet nur die ausgewählten Befunde auf den vollständigen Originaltext an. Das Ergebnis wird im gleichen begrenzten Diff wie andere Transformationen geprüft. Ablehnen behält die Befunde; eine tatsächliche Textübernahme oder andere Text-/Dokumentänderung verwirft sie.
+Ein Befund enthält die exakte Fundstelle, Regel, Demo-Dokument, Seite, Begründung, Vorschlag und einen Link zum PDF in einem neuen Tab. Alle Befunde stehen zunächst auf **Korrigieren** und können auf **Überspringen** gesetzt werden. Ein anschliessender LLM-Aufruf liefert Ersatztexte für die gewählten Fundstellen. Die gemeinsame Vorschau zeigt jede Ersetzung an ihrem geprüften Bereich. Ablehnen behält die Befunde; eine tatsächliche Textübernahme oder andere Text-/Dokumentänderung verwirft sie.
 
 Die mitgelieferten Regeln sind weder vollständig noch amtlich verbindlich. Eigene JSON-/PDF-Paare können gebündelt ergänzt werden und stehen nach Build und Neustart bereit; es gibt bewusst keinen Upload, Regel-Editor oder Persistenzdienst. Details stehen in [Eigene Advisor-Regelwerke erstellen](advisor-authoring.md).
 
@@ -50,9 +50,9 @@ Verfügbare Textsprachen sind automatische Erkennung, Deutsch (Schweiz), Franzö
 
 **Verständlicher schreiben** und **Zusammenfassen** verändern den Editor nicht sofort. Textbuddy zeigt das Ergebnis zuerst in einer vollbreiten Diff-Prüfung:
 
-- Standardmässig erscheint ein Inline-Diff; eine Zweispaltenansicht ist umschaltbar.
+- Standardmässig erscheint ein Inline-Diff. Die Ansicht lässt sich auf zwei Spalten umschalten.
 - Mehrere Änderungen können einzeln angenommen oder abgelehnt werden.
-- Bis zu insgesamt 10.000 Eingabezeichen wird ein Wort-Diff berechnet. Darüber zeigt Textbuddy einen einzigen Dokumentblock zum globalen Annehmen oder Ablehnen, damit die Oberfläche responsiv bleibt.
+- Auch bei mehrseitigen Texten bleiben einzelne Änderungen prüfbar. Geänderter Leerraum erscheint mit sichtbaren Zeichen. Erreicht die Berechnung ihr Ressourcenlimit, endet die Vorschau mit einer Meldung und der Editor behält den Originaltext.
 - **Alle annehmen**, **Alle ablehnen** und bei Quick Actions **Erneut ausführen** bearbeiten den gesamten Review-Ablauf.
 - Erst wenn alle Änderungen entschieden sind, wird das aufgelöste Ergebnis in einer einzigen rückgängig machbaren Editortransaktion übernommen.
 - Abbrechen, vollständiges Ablehnen, Fehler und ungültige leere Antworten lassen den Originaltext unverändert.
@@ -73,7 +73,7 @@ Die kompakte Werkzeugleiste am unteren Editorrand enthält:
 
 Beim Import ersetzt der konvertierte Dokumentinhalt den bisherigen Editorinhalt. Unterstützte Eingaben sind PDF, DOCX, PPTX, XLSX, HTML, Markdown, AsciiDoc, TXT, PNG, JPG/JPEG und TIF/TIFF. Die OCR-Sprache folgt der Textsprache; bei automatischer Erkennung wird Deutsch verwendet. Die Standardgrenze beträgt 20 MB und kann im Betrieb konfiguriert werden.
 
-Der Editor ist absichtlich ein Plaintext-Editor: Import behält Text und Absatzumbrüche, aber keine Schrift-, Listen- oder sonstige Dokumentformatierung. Auch KI-Ergebnisse werden als Plaintext eingesetzt. Der DOCX-Export bildet diesen Text wortgetreu ab; Markdown-Zeichen erzeugen keine unbeabsichtigte Formatierung. Das Datum im Dateinamen folgt dem lokalen Datum des Browsers.
+Der Editor ist absichtlich ein Plaintext-Editor: Import behält Text und Absatzumbrüche, aber keine Schrift-, Listen- oder sonstige Dokumentformatierung. Auch KI-Ergebnisse werden als Plaintext eingesetzt. Der DOCX-Export schreibt den Text zeilenweise als Word-Absätze. Das Datum im Dateinamen folgt dem lokalen Datum des Browsers.
 
 ## Anbindungen, Daten und Grenzen
 
