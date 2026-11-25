@@ -35,14 +35,14 @@ public final class KreuzbergDoclingClient implements DoclingClient {
     @Override
     public String extractText(DocumentUpload upload, String ocrLanguage) {
         String mimeType = resolveMimeType(upload);
-        String normalizedLanguage = DocumentOcrLanguage.normalizeCode(ocrLanguage);
+        String normalizedLanguage = DocumentOcrLanguage.tesseractCode(ocrLanguage);
 
         try {
             return extract(upload, mimeType, normalizedLanguage);
         } catch (KreuzbergException primaryException) {
             if (shouldRetryWithFallbackLanguage(primaryException, normalizedLanguage)) {
                 try {
-                    return extract(upload, mimeType, DocumentOcrLanguage.DEFAULT.code());
+                    return extract(upload, mimeType, DocumentOcrLanguage.DEFAULT);
                 } catch (KreuzbergException fallbackException) {
                     throw mapFailure(fallbackException);
                 }
@@ -133,7 +133,7 @@ public final class KreuzbergDoclingClient implements DoclingClient {
     }
 
     private boolean shouldRetryWithFallbackLanguage(KreuzbergException exception, String language) {
-        return !DocumentOcrLanguage.DEFAULT.code().equals(language) && isOcrProblem(exception);
+        return !DocumentOcrLanguage.DEFAULT.equals(language) && isOcrProblem(exception);
     }
 
     private boolean isTimeout(KreuzbergException exception) {

@@ -2,7 +2,7 @@
 
 ## Produktionsstart
 
-Empfohlen ist ein einzelner Textbuddy-Prozess hinter einem TLS-terminierenden Reverse Proxy:
+Das Installer-ZIP enthält `bin/start-textbuddy.sh` und `bin/start-textbuddy.cmd` für Java 25. Beide starten das mitgelieferte JAR und übernehmen die angegebenen Argumente. Das JAR lässt sich auch direkt starten.
 
 ```bash
 java --enable-native-access=ALL-UNNAMED -jar textbuddy.jar \
@@ -28,13 +28,22 @@ textbuddy.auth.enabled=false
 
 Ohne explizite Loopback-Adresse verweigert die Anwendung diesen Start. Diese Einstellung ist nicht für Container- oder Team-Betrieb vorgesehen.
 
-### Adapter
+### LLM und lokale Dienste
 
-- `textbuddy.llm.mode=provider|stub`: Produktion verwendet normalerweise `provider` und verlangt Base-URL, API-Key und Modell-ID.
-- LanguageTool prüft Texte im Anwendungsprozess.
-- Kreuzberg verarbeitet Dokumente lokal. OCR benötigt eine auf der Zielplattform funktionierende Kreuzberg-OCR-Laufzeit und passende Sprachdaten.
+`textbuddy.llm.mode=provider` verwendet einen OpenAI-kompatiblen Provider und verlangt Base-URL, API-Key und Modell-ID. `stub` liefert für Entwicklung und Tests reproduzierbare Demo-Antworten. LanguageTool und Kreuzberg arbeiten im Anwendungsprozess.
 
-Der LLM-Stub liefert für Entwicklung und Tests reproduzierbare Demo-Antworten.
+### Lokale OCR
+
+Kreuzberg verwendet Tesseract. `TESSDATA_PREFIX` muss auf den Ordner mit `deu.traineddata`, `eng.traineddata`, `fra.traineddata` und `ita.traineddata` zeigen. Die regulären Tests prüfen Text aus einem echten Scanbild und einem gescannten PDF.
+
+Unter Ubuntu richtet die CI die Laufzeit so ein:
+
+```bash
+sudo apt-get install tesseract-ocr tesseract-ocr-deu tesseract-ocr-eng tesseract-ocr-fra tesseract-ocr-ita
+export TESSDATA_PREFIX="$(dirname "$(dpkg -L tesseract-ocr-eng | grep '/eng.traineddata$')")"
+```
+
+Auf macOS (Apple Silicon) wurde die mit Kreuzberg gelieferte Laufzeit mit den vier [Tesseract-Sprachdateien aus tessdata_fast](https://github.com/tesseract-ocr/tessdata_fast/tree/4.1.0) geprüft. Lege die Dateien gemeinsam in einem Ordner ab und setze `TESSDATA_PREFIX` auf dessen absoluten Pfad. Die OCR-Laufzeit wurde auf Ubuntu x86-64 und macOS Apple Silicon geprüft.
 
 ## Grenzen und Timeouts
 
@@ -46,7 +55,7 @@ Der LLM-Stub liefert für Entwicklung und Tests reproduzierbare Demo-Antworten.
 | `textbuddy.llm.timeout` | `30s` | Timeout einer LLM-Anfrage |
 | `textbuddy.document.timeout` | `45s` | Timeout der Dokumentverarbeitung |
 
-Textbuddy wiederholt fehlgeschlagene Provider- oder Netzwerkaufrufe nicht automatisch. Retries, falls fachlich gewünscht, müssen bewusst ausserhalb der Anwendung mit Idempotenz- und Kostenbetrachtung entworfen werden. Nur lokale OCR darf bei einem sprachbezogenen OCR-Fehler einmal mit der Standardsprache wiederholen.
+Nur lokale OCR wiederholt bei einem sprachbezogenen OCR-Fehler einmal mit der Standardsprache.
 
 Eine Advisor-Prüfung verarbeitet maximal fünf Dokumente und zwanzig Regeln. Beim aktuellen Katalog mit zehn Regeln sind das vier serielle LLM-Aufrufe in Dreierbatches; das SSE-Timeout wird aus der maximalen Batchzahl und dem LLM-Timeout abgeleitet. Das Anwenden ausgewählter Befunde verursacht genau einen zusätzlichen atomaren LLM-Aufruf. Die Summe der ausgewählten Vorschläge ist durch `textbuddy.input.max-prompt-length` begrenzt.
 
@@ -77,14 +86,3 @@ Textbuddy hält keine serverseitigen Nutzdaten dauerhaft. Zu sichern sind daher 
 Das browserlokale Wörterbuch kann nicht serverseitig wiederhergestellt werden. Advisor-Dokumente sind Bestandteil des JARs und werden durch ein neues Release aktualisiert.
 
 Die ausgelieferten Advisor-Regelwerke sind projektinterne Demos. Für eigene Regelwerke muss ein fachlich geprüftes JSON-/PDF-Paar gemäss [Advisor-Regelwerke erstellen](advisor-authoring.md) gebaut und die Anwendung neu gestartet werden.
-
-## Release-Prüfung
-
-```bash
-./gradlew clean test verifyReleaseBundle installerZip
-npm ci --prefix playwright
-npx --prefix playwright playwright install chromium
-npm test --prefix playwright
-```
-
-Vor einem Release zusätzlich manuell prüfen: Anmeldung/Abmeldung am echten OIDC-Provider, Proxy-Header und Redirect-URI, LLM-Datenschutzfreigabe, OCR auf der Zielplattform sowie Upload- und Rate Limits.

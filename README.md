@@ -1,76 +1,26 @@
 # Textbuddy
 
-Textbuddy ist eine serverbasierte Schreibassistenz mit vier bewusst sichtbaren Abläufen: Textkorrektur, Richtlinien-Advisor, verständlicher schreiben und zusammenfassen. Der Advisor demonstriert mit fünf projektinternen Demo-Regelwerken, wie später eigene gebündelte Richtlinien eingesetzt werden können. Der Editor bietet ausserdem Dokumentimport und DOCX-Export. Die Anwendung besteht aus Spring Boot MVC und einer kleinen TypeScript-/Tiptap-Insel in serverseitig gerendertem JTE-HTML.
+Textbuddy ist eine Schreibassistenz mit lokaler LanguageTool-Korrektur, Richtlinien-Advisor, **Verständlicher schreiben** und fünf Zusammenfassungsvarianten. Der Editor bietet Dokumentimport mit lokaler OCR, Textstatistik und DOCX-Export. Spring Boot rendert die Oberfläche mit JTE und bindet den TypeScript-/Tiptap-Editor ein.
 
-Der Editor verwendet Plaintext als verbindliches Inhaltsmodell. Importierte Formatierungen werden auf Text und Absatzumbrüche reduziert; KI-Ergebnisse und DOCX-Exporte interpretieren Zeichen wie `#`, `*` oder `1.` nicht als Formatierungsanweisung.
+## Entwickeln
 
-## Voraussetzungen
+Voraussetzungen sind Java 25, Node.js ab 20.19 und npm. `./dev.sh` startet Textbuddy auf [127.0.0.1:8080](http://127.0.0.1:8080) mit Stub-LLM und ohne OIDC-Anmeldung. Nach Änderungen an der Anwendung das Skript neu starten.
 
-- Java 25
-- Node.js 20.19 oder neuer und npm
-- optional: eine von Kreuzberg unterstützte lokale OCR-Laufzeit für Bild- und Scan-PDF-Texterkennung
+## Prüfen und paketieren
 
-## Lokal entwickeln
-
-Der ungeschützte Modus ist ausschliesslich an einer expliziten Loopback-Adresse erlaubt. Der LLM-Stub, LanguageTool und der Dokumentimport laufen lokal.
+Die reguläre Suite prüft echte OCR mit den [lokalen Sprachdaten](docs/operations.md#lokale-ocr). Playwright startet anschliessend das gebaute JAR im selben Loopback-Modus.
 
 ```bash
-./dev.sh
-```
-
-Danach ist Textbuddy unter [http://127.0.0.1:8080](http://127.0.0.1:8080) erreichbar.
-
-Das Skript startet Spring Boot und den Frontend-Watcher gemeinsam. Änderungen unter `frontend/src/` werden automatisch neu gebaut und sind nach einem manuellen Browser-Reload sichtbar, ohne Spring Boot neu zu starten. Änderungen an Java-Code, JTE-Templates oder der Konfiguration erfordern weiterhin einen Neustart. `Ctrl+C` beendet beide Prozesse.
-
-Wenn kein Frontend-Watcher benötigt wird, kann das Backend weiterhin direkt gestartet werden:
-
-```bash
-./gradlew bootRun --args='--server.address=127.0.0.1 --textbuddy.auth.enabled=false --textbuddy.llm.mode=stub'
-```
-
-## Prüfen und bauen
-
-```bash
-./gradlew test
+./gradlew clean test installerZip
 npm ci --prefix playwright
 npx --prefix playwright playwright install chromium
 npm test --prefix playwright
-./gradlew clean verifyReleaseBundle installerZip
 ```
 
-Das Release-Bundle liegt danach unter `build/release/`. Die CI führt Java-, Frontend-, Browser- und Accessibility-Tests sowie ein Dependency-Audit aus.
+Die Auslieferung liegt unter `build/libs/textbuddy.jar` und `build/distributions/textbuddy-*.zip`. Der Betrieb mit OIDC und einem OpenAI-kompatiblen Provider ist unter [Betrieb und Konfiguration](docs/operations.md) beschrieben.
 
-## Produktion
-
-Authentifizierung ist standardmässig aktiv und erfordert eine OIDC-Client-Konfiguration. LLM-Zugriff benötigt einen OpenAI-kompatiblen Provider. LanguageTool und Kreuzberg verarbeiten Korrekturen und Dokumente lokal. Konkrete Beispiele liegen unter `config/examples/`.
-
-Eine `.env`-Datei wird nicht automatisch geladen. Vor einem Start mit dem Beispiel muss sie explizit in die Shell übernommen werden:
-
-```bash
-set -a
-source config/examples/textbuddy.env.example
-set +a
-java --enable-native-access=ALL-UNNAMED -jar build/libs/textbuddy.jar \
-  --spring.config.additional-location=file:config/examples/application-production.properties.example
-```
-
-Der [Archivtag](https://github.com/edigonzales/textbuddy/tree/archive/pre-rrb-cleanup-2026-11-25) sichert den Stand vor der Bereinigung.
-
-Weitere Dokumentation:
-
-- [Funktionsübersicht](docs/features.md)
-- [Getting Started](docs/getting-started.md)
+- [Funktionen](docs/features.md)
 - [Architektur](docs/architecture.md)
-- [Betrieb und Konfiguration](docs/operations.md)
-- [Accessibility](docs/accessibility.md)
 - [Eigene Advisor-Regelwerke erstellen](docs/advisor-authoring.md)
-
-## Sicherheitsmodell in Kürze
-
-- `/api/**` ist im Normalbetrieb OIDC-geschützt und CSRF-gesichert.
-- `textbuddy.auth.enabled=false` startet nur mit expliziter Loopback-Bindung.
-- Actuator veröffentlicht ausschliesslich `/actuator/health`, ohne Komponenten oder Details.
-- Provider-Antworten und API-Schlüssel werden nicht in Fehlermeldungen ausgegeben.
-- Text- und Uploadgrössen werden vor der Verarbeitung begrenzt.
-
-API-Verträge und technische Entscheidungen stehen in [docs/architecture.md](docs/architecture.md); Hinweise zu Reverse Proxy, TLS, Rate Limits und Secrets in [docs/operations.md](docs/operations.md).
+- [Barrierefreiheit](docs/accessibility.md)
+- [Archivstand vor der Bereinigung](https://github.com/edigonzales/textbuddy/tree/archive/pre-rrb-cleanup-2026-11-25)

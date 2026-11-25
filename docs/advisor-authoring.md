@@ -50,9 +50,4 @@ Die fünf mitgelieferten Regelwerke sind projektinterne Demos mit je zwei Regeln
 
 ## Technische Prüfung
 
-```bash
-./gradlew test
-npm test --prefix playwright
-```
-
-Die Katalogtests erkennen unter anderem fehlende PDFs, doppelte Dokument- oder Regel-IDs, ungültige Seitenzahlen und leere Pflichtfelder. Ergänze für neue Regeln gezielte positive und negative Beispiele, besonders für Begriffe, die auch als Teil längerer Wörter vorkommen.
+Führe den [regulären Prüfpfad](../README.md#prüfen-und-paketieren) aus. Die Katalogtests erkennen unter anderem fehlende PDFs, doppelte Dokument- oder Regel-IDs, ungültige Seitenzahlen und leere Pflichtfelder. Ergänze für neue Regeln gezielte positive und negative Beispiele, besonders für Begriffe, die auch als Teil längerer Wörter vorkommen.

@@ -1,6 +1,6 @@
 # Architektur
 
-## Zielbild
+## Aufbau
 
 Textbuddy ist eine einzelne Spring-Boot-Anwendung für einen zentral betriebenen Team-Server. Es gibt keine Datenbank und keinen verteilten Anwendungszustand. Diese Begrenzung ist Absicht: Deployment, Fehlersuche und Weiterentwicklung sollen ohne zusätzliche Infrastruktur verständlich bleiben.
 
@@ -13,15 +13,11 @@ flowchart LR
     App --> Advisor["Advisor-Metadaten und PDFs im JAR"]
 ```
 
-## Aufbau
-
 - `web`: HTTP-Verträge, Eingabegrenzen, Fehlerabbildung und Startseite.
 - Fachpakete wie `quickaction`, `textcorrection`, `advisor` und `document`: kleine Services und unveränderliche Request-/Response-Typen.
 - `integration`: Provider-Adapter. Alle LLM-Funktionen hängen an genau einem `TextbuddyLlmClient`.
 - `config`: ein Konfigurationsaggregat (`TextbuddyProperties`) und die Auswahl der Adapter.
 - `frontend`: eine TypeScript-/Tiptap-Insel; keine zweite eigenständige Webanwendung.
-
-Neue Abstraktionen sollen nur entstehen, wenn es tatsächlich mehrere Implementierungen oder eine klar testbare Grenze gibt. Für reine Weiterleitung ist eine zusätzliche Klasse kein Gewinn.
 
 ## HTTP-Verträge
 

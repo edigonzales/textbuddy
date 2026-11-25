@@ -31,7 +31,7 @@ class KreuzbergDoclingClientOcrFallbackTest {
                 .isInstanceOf(DocumentConversionFailedException.class)
                 .hasMessageContaining("OCR konnte");
 
-        assertThat(attemptedLanguages).containsExactly("fr", "de");
+        assertThat(attemptedLanguages).containsExactly("fra", "deu");
     }
 
     @Test
@@ -49,7 +49,7 @@ class KreuzbergDoclingClientOcrFallbackTest {
                 .isInstanceOf(DocumentConversionFailedException.class)
                 .hasMessageContaining("OCR konnte");
 
-        assertThat(attemptedLanguages).containsExactly("de");
+        assertThat(attemptedLanguages).containsExactly("deu");
     }
 
     @Test

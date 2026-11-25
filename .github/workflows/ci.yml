@@ -1,29 +1,61 @@
-name: CI
+name: Textbuddy
 
 on:
   pull_request:
   push:
-    branches:
-      - main
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'SemVer-Tag (z. B. v1.2.3)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
 
 jobs:
-  build-and-test:
+  check:
     runs-on: ubuntu-latest
     timeout-minutes: 45
-
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Resolve release tag
+        id: release
+        env:
+          DISPATCH_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+            tag="$DISPATCH_TAG"
+          elif [[ "$GITHUB_EVENT_NAME" == push && "$GITHUB_REF_TYPE" == tag ]]; then
+            tag="$GITHUB_REF_NAME"
+          else
+            exit 0
+          fi
+          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Erwartet wird ein SemVer-Tag mit Präfix v." >&2
+            exit 1
+          fi
+          {
+            echo "ref=refs/tags/$tag"
+            echo "tag=$tag"
+            echo "version=${tag#v}"
+          } >> "$GITHUB_OUTPUT"
 
-      - name: Set up Java 25
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.release.outputs.ref }}
+
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '25'
           cache: gradle
 
-      - name: Set up Node.js 20
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: npm
@@ -31,39 +63,119 @@ jobs:
             frontend/package-lock.json
             playwright/package-lock.json
 
-      - name: Install OCR runtime
+      - name: Install OCR language data
         run: |
           sudo apt-get update
-          sudo apt-get install --yes tesseract-ocr tesseract-ocr-deu tesseract-ocr-eng
-          TESSDATA_DIR="$(dirname "$(dpkg -L tesseract-ocr-eng | grep '/eng.traineddata$' | head -n 1)")"
-          echo "TESSDATA_PREFIX=$TESSDATA_DIR" >> "$GITHUB_ENV"
+          sudo apt-get install --yes tesseract-ocr tesseract-ocr-deu tesseract-ocr-eng tesseract-ocr-fra tesseract-ocr-ita
+          tessdata_dir="$(dirname "$(dpkg -L tesseract-ocr-eng | grep '/eng.traineddata$')")"
+          echo "TESSDATA_PREFIX=$tessdata_dir" >> "$GITHUB_ENV"
 
       - name: Audit npm dependencies
         run: |
           npm audit --prefix frontend --audit-level=moderate
           npm audit --prefix playwright --audit-level=moderate
 
-      - name: Build and test
+      - name: Build, test and package
         env:
-          TEXTBUDDY_REQUIRE_OCR_TESTS: 'true'
-        run: ./gradlew clean test verifyReleaseBundle installerZip
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          args=()
+          if [[ -n "$RELEASE_VERSION" ]]; then
+            args+=("-PreleaseVersion=$RELEASE_VERSION")
+          fi
+          ./gradlew clean test installerZip "${args[@]}"
 
-      - name: Install browser test dependencies
+      - name: Install Chromium
         run: |
           npm ci --prefix playwright
           npx --prefix playwright playwright install --with-deps chromium
 
-      - name: Run browser and accessibility tests
+      - name: Test the packaged JAR in Chromium
         run: npm test --prefix playwright
 
-      - name: Upload failure reports
-        if: failure()
-        uses: actions/upload-artifact@v4
+      - name: Start the extracted installer
+        run: |
+          set -euo pipefail
+          installer_dir="$(mktemp -d)"
+          unzip -q build/distributions/textbuddy-*.zip -d "$installer_dir"
+          cmp build/libs/textbuddy.jar "$installer_dir/textbuddy.jar"
+          test -f "$installer_dir/bin/start-textbuddy.cmd"
+          test -f "$installer_dir/docs/operations.md"
+          test -f "$installer_dir/config/examples/application-production.properties.example"
+          test -f "$installer_dir/config/examples/textbuddy.env.example"
+          "$installer_dir/bin/start-textbuddy.sh" --server.port=18090 --server.address=127.0.0.1 \
+            --textbuddy.auth.enabled=false --textbuddy.llm.mode=stub &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          curl --fail --silent --show-error --retry-connrefused --retry 90 --retry-delay 1 \
+            http://127.0.0.1:18090/actuator/health
+
+      - uses: actions/upload-artifact@v4
+        if: steps.release.outputs.tag != ''
         with:
-          name: ci-failure-reports
+          name: delivery
+          if-no-files-found: error
+          path: |
+            build/libs/textbuddy.jar
+            build/distributions/textbuddy-${{ steps.release.outputs.version }}.zip
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: failure-reports
           if-no-files-found: ignore
           path: |
-            build/reports/**
-            build/test-results/**
-            frontend/**/test-results/**
-            playwright/test-results/**
+            build/reports/
+            build/test-results/
+            playwright/test-results/
+
+  release:
+    needs: check
+    if: needs.check.outputs.tag != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: delivery
+          path: delivery
+
+      - name: Sign and verify release files
+        working-directory: delivery/libs
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$GPG_PRIVATE_KEY" || -z "$GPG_PASSPHRASE" ]]; then
+            echo "Der Signierschlüssel oder seine Passphrase fehlt." >&2
+            exit 1
+          fi
+          printf '%s' "$GPG_PRIVATE_KEY" | gpg --batch --import
+          sha256sum textbuddy.jar > textbuddy.jar.sha256
+          args=()
+          if [[ -n "$GPG_KEY_ID" ]]; then
+            args+=(--local-user "$GPG_KEY_ID")
+          fi
+          for file in textbuddy.jar textbuddy.jar.sha256; do
+            printf '%s\n' "$GPG_PASSPHRASE" | gpg --batch --pinentry-mode loopback \
+              --passphrase-fd 0 "${args[@]}" --output "$file.asc" --detach-sign "$file"
+            gpg --verify "$file.asc" "$file"
+          done
+          sha256sum -c textbuddy.jar.sha256
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.check.outputs.tag }}
+          name: Textbuddy ${{ needs.check.outputs.tag }}
+          draft: true
+          fail_on_unmatched_files: true
+          files: |
+            delivery/libs/textbuddy.jar
+            delivery/libs/textbuddy.jar.sha256
+            delivery/libs/textbuddy.jar.asc
+            delivery/libs/textbuddy.jar.sha256.asc
+            delivery/distributions/*.zip
