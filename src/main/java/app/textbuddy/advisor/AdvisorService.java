@@ -4,7 +4,6 @@ import app.textbuddy.integration.llm.LlmProviderException;
 import app.textbuddy.integration.llm.TextbuddyLlmClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -13,20 +12,18 @@ import org.springframework.web.util.UriUtils;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 public final class AdvisorService {
 
-    static final int DEFAULT_RULE_BATCH_SIZE = 3;
+    static final int RULE_BATCH_SIZE = 3;
     static final int MAX_RULES = 20;
     static final int MAX_DOCUMENTS = 5;
     static final int MAX_FINDINGS = 20;
@@ -35,17 +32,10 @@ public final class AdvisorService {
 
     private final AdvisorCatalog advisorCatalog;
     private final TextbuddyLlmClient llmClient;
-    private final int ruleBatchSize;
 
-    @Autowired
     public AdvisorService(AdvisorCatalog advisorCatalog, TextbuddyLlmClient llmClient) {
-        this(advisorCatalog, llmClient, DEFAULT_RULE_BATCH_SIZE);
-    }
-
-    AdvisorService(AdvisorCatalog advisorCatalog, TextbuddyLlmClient llmClient, int ruleBatchSize) {
-        this.advisorCatalog = Objects.requireNonNull(advisorCatalog);
-        this.llmClient = Objects.requireNonNull(llmClient);
-        this.ruleBatchSize = Math.max(1, ruleBatchSize);
+        this.advisorCatalog = advisorCatalog;
+        this.llmClient = llmClient;
     }
 
     public void validate(AdvisorValidateRequest request, AdvisorValidationStreamHandler handler) {
@@ -56,161 +46,130 @@ public final class AdvisorService {
         validateSelectedDocuments(selectedDocuments);
 
         if (text.isBlank() || selectedDocuments.isEmpty()) {
-            handler.complete();
+            handler.complete(false);
             return;
         }
 
-        List<AdvisorRuleCheck> ruleChecks = loadRuleChecks(selectedDocuments).stream()
-                .limit(MAX_RULES)
-                .toList();
-        if (ruleChecks.isEmpty()) {
-            handler.complete();
-            return;
-        }
+        List<AdvisorRuleCheck> rules = loadRuleChecks(selectedDocuments);
+        int total = Math.min(rules.size(), MAX_RULES);
+        boolean truncated = rules.size() > total;
+        Set<String> emitted = new HashSet<>();
 
-        Map<String, Integer> nextMatchOffsets = new HashMap<>();
-        Set<String> emittedKeys = new HashSet<>();
-        int checked = 0;
-
-        for (List<AdvisorRuleCheck> batch : partitionRuleChecks(ruleChecks, ruleBatchSize)) {
-            Map<String, AdvisorRuleCheck> checksByKey = batch.stream().collect(Collectors.toMap(
-                    ruleCheck -> ruleKey(ruleCheck.documentName(), ruleCheck.ruleId()),
-                    Function.identity()
-            ));
-
-            List<AdvisorRuleMatch> matches = Objects.requireNonNullElse(llmClient.validate(text, batch), List.of());
+        for (int checked = 0; checked < total && !Thread.currentThread().isInterrupted();) {
+            int end = Math.min(checked + RULE_BATCH_SIZE, total);
+            List<AdvisorRuleCheck> batch = rules.subList(checked, end);
+            List<AdvisorRuleMatch> matches = llmClient.validate(text, batch);
+            if (matches == null) {
+                throw new LlmProviderException("LLM-Provider lieferte keine gültigen Advisor-Befunde.");
+            }
             for (AdvisorRuleMatch match : matches) {
-                if (match == null || emittedKeys.size() >= MAX_FINDINGS) {
+                if (match == null) continue;
+                AdvisorRuleCheck rule = batch.stream()
+                        .filter(candidate -> candidate.documentName().equals(match.documentName())
+                                && candidate.ruleId().equals(match.ruleId()))
+                        .findFirst().orElse(null);
+                AdvisorValidationEvent event = locateEvent(text, rule, match).orElse(null);
+                if (event == null || emitted.contains(event.stableKey())) continue;
+                if (emitted.size() == MAX_FINDINGS) {
+                    truncated = true;
                     continue;
                 }
-                AdvisorRuleCheck ruleCheck = checksByKey.get(ruleKey(match.documentName(), match.ruleId()));
-                locateEvent(text, ruleCheck, match, nextMatchOffsets).ifPresent(event -> {
-                    if (emittedKeys.add(event.stableKey())) {
-                        handler.validation(event);
-                    } else if (ruleCheck != null) {
-                        log.debug("Duplicate advisor finding discarded (document={}, rule={}).",
-                                ruleCheck.documentName(), ruleCheck.ruleId());
-                    }
-                });
+                emitted.add(event.stableKey());
+                handler.validation(event);
             }
-
-            checked += batch.size();
-            handler.progress(new AdvisorProgressEvent(checked, ruleChecks.size()));
+            checked = end;
+            handler.progress(new AdvisorProgressEvent(checked, total));
         }
 
-        handler.complete();
+        if (!Thread.currentThread().isInterrupted()) {
+            handler.complete(truncated);
+        }
     }
 
-    public AdvisorFixResponse fix(AdvisorFixRequest request) {
+    public List<String> fix(AdvisorFixRequest request) {
         String text = request == null ? "" : Objects.requireNonNullElse(request.text(), "");
-        List<AdvisorFixRequest.Finding> requested = request == null || request.findings() == null
+        List<AdvisorFixRequest.Finding> selected = request == null || request.findings() == null
                 ? List.of()
                 : request.findings();
 
         if (text.isBlank()) {
             badRequest("Text ist erforderlich.");
         }
-        if (requested.isEmpty()) {
-            badRequest("Mindestens ein Advisor-Befund ist erforderlich.");
-        }
-        if (requested.size() > MAX_FINDINGS) {
-            badRequest("Höchstens " + MAX_FINDINGS + " Advisor-Befunde sind erlaubt.");
+        if (selected.isEmpty() || selected.size() > MAX_FINDINGS) {
+            badRequest("Es sind 1 bis " + MAX_FINDINGS + " Advisor-Befunde erforderlich.");
         }
 
-        List<AdvisorFixFinding> findings = new ArrayList<>(requested.size());
-        Set<String> uniqueRanges = new HashSet<>();
-        Set<String> uniqueDocuments = new HashSet<>();
-
-        for (AdvisorFixRequest.Finding finding : requested) {
-            AdvisorFixFinding resolved = resolveFinding(text, finding, uniqueRanges);
-            findings.add(resolved);
-            uniqueDocuments.add(resolved.documentName());
+        List<AdvisorFixFinding> findings = new ArrayList<>(selected.size());
+        Set<String> documents = new HashSet<>();
+        int previousEnd = 0;
+        for (AdvisorFixRequest.Finding finding : selected) {
+            if (finding == null || finding.start() < previousEnd) {
+                badRequest("Advisor-Fundstellen müssen geordnet sein und dürfen sich nicht überschneiden.");
+            }
+            findings.add(resolveFinding(text, finding));
+            previousEnd = finding.end();
+            documents.add(normalized(finding.documentName()));
         }
-        if (uniqueDocuments.size() > MAX_DOCUMENTS) {
+        if (documents.size() > MAX_DOCUMENTS) {
             badRequest("Höchstens " + MAX_DOCUMENTS + " Advisor-Dokumente sind erlaubt.");
         }
 
-        String corrected = Objects.requireNonNullElse(llmClient.fixAdvisor(text, List.copyOf(findings)), "");
-        if (corrected.isBlank()) {
-            throw new LlmProviderException("LLM-Provider lieferte keinen korrigierten Text.");
+        List<String> replacements = llmClient.fixAdvisor(findings);
+        if (replacements == null || replacements.size() != findings.size()
+                || replacements.stream().anyMatch(Objects::isNull)) {
+            throw new LlmProviderException("LLM-Provider lieferte keine gültigen Advisor-Korrekturen.");
         }
-
-        return new AdvisorFixResponse(preserveOuterWhitespace(text, corrected));
+        return replacements;
     }
 
     public static Duration maximumValidationDuration(Duration providerTimeout) {
-        int batchCount = (MAX_RULES + DEFAULT_RULE_BATCH_SIZE - 1) / DEFAULT_RULE_BATCH_SIZE;
+        int batchCount = (MAX_RULES + RULE_BATCH_SIZE - 1) / RULE_BATCH_SIZE;
         return providerTimeout.multipliedBy(batchCount).plusSeconds(10);
     }
 
-    List<List<AdvisorRuleCheck>> partitionRuleChecks(List<AdvisorRuleCheck> ruleChecks, int batchSize) {
-        if (ruleChecks == null || ruleChecks.isEmpty()) {
-            return List.of();
+    private Optional<AdvisorValidationEvent> locateEvent(String text, AdvisorRuleCheck rule, AdvisorRuleMatch match) {
+        if (rule == null || !matchesCanonicalTerm(match.matchedText(), rule.matchTerms())) {
+            return Optional.empty();
         }
-        int normalizedBatchSize = Math.max(1, batchSize);
-        List<List<AdvisorRuleCheck>> batches = new ArrayList<>();
-        for (int index = 0; index < ruleChecks.size(); index += normalizedBatchSize) {
-            batches.add(List.copyOf(ruleChecks.subList(index, Math.min(ruleChecks.size(), index + normalizedBatchSize))));
+        String matchedText = match.matchedText();
+        int start = uniqueOffset(text, matchedText);
+        if (start < 0 && match.excerpt() != null && !match.excerpt().isBlank()) {
+            int context = uniqueOffset(text, match.excerpt());
+            int relative = uniqueOffset(match.excerpt(), matchedText);
+            if (context >= 0 && relative >= 0) start = context + relative;
         }
-        return List.copyOf(batches);
-    }
-
-    private java.util.Optional<AdvisorValidationEvent> locateEvent(
-            String text,
-            AdvisorRuleCheck ruleCheck,
-            AdvisorRuleMatch match,
-            Map<String, Integer> nextMatchOffsets
-    ) {
-        if (ruleCheck == null || match == null) {
-            return java.util.Optional.empty();
-        }
-        String matchedText = Objects.requireNonNullElse(match.matchedText(), "");
-        if (matchedText.isEmpty() || !matchesCanonicalTerm(matchedText, ruleCheck.matchTerms())) {
-            log.debug("Unlocatable advisor finding discarded (document={}, rule={}).",
-                    ruleCheck.documentName(), ruleCheck.ruleId());
-            return java.util.Optional.empty();
-        }
-
-        String cursorKey = ruleKey(ruleCheck.documentName(), ruleCheck.ruleId()) + "::" + matchedText;
-        int start = text.indexOf(matchedText, nextMatchOffsets.getOrDefault(cursorKey, 0));
         if (start < 0) {
-            log.debug("Unlocatable advisor finding discarded (document={}, rule={}).",
-                    ruleCheck.documentName(), ruleCheck.ruleId());
-            return java.util.Optional.empty();
+            log.debug("Unlocatable advisor finding discarded (document={}, rule={}).", rule.documentName(), rule.ruleId());
+            return Optional.empty();
         }
         int end = start + matchedText.length();
-        nextMatchOffsets.put(cursorKey, end);
-
-        return java.util.Optional.of(new AdvisorValidationEvent(
-                ruleKey(ruleCheck.documentName(), ruleCheck.ruleId()) + "::" + start + ":" + end,
-                ruleCheck.documentName(),
-                ruleCheck.documentTitle(),
-                ruleCheck.ruleId(),
-                ruleCheck.ruleTitle(),
-                ruleCheck.page(),
-                "Seite " + ruleCheck.page(),
-                fallback(match.message(), ruleCheck.message()),
+        return Optional.of(new AdvisorValidationEvent(
+                rule.documentName() + "::" + rule.ruleId() + "::" + start + ":" + end,
+                rule.documentName(),
+                rule.documentTitle(),
+                rule.ruleId(),
+                rule.ruleTitle(),
+                rule.page(),
+                fallback(match.message(), rule.message()),
                 matchedText,
-                fallback(match.excerpt(), excerptAround(text, start, end)),
-                fallback(match.suggestion(), ruleCheck.suggestion()),
-                ruleCheck.referenceUrl(),
+                excerptAround(text, start, end),
+                fallback(match.suggestion(), rule.suggestion()),
+                rule.referenceUrl(),
                 start,
                 end
         ));
     }
 
-    private AdvisorFixFinding resolveFinding(
-            String text,
-            AdvisorFixRequest.Finding finding,
-            Set<String> uniqueRanges
-    ) {
-        if (finding == null) {
-            badRequest("Advisor-Befund ist ungültig.");
-        }
+    private int uniqueOffset(String text, String fragment) {
+        int first = text.indexOf(fragment);
+        return first >= 0 && text.indexOf(fragment, first + 1) < 0 ? first : -1;
+    }
+
+    private AdvisorFixFinding resolveFinding(String text, AdvisorFixRequest.Finding finding) {
         String documentName = normalized(finding.documentName());
         String ruleId = normalized(finding.ruleId());
-        String suggestion = normalized(finding.suggestion());
-        if (documentName.isBlank() || ruleId.isBlank() || suggestion.isBlank()) {
+        String suggestion = finding.suggestion();
+        if (documentName.isBlank() || ruleId.isBlank() || suggestion == null) {
             badRequest("Dokument, Regel und Vorschlag sind erforderlich.");
         }
         if (finding.start() < 0 || finding.end() <= finding.start() || finding.end() > text.length()) {
@@ -224,22 +183,16 @@ public final class AdvisorService {
                 .findFirst()
                 .orElseThrow(() -> badRequestException("Advisor-Regel ist unbekannt."));
         String matchedText = text.substring(finding.start(), finding.end());
-        if (matchedText.isBlank() || !matchesCanonicalTerm(matchedText, rule.matchTerms())) {
-            badRequest("Fundstelle stimmt nicht mit der ausgewählten Regel überein.");
+        if (!matchedText.equals(finding.matchedText()) || !matchesCanonicalTerm(matchedText, rule.matchTerms())) {
+            badRequest("Fundstelle stimmt nicht mit dem ausgewählten Befund überein.");
         }
-        String rangeKey = finding.start() + ":" + finding.end();
-        if (!uniqueRanges.add(rangeKey)) {
-            badRequest("Advisor-Fundstellen dürfen nicht doppelt vorkommen.");
-        }
-
-        return new AdvisorFixFinding(
-                document.name(), document.title(), rule.id(), rule.title(), rule.instructions(),
-                rule.suggestion(), finding.start(), finding.end(), matchedText, suggestion
-        );
+        return new AdvisorFixFinding(matchedText, excerptAround(text, finding.start(), finding.end()),
+                rule.instructions(), suggestion);
     }
 
     private boolean matchesCanonicalTerm(String matchedText, List<String> terms) {
-        return terms.stream().anyMatch(term -> matchedText.equalsIgnoreCase(term));
+        return matchedText != null && !matchedText.isBlank()
+                && terms.stream().anyMatch(matchedText::equalsIgnoreCase);
     }
 
     private void validateSelectedDocuments(Set<String> selectedDocuments) {
@@ -248,7 +201,7 @@ public final class AdvisorService {
         }
         for (String name : selectedDocuments) {
             if (advisorCatalog.find(name).isEmpty()) {
-                badRequest("Advisor-Dokument ist unbekannt: " + name);
+                badRequest("Advisor-Dokument ist unbekannt.");
             }
         }
     }
@@ -277,10 +230,6 @@ public final class AdvisorService {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    private String ruleKey(String documentName, String ruleId) {
-        return normalized(documentName) + "::" + normalized(ruleId);
-    }
-
     private String fallback(String preferred, String fallback) {
         String value = normalized(preferred);
         return value.isBlank() ? normalized(fallback) : value;
@@ -290,27 +239,6 @@ public final class AdvisorService {
         int from = Math.max(0, start - 40);
         int to = Math.min(text.length(), end + 40);
         return (from > 0 ? "…" : "") + text.substring(from, to) + (to < text.length() ? "…" : "");
-    }
-
-    private String preserveOuterWhitespace(String original, String corrected) {
-        int leadingEnd = 0;
-        while (leadingEnd < original.length() && Character.isWhitespace(original.charAt(leadingEnd))) {
-            leadingEnd++;
-        }
-        int trailingStart = original.length();
-        while (trailingStart > leadingEnd && Character.isWhitespace(original.charAt(trailingStart - 1))) {
-            trailingStart--;
-        }
-        String leading = original.substring(0, leadingEnd);
-        String trailing = original.substring(trailingStart);
-        String value = corrected;
-        if (!leading.isEmpty() && !value.startsWith(leading)) {
-            value = leading + value.stripLeading();
-        }
-        if (!trailing.isEmpty() && !value.endsWith(trailing)) {
-            value = value.stripTrailing() + trailing;
-        }
-        return value;
     }
 
     private String normalized(String value) {

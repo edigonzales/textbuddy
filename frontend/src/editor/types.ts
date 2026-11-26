@@ -1,12 +1,9 @@
 export interface EditorTextChangedDetail {
   text: string;
-  characters: number;
-  words: number;
 }
 
 export interface EditorElements {
   root: HTMLElement;
-  canvas: HTMLElement;
   surface: HTMLElement;
   mirror: HTMLTextAreaElement;
   characterCount: HTMLElement;
@@ -52,11 +49,6 @@ export interface TextCorrectionResponse {
 
 export interface QuickActionResponse {
   text: string;
-}
-
-export interface RewriteDiffView {
-  hasChanges: boolean;
-  segments: RewriteDiffSegment[];
 }
 
 export type RewriteDiffHunkStatus = "pending" | "accepted" | "rejected";

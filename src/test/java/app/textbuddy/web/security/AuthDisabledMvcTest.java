@@ -40,6 +40,6 @@ class AuthDisabledMvcTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.blocks[0].shortMessage").value("Spelling"));
+                .andExpect(jsonPath("$.blocks[0].replacements[0]").value("the"));
     }
 }

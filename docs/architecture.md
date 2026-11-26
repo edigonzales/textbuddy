@@ -1,6 +1,6 @@
 # Architektur
 
-## Zielbild
+## Aufbau
 
 Textbuddy ist eine einzelne Spring-Boot-Anwendung für einen zentral betriebenen Team-Server. Es gibt keine Datenbank und keinen verteilten Anwendungszustand. Diese Begrenzung ist Absicht: Deployment, Fehlersuche und Weiterentwicklung sollen ohne zusätzliche Infrastruktur verständlich bleiben.
 
@@ -8,12 +8,10 @@ Textbuddy ist eine einzelne Spring-Boot-Anwendung für einen zentral betriebenen
 flowchart LR
     Browser["Browser: JTE + Tiptap"] -->|"JSON / Multipart / SSE"| App["Textbuddy Spring Boot"]
     App --> LLM["OpenAI-kompatibles LLM"]
-    App --> LT["LanguageTool eingebettet oder HTTP"]
-    App --> Doc["Kreuzberg eingebettet oder Dokument-HTTP-API"]
+    App --> LT["LanguageTool eingebettet"]
+    App --> Doc["Kreuzberg lokal"]
     App --> Advisor["Advisor-Metadaten und PDFs im JAR"]
 ```
-
-## Aufbau
 
 - `web`: HTTP-Verträge, Eingabegrenzen, Fehlerabbildung und Startseite.
 - Fachpakete wie `quickaction`, `textcorrection`, `advisor` und `document`: kleine Services und unveränderliche Request-/Response-Typen.
@@ -21,25 +19,23 @@ flowchart LR
 - `config`: ein Konfigurationsaggregat (`TextbuddyProperties`) und die Auswahl der Adapter.
 - `frontend`: eine TypeScript-/Tiptap-Insel; keine zweite eigenständige Webanwendung.
 
-Neue Abstraktionen sollen nur entstehen, wenn es tatsächlich mehrere Implementierungen oder eine klar testbare Grenze gibt. Für reine Weiterleitung ist eine zusätzliche Klasse kein Gewinn.
-
 ## HTTP-Verträge
 
 | Endpoint | Format | Zweck |
 | --- | --- | --- |
 | `POST /api/text-correction` | JSON | Rechtschreib- und Stilhinweise |
-| `POST /api/sentence-rewrite` | JSON | Satzalternativen |
-| `POST /api/word-synonym` | JSON | Synonyme im Kontext |
-| `POST /api/quick-actions/{action}` | JSON | Volltext-Aktionen; eine abschliessende Antwort |
+| `POST /api/quick-actions/plain-language`, `POST /api/quick-actions/summarize` | JSON | Volltext-Überarbeitung oder Zusammenfassung |
 | `GET /api/advisor/docs` | JSON | Statischer Advisor-Katalog |
 | `GET /api/advisor/doc/{name}` | PDF | Referenzdokument für einen neuen Browser-Tab |
-| `POST /api/advisor/validate` | SSE | Regelprüfung mit fortlaufenden Treffern und Batchfortschritt |
-| `POST /api/advisor/fix` | JSON | Ausgewählte Advisor-Befunde atomar auf den Volltext anwenden |
-| `POST /api/convert/doc` | Multipart/JSON | Dokument in bereinigtes HTML umwandeln; das Frontend reduziert es auf Plaintext |
+| `POST /api/advisor/validate` | SSE | Regelprüfung mit Befunden, Batchfortschritt und Abschlussereignis |
+| `POST /api/advisor/fix` | JSON | Ein Ersatztext pro ausgewählter Fundstelle in Reihenfolge des Requests |
+| `POST /api/convert/doc` | Multipart/JSON | Extrahierten Dokumenttext als `{"text": "..."}` liefern |
 
-Nur die Advisor-Prüfung verwendet SSE, weil dort mehrere fachlich unabhängige Treffer laufend sichtbar werden. Die Regelsets werden in Batches von drei Regeln seriell geprüft; bei den derzeit zehn Regeln sind das höchstens vier Provider-Aufrufe. Der Advisor-Fix und Quick Actions liefern normale atomare JSON-Antworten. Es gibt keine automatischen Provider-Retries.
+Die Advisor-Prüfung verarbeitet Regeln in Dreierbatches. Das SSE-Abschlussereignis `complete` enthält `truncated: true`, wenn die Regel- oder Befundgrenze Ergebnisse begrenzt. Ein Stream ohne gültiges Abschlussereignis gilt als fehlgeschlagen.
 
-Advisor-Befunde verwenden halb offene UTF-16-Indizes in den unveränderten Request-Text. Das entspricht Java-`String`- und Browser-String-Indizes. Der Server übernimmt keine vom Modell behaupteten Positionen, sondern lokalisiert einen exakt kopierten `matchedText` selbst, entfernt Duplikate und verwirft nicht auffindbare Treffer ohne Nutztext zu protokollieren. Der Fix löst Dokument und Regel erneut aus dem kanonischen Katalog auf.
+LanguageTool und Advisor liefern halb offene UTF-16-Bereiche im unveränderten Request-Text. Der Advisor übernimmt exakt kopierte Fundstellen aus gültigen Regeln. Bei Wiederholungen muss ein exakt kopierter Kontext die Stelle eindeutig bestimmen. Für Korrekturen übermittelt der Editor geordnete, disjunkte Bereiche mit ihrem Originalausschnitt. Der Server prüft Textausschnitt und Regel und fordert pro Bereich einen Ersatztext an. Der Editor bindet die Vorschau an den geprüften Textstand und übernimmt die ausgewählten Ersetzungen als eine Undo-Transaktion.
+
+Kreuzberg liefert direkt Text und Absatzumbrüche. Der Ergebnis-Cache ist deaktiviert. Der Editor setzt Text als Tiptap-Textknoten ein und verwendet LF als Zeilenumbruch. DOCX exportiert jede Editorzeile als Absatz.
 
 ## Zustand und Daten
 
@@ -53,4 +49,4 @@ Advisor-Befunde verwenden halb offene UTF-16-Indizes in den unveränderten Reque
 
 Im Produktionsmodus sind nur Login, Fehlerseite und statische Assets öffentlich; alle übrigen Routen verlangen eine OIDC-Anmeldung. Zustandsändernde Browseranfragen tragen ein CSRF-Token. Ein ungeschützter Start ist nur bei expliziter Loopback-Bindung möglich. Upload-, Text- und Promptgrössen werden vor teurer Verarbeitung geprüft. CSP und `X-Frame-Options: SAMEORIGIN` erlauben eigene PDF-Ressourcen, aber keine fremde Einbettung.
 
-Externe Provider sind eine eigene Datenschutzgrenze: LLM-Texte beziehungsweise Dokumente im HTTP-Modus verlassen den Textbuddy-Prozess. Die Entscheidung dafür und die Aufbewahrungsregeln des Providers gehören zur Betriebskonfiguration.
+Externe Provider sind eine eigene Datenschutzgrenze: Für LLM-Funktionen erforderliche Texte verlassen den Textbuddy-Prozess. Die Entscheidung dafür und die Aufbewahrungsregeln des Providers gehören zur Betriebskonfiguration.

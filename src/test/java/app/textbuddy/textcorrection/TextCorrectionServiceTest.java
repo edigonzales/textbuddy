@@ -50,6 +50,20 @@ class TextCorrectionServiceTest {
     }
 
     @Test
+    void preservesInsertionAndDeletionSuggestionsAtValidCharacterBoundaries() {
+        LanguageToolClient client = (text, language) -> List.of(
+                new LanguageToolMatch(1, 0, "", "", "UNSAFE", List.of(" ")),
+                new LanguageToolMatch(2, 0, "", "", "INSERT", List.of(" ")),
+                new LanguageToolMatch(2, 1, "", "", "DELETE", List.of(""))
+        );
+        var service = new TextCorrectionService(client);
+
+        assertThat(service.correct(new CorrectionRequest("🌱x", "de")).blocks())
+                .extracting(CorrectionBlock::replacements)
+                .containsExactly(List.of(" "), List.of(""));
+    }
+
+    @Test
     void defaultsLanguageToAutoWhenBlank() {
         AtomicReference<String> capturedLanguage = new AtomicReference<>();
         LanguageToolClient client = (text, language) -> {

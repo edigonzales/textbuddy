@@ -24,14 +24,14 @@ class KreuzbergDoclingClientOcrFallbackTest {
             throw new KreuzbergException("OCR failed", ErrorCode.OCR_ERROR);
         });
 
-        assertThatThrownBy(() -> client.convertToHtml(
+        assertThatThrownBy(() -> client.extractText(
                 new DocumentUpload("scan.png", "image/png", "noop".getBytes(StandardCharsets.UTF_8)),
                 "fr"
         ))
                 .isInstanceOf(DocumentConversionFailedException.class)
                 .hasMessageContaining("OCR konnte");
 
-        assertThat(attemptedLanguages).containsExactly("fr", "de");
+        assertThat(attemptedLanguages).containsExactly("fra", "deu");
     }
 
     @Test
@@ -42,14 +42,14 @@ class KreuzbergDoclingClientOcrFallbackTest {
             throw new KreuzbergException("OCR failed", ErrorCode.OCR_ERROR);
         });
 
-        assertThatThrownBy(() -> client.convertToHtml(
+        assertThatThrownBy(() -> client.extractText(
                 new DocumentUpload("scan.png", "image/png", "noop".getBytes(StandardCharsets.UTF_8)),
                 "de"
         ))
                 .isInstanceOf(DocumentConversionFailedException.class)
                 .hasMessageContaining("OCR konnte");
 
-        assertThat(attemptedLanguages).containsExactly("de");
+        assertThat(attemptedLanguages).containsExactly("deu");
     }
 
     @Test
@@ -58,7 +58,7 @@ class KreuzbergDoclingClientOcrFallbackTest {
             throw new KreuzbergException("extraction timeout reached", ErrorCode.GENERIC_ERROR);
         });
 
-        assertThatThrownBy(() -> client.convertToHtml(
+        assertThatThrownBy(() -> client.extractText(
                 new DocumentUpload("scan.pdf", "application/pdf", "noop".getBytes(StandardCharsets.UTF_8)),
                 "en"
         ))
@@ -72,7 +72,7 @@ class KreuzbergDoclingClientOcrFallbackTest {
             throw new KreuzbergException("cannot parse", ErrorCode.PARSING_ERROR);
         });
 
-        assertThatThrownBy(() -> client.convertToHtml(
+        assertThatThrownBy(() -> client.extractText(
                 new DocumentUpload("kaputt.pdf", "application/pdf", "noop".getBytes(StandardCharsets.UTF_8)),
                 "de"
         ))

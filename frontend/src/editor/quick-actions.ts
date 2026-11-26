@@ -5,6 +5,7 @@ import { isApiLocked } from "./auth";
 import { dispatchWorkspaceBusy } from "./events";
 import { extractErrorMessage } from "./http-error";
 import { getPlainText } from "./plain-text";
+import { buildRewriteDiffSegments } from "./rewrite-diff";
 import { normalizeRequestedLanguage } from "./request-language";
 import type { ReadabilityComparison, ReviewController } from "./review-controller";
 import { calculateTextStatistics, supportsGermanFlesch } from "./text-statistics";
@@ -36,12 +37,6 @@ const ACTIONS = {
   },
 } as const;
 
-function isAbortError(error: unknown): boolean {
-  return error instanceof DOMException
-    ? error.name === "AbortError"
-    : error instanceof Error && error.name === "AbortError";
-}
-
 function readability(
   action: QuickAction,
   language: string,
@@ -71,10 +66,9 @@ export function mountQuickActions(
   const workspaceStatus = root.querySelector<HTMLElement>("[data-workspace-status]");
   if (!plainLanguage || !summary || !language) return;
 
-  let activeRequest: AbortController | null = null;
+  let running = false;
 
   function setStatus(state: "idle" | "running" | "success" | "error", message: string): void {
-    root.dataset.quickActionState = state;
     if (!workspaceStatus) return;
     workspaceStatus.dataset.state = state;
     workspaceStatus.textContent = message;
@@ -83,17 +77,11 @@ export function mountQuickActions(
   }
 
   function syncAvailability(): void {
-    const unavailable = isApiLocked(root) || activeRequest !== null || reviewController.isOpen()
+    const unavailable = isApiLocked(root) || running
       || root.dataset.workspaceBusy === "true";
     const hasText = getPlainText(editor).trim().length > 0;
     plainLanguage.disabled = unavailable || !hasText;
     summary.disabled = unavailable || !hasText;
-  }
-
-  function setRunning(running: boolean): void {
-    root.dataset.quickActionRunning = running ? "true" : "false";
-    if (running) dispatchWorkspaceBusy(root, true, "editor", "quick-action");
-    syncAvailability();
   }
 
   function requestBody(action: QuickAction, original: string): QuickActionRequestBody {
@@ -111,50 +99,48 @@ export function mountQuickActions(
       syncAvailability();
       return;
     }
-    if (!original.trim() || activeRequest || reviewController.isOpen() || root.dataset.workspaceBusy === "true") {
+    if (!original.trim() || running || root.dataset.workspaceBusy === "true") {
       syncAvailability();
       return;
     }
 
     const definition = ACTIONS[action];
     const body = retryRequest ?? requestBody(action, original);
-    const controller = new AbortController();
-    activeRequest = controller;
-    setRunning(true);
+    running = true;
+    dispatchWorkspaceBusy(root, true, "editor", "quick-action");
+    let reviewOpened = false;
     setStatus("running", definition.running);
     try {
       const response = await apiFetch(definition.endpoint, {
         method: "POST",
         headers: { Accept: "application/json", "Content-Type": "application/json" },
         body: JSON.stringify(body),
-        signal: controller.signal,
       });
       if (!response.ok) throw new Error(await extractErrorMessage(response, definition.error));
       const payload = (await response.json()) as QuickActionResponse;
-      if (activeRequest !== controller) return;
       if (typeof payload.text !== "string" || (!payload.text.trim() && original.trim())) {
         throw new Error(definition.error);
       }
 
-      activeRequest = null;
-      root.dataset.quickActionRunning = "false";
-      setStatus("success", definition.success);
-      reviewController.open({
+      const rewritten = payload.text.replace(/\r\n?/g, "\n");
+      const segments = buildRewriteDiffSegments(original, rewritten);
+      if (!segments) throw new Error(t("review.tooLarge"));
+      reviewOpened = reviewController.open({
         source: "quick-action",
         title: t("review.title", { action: definition.label }),
         original,
-        rewritten: payload.text,
-        readability: readability(action, body.language, original, payload.text),
+        segments,
+        readability: readability(action, body.language, original, rewritten),
         retry: () => void runAction(action, body),
-        onClose: () => syncAvailability(),
       });
+      if (!reviewOpened) throw new Error(t("review.stale"));
+      setStatus("success", definition.success);
     } catch (error) {
-      if (isAbortError(error) || activeRequest !== controller) return;
-      activeRequest = null;
-      root.dataset.quickActionRunning = "false";
-      dispatchWorkspaceBusy(root, false, "editor");
       setStatus("error", error instanceof Error && error.message.trim()
         ? error.message : t("quickAction.error.generic"));
+    } finally {
+      running = false;
+      if (!reviewOpened) dispatchWorkspaceBusy(root, false, "editor");
       syncAvailability();
     }
   }

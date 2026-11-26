@@ -1,9 +1,7 @@
 package app.textbuddy.integration.docling;
 
 import app.textbuddy.document.DocumentUpload;
-import dev.kreuzberg.Kreuzberg;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -31,32 +29,26 @@ class KreuzbergDoclingClientTest {
 
     @ParameterizedTest
     @MethodSource("supportedUploads")
-    void convertsSupportedFormatsToHtml(DocumentUpload upload, String expectedFragment) {
-        assertThat(client.convertToHtml(upload, "de")).contains(expectedFragment);
+    void extractsTextFromSupportedFormats(DocumentUpload upload, String expectedFragment) {
+        assertThat(client.extractText(upload, "de")).contains(expectedFragment);
     }
 
     @Test
-    void convertsScannedImageWithLocalOcrWhenRuntimeProvidesOcrBackend() throws IOException {
-        requireOrAssumeOcr(isOcrRuntimeAvailable(), "Keine lokale OCR-Engine verfügbar.");
-        requireOrAssumeOcr(isOcrRuntimeReady("en"), "Lokale OCR ist vorhanden, aber nicht betriebsbereit.");
-
+    void extractsRealTextFromAScannedImage() throws IOException {
         byte[] image = createScannedPng("HELLO OCR");
-        String html = client.convertToHtml(new DocumentUpload("scan.png", "image/png", image), "en");
-        String normalized = normalizeLetters(html);
+        String text = client.extractText(new DocumentUpload("scan.png", "image/png", image), "en");
+        String normalized = normalizeLetters(text);
 
-        assertThat(normalized).contains("hello");
+        assertThat(normalized).contains("helloocr");
     }
 
     @Test
-    void convertsScannedPdfWithLocalOcrWhenRuntimeProvidesOcrBackend() throws IOException {
-        requireOrAssumeOcr(isOcrRuntimeAvailable(), "Keine lokale OCR-Engine verfügbar.");
-        requireOrAssumeOcr(isOcrRuntimeReady("de"), "Lokale OCR ist vorhanden, aber nicht betriebsbereit.");
-
+    void extractsRealTextFromAScannedPdf() throws IOException {
         byte[] scannedPdf = createScannedPdf("OCR PDF");
-        String html = client.convertToHtml(new DocumentUpload("scan.pdf", "application/pdf", scannedPdf), "de");
-        String normalized = normalizeLetters(html);
+        String text = client.extractText(new DocumentUpload("scan.pdf", "application/pdf", scannedPdf), "de");
+        String normalized = normalizeLetters(text);
 
-        assertThat(normalized).contains("ocr");
+        assertThat(normalized).contains("ocrpdf");
     }
 
     private static List<Object[]> supportedUploads() throws IOException {
@@ -75,7 +67,7 @@ class KreuzbergDoclingClientTest {
                                 "application/octet-stream",
                                 createDocx("DOCX Import Titel", "Zweite Zeile")
                         ),
-                        "DOCX Import Titel"
+                        "DOCX Import Titel\n\nZweite Zeile"
                 },
                 new Object[]{
                         new DocumentUpload(
@@ -193,36 +185,6 @@ class KreuzbergDoclingClientTest {
                 .replace("&", "&amp;")
                 .replace("<", "&lt;")
                 .replace(">", "&gt;");
-    }
-
-    private static boolean isOcrRuntimeAvailable() {
-        try {
-            return !Kreuzberg.listOCRBackends().isEmpty();
-        } catch (Exception exception) {
-            return false;
-        }
-    }
-
-    private static void requireOrAssumeOcr(boolean available, String message) {
-        if (Boolean.parseBoolean(System.getenv("TEXTBUDDY_REQUIRE_OCR_TESTS"))) {
-            assertThat(available).as(message).isTrue();
-            return;
-        }
-
-        Assumptions.assumeTrue(available, message);
-    }
-
-    private boolean isOcrRuntimeReady(String language) {
-        try {
-            byte[] image = createScannedPng("OCR READY");
-            String html = client.convertToHtml(
-                    new DocumentUpload("ocr-health.png", "image/png", image),
-                    language
-            );
-            return !normalizeLetters(html).isBlank();
-        } catch (Exception exception) {
-            return false;
-        }
     }
 
     private static byte[] createScannedPng(String text) throws IOException {

@@ -18,7 +18,7 @@ import java.util.Objects;
 public final class KreuzbergDoclingClient implements DoclingClient {
 
     private static final String DEFAULT_MIME_TYPE = "application/octet-stream";
-    private static final String HTML_OUTPUT_FORMAT = "html";
+    private static final String PLAIN_TEXT = "plain";
 
     private final long extractionTimeoutSeconds;
     private final KreuzbergExtractor extractor;
@@ -33,16 +33,16 @@ public final class KreuzbergDoclingClient implements DoclingClient {
     }
 
     @Override
-    public String convertToHtml(DocumentUpload upload, String ocrLanguage) {
+    public String extractText(DocumentUpload upload, String ocrLanguage) {
         String mimeType = resolveMimeType(upload);
-        String normalizedLanguage = DocumentOcrLanguage.normalizeCode(ocrLanguage);
+        String normalizedLanguage = DocumentOcrLanguage.tesseractCode(ocrLanguage);
 
         try {
-            return extractHtml(upload, mimeType, normalizedLanguage);
+            return extract(upload, mimeType, normalizedLanguage);
         } catch (KreuzbergException primaryException) {
             if (shouldRetryWithFallbackLanguage(primaryException, normalizedLanguage)) {
                 try {
-                    return extractHtml(upload, mimeType, DocumentOcrLanguage.DEFAULT.code());
+                    return extract(upload, mimeType, DocumentOcrLanguage.DEFAULT);
                 } catch (KreuzbergException fallbackException) {
                     throw mapFailure(fallbackException);
                 }
@@ -71,7 +71,7 @@ public final class KreuzbergDoclingClient implements DoclingClient {
         }
     }
 
-    private String extractHtml(DocumentUpload upload, String mimeType, String ocrLanguage) throws KreuzbergException {
+    private String extract(DocumentUpload upload, String mimeType, String ocrLanguage) throws KreuzbergException {
         ExtractionConfig extractionConfig = buildExtractionConfig(ocrLanguage);
         ExtractionResult result = extractor.extract(upload.content(), mimeType, extractionConfig);
 
@@ -79,7 +79,7 @@ public final class KreuzbergDoclingClient implements DoclingClient {
             throw new DocumentConversionFailedException("Lokale Dokumentkonvertierung ist fehlgeschlagen.");
         }
 
-        return normalize(result.getContent());
+        return Objects.requireNonNullElse(result.getContent(), "");
     }
 
     private ExtractionConfig buildExtractionConfig(String ocrLanguage) {
@@ -90,7 +90,8 @@ public final class KreuzbergDoclingClient implements DoclingClient {
         return ExtractionConfig.builder()
                 .disableOcr(false)
                 .forceOcr(false)
-                .outputFormat(HTML_OUTPUT_FORMAT)
+                .outputFormat(PLAIN_TEXT)
+                .useCache(false)
                 .ocr(ocrConfig)
                 .extractionTimeoutSecs(extractionTimeoutSeconds)
                 .build();
@@ -132,7 +133,7 @@ public final class KreuzbergDoclingClient implements DoclingClient {
     }
 
     private boolean shouldRetryWithFallbackLanguage(KreuzbergException exception, String language) {
-        return !DocumentOcrLanguage.DEFAULT.code().equals(language) && isOcrProblem(exception);
+        return !DocumentOcrLanguage.DEFAULT.equals(language) && isOcrProblem(exception);
     }
 
     private boolean isTimeout(KreuzbergException exception) {

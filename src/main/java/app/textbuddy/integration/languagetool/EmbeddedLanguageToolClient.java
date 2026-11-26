@@ -1,26 +1,21 @@
 package app.textbuddy.integration.languagetool;
 
-import app.textbuddy.config.TextbuddyProperties;
 import org.languagetool.JLanguageTool;
 import org.languagetool.Language;
 import org.languagetool.Languages;
 import org.languagetool.rules.RuleMatch;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
+@Component
 public final class EmbeddedLanguageToolClient implements LanguageToolClient {
 
-    private static final Set<String> NGRAM_LANGUAGE_CODES = Set.of("de", "en", "fr", "es");
     private static final Map<String, Set<String>> AUTO_LANGUAGE_HINTS = Map.of(
             "de-CH", Set.of(" der ", " die ", " das ", " und ", " ist ", " nicht ", " mit ", " für ", " grüezi "),
             "fr", Set.of(" le ", " la ", " les ", " un ", " une ", " est ", " avec ", " pour ", " bonjour "),
@@ -28,26 +23,17 @@ public final class EmbeddedLanguageToolClient implements LanguageToolClient {
             "en-US", Set.of(" the ", " and ", " is ", " are ", " with ", " this ", " that ", " hello ")
     );
 
-    private final Optional<Path> ngramPath;
-
-    public EmbeddedLanguageToolClient(TextbuddyProperties.LanguageTool properties) {
-        this.ngramPath = Objects.requireNonNull(properties).normalizedNgramPath();
-    }
-
     @Override
     public List<LanguageToolMatch> check(String text, String language) {
-        String normalizedText = normalize(text);
-
-        if (normalizedText.isBlank()) {
+        if (text == null || text.isBlank()) {
             return List.of();
         }
 
-        Language resolvedLanguage = resolveLanguage(normalize(language), normalizedText);
+        Language resolvedLanguage = resolveLanguage(normalize(language), text);
         JLanguageTool languageTool = resolvedLanguage.createDefaultJLanguageTool();
-        activateLanguageModelRules(languageTool, resolvedLanguage);
 
         try {
-            return languageTool.check(normalizedText).stream()
+            return languageTool.check(text).stream()
                     .map(this::mapMatch)
                     .toList();
         } catch (IOException exception) {
@@ -68,13 +54,7 @@ public final class EmbeddedLanguageToolClient implements LanguageToolClient {
                 normalize(match.getMessage()),
                 normalize(match.getShortMessage()),
                 ruleId,
-                match.getSuggestedReplacements().stream()
-                        .map(this::normalize)
-                        .filter(value -> !value.isBlank())
-                        .collect(java.util.stream.Collectors.collectingAndThen(
-                                java.util.stream.Collectors.toCollection(LinkedHashSet::new),
-                                List::copyOf
-                        ))
+                match.getSuggestedReplacements()
         );
     }
 
@@ -122,39 +102,20 @@ public final class EmbeddedLanguageToolClient implements LanguageToolClient {
         String normalized = normalize(languageCode);
         Language resolvedLanguage = null;
 
-        if (!normalized.isBlank()) {
+        try {
             resolvedLanguage = Languages.getLanguageForShortCode(normalized);
-        }
-
-        if (resolvedLanguage == null && !normalized.isBlank()) {
-            resolvedLanguage = Languages.getLanguageForLocale(Locale.forLanguageTag(normalized));
+            if (resolvedLanguage == null) {
+                resolvedLanguage = Languages.getLanguageForLocale(Locale.forLanguageTag(normalized));
+            }
+        } catch (IllegalArgumentException exception) {
+            throw new LanguageToolUnavailableException("Nicht unterstützte LanguageTool-Sprache.", exception);
         }
 
         if (resolvedLanguage == null) {
-            throw new LanguageToolUnavailableException("Nicht unterstützte LanguageTool-Sprache: " + normalized);
+            throw new LanguageToolUnavailableException("Nicht unterstützte LanguageTool-Sprache.");
         }
 
         return resolvedLanguage.getDefaultLanguageVariant();
-    }
-
-    private void activateLanguageModelRules(JLanguageTool languageTool, Language language) {
-        if (ngramPath.isEmpty() || !NGRAM_LANGUAGE_CODES.contains(language.getShortCode())) {
-            return;
-        }
-
-        Path configuredPath = ngramPath.get();
-
-        if (!Files.isDirectory(configuredPath)) {
-            throw new LanguageToolUnavailableException(
-                    "textbuddy.languagetool.ngram-path muss auf ein bestehendes Verzeichnis zeigen."
-            );
-        }
-
-        try {
-            languageTool.activateLanguageModelRules(configuredPath.toFile());
-        } catch (IOException exception) {
-            throw new LanguageToolUnavailableException("LanguageTool-N-Gramm-Regeln konnten nicht aktiviert werden.", exception);
-        }
     }
 
     private String normalize(String value) {

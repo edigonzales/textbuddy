@@ -2,7 +2,7 @@ import type { Editor } from "@tiptap/core";
 
 import { apiFetch } from "./api-fetch";
 import { isApiLocked } from "./auth";
-import { importedHtmlToPlainText, setEditorPlainText } from "./editor-content";
+import { getPlainText, plainTextDocument } from "./plain-text";
 import { dispatchWorkspaceBusy } from "./events";
 import { extractErrorMessage } from "./http-error";
 import { mapTextLanguageToOcr } from "./import-language";
@@ -12,7 +12,7 @@ import { t } from "./ui-i18n";
 const DEFAULT_ERROR_MESSAGE = t("import.status.defaultError");
 
 interface DocumentConversionResponse {
-  html: string;
+  text: string;
 }
 
 function isSupportedFile(file: File, accept: string): boolean {
@@ -30,7 +30,6 @@ export function mountDocumentImport(
   root: HTMLElement,
   elements: DocumentImportElements,
 ): void {
-  let activeRequest: AbortController | null = null;
   const foundUploadButton = root.querySelector<HTMLButtonElement>("[data-editor-action='upload']");
   const foundDropTarget = root.querySelector<HTMLElement>("[data-editor-import-drop-target]");
   const workspaceStatus = root.querySelector<HTMLElement>("[data-workspace-status]");
@@ -42,45 +41,36 @@ export function mountDocumentImport(
   const dropTarget = foundDropTarget;
 
   function setState(state: "idle" | "loading" | "success" | "error", message: string): void {
-    root.dataset.documentImportState = state;
     if (workspaceStatus) {
       workspaceStatus.dataset.state = state;
       workspaceStatus.textContent = message;
       workspaceStatus.hidden = message.length === 0;
       workspaceStatus.setAttribute("role", state === "error" ? "alert" : "status");
     }
-    root.dispatchEvent(
-      new CustomEvent("document-import:state", { bubbles: true, detail: { state, message } }),
-    );
   }
 
-  function setBusy(busy: boolean): void {
-    const disabled = busy || isApiLocked(root);
-    elements.input.disabled = disabled;
-    uploadButton.disabled = disabled;
-    dropTarget.dataset.busy = busy ? "true" : "false";
-    dropTarget.dataset.authLocked = isApiLocked(root) ? "true" : "false";
-    dropTarget.setAttribute("aria-busy", busy ? "true" : "false");
-    root.dataset.documentImportRunning = busy ? "true" : "false";
-    editor.setEditable(!busy && root.dataset.workspaceBusy !== "true");
-    dispatchWorkspaceBusy(root, busy, "editor", busy ? "document-import" : "");
+  function syncControls(): void {
+    const busy = root.dataset.workspaceBusy === "true";
+    const locked = isApiLocked(root);
+    elements.input.disabled = busy || locked;
+    uploadButton.disabled = busy || locked;
+    dropTarget.setAttribute("aria-busy", String(busy));
   }
 
   async function importFile(file: File): Promise<void> {
-    activeRequest?.abort();
+    if (root.dataset.workspaceBusy === "true" || isApiLocked(root)) return;
     if (!isSupportedFile(file, elements.input.accept)) {
       setState("error", t("import.status.unsupportedFormat", { formats: elements.labels }));
       elements.input.value = "";
       return;
     }
 
-    const controller = new AbortController();
+    const original = getPlainText(editor);
     const formData = new FormData();
     const textLanguage = document.querySelector<HTMLSelectElement>("[data-workspace-language]")?.value ?? "auto";
     const ocrLanguage = mapTextLanguageToOcr(textLanguage);
     formData.append("file", file);
-    activeRequest = controller;
-    setBusy(true);
+    dispatchWorkspaceBusy(root, true, "editor", "document-import");
     setState("loading", t("import.status.loading", {
       fileName: file.name,
       ocrLabel: ocrLanguage.toUpperCase(),
@@ -89,33 +79,28 @@ export function mountDocumentImport(
     try {
       const response = await apiFetch(
         `/api/convert/doc?ocrLanguage=${encodeURIComponent(ocrLanguage)}`,
-        { method: "POST", body: formData, signal: controller.signal },
+        { method: "POST", body: formData },
       );
       if (!response.ok) {
         throw new Error(await extractErrorMessage(response, DEFAULT_ERROR_MESSAGE));
       }
 
       const payload = (await response.json()) as DocumentConversionResponse;
-      if (activeRequest !== controller) {
-        return;
+      if (typeof payload.text !== "string" || !payload.text.trim() || getPlainText(editor) !== original) {
+        throw new Error(DEFAULT_ERROR_MESSAGE);
       }
-      setEditorPlainText(editor, importedHtmlToPlainText(payload.html ?? ""));
+      editor.commands.setContent(plainTextDocument(payload.text));
       editor.commands.focus("start");
       setState("success", t("import.status.success", { fileName: file.name }));
     } catch (error) {
-      if (!controller.signal.aborted) {
-        setState(
-          "error",
-          error instanceof Error && error.message.trim() ? error.message : DEFAULT_ERROR_MESSAGE,
-        );
-      }
+      setState(
+        "error",
+        error instanceof Error && error.message.trim() ? error.message : DEFAULT_ERROR_MESSAGE,
+      );
     } finally {
-      if (activeRequest === controller) {
-        activeRequest = null;
-        setBusy(false);
-        dropTarget.dataset.dragging = "false";
-        elements.input.value = "";
-      }
+      dispatchWorkspaceBusy(root, false, "editor");
+      dropTarget.dataset.dragging = "false";
+      elements.input.value = "";
     }
   }
 
@@ -152,7 +137,8 @@ export function mountDocumentImport(
     }
   });
 
-  setBusy(false);
+  root.addEventListener("workspace:busy-changed", syncControls);
+  syncControls();
   setState(
     isApiLocked(root) ? "error" : "idle",
     isApiLocked(root) ? t("import.status.authRequired") : "",

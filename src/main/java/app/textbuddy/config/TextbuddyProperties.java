@@ -4,12 +4,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.util.unit.DataSize;
 
 import java.net.URI;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @ConfigurationProperties(prefix = "textbuddy")
 public class TextbuddyProperties {
@@ -17,7 +14,6 @@ public class TextbuddyProperties {
     private final Auth auth = new Auth();
     private final Input input = new Input();
     private final Llm llm = new Llm();
-    private final LanguageTool languagetool = new LanguageTool();
     private final Document document = new Document();
 
     public Auth getAuth() {
@@ -30,10 +26,6 @@ public class TextbuddyProperties {
 
     public Llm getLlm() {
         return llm;
-    }
-
-    public LanguageTool getLanguagetool() {
-        return languagetool;
     }
 
     public Document getDocument() {
@@ -191,132 +183,12 @@ public class TextbuddyProperties {
         }
     }
 
-    public static class LanguageTool {
-
-        public enum Mode {
-            EMBEDDED,
-            HTTP,
-            STUB
-        }
-
-        private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(10);
-        private Mode mode = Mode.EMBEDDED;
-        private String baseUrl = "";
-        private String ngramPath = "";
-        private Duration timeout = DEFAULT_TIMEOUT;
-
-        public Mode getMode() {
-            return mode;
-        }
-
-        public void setMode(Mode mode) {
-            this.mode = mode == null ? Mode.EMBEDDED : mode;
-        }
-
-        public String getBaseUrl() {
-            return baseUrl;
-        }
-
-        public void setBaseUrl(String baseUrl) {
-            this.baseUrl = normalize(baseUrl);
-        }
-
-        public String getNgramPath() {
-            return ngramPath;
-        }
-
-        public void setNgramPath(String ngramPath) {
-            this.ngramPath = normalize(ngramPath);
-        }
-
-        public Duration getTimeout() {
-            return timeout;
-        }
-
-        public void setTimeout(Duration timeout) {
-            this.timeout = timeout == null ? DEFAULT_TIMEOUT : timeout;
-        }
-
-        public boolean isEmbeddedMode() {
-            return mode == Mode.EMBEDDED;
-        }
-
-        public boolean isHttpMode() {
-            return mode == Mode.HTTP;
-        }
-
-        public boolean isStubMode() {
-            return mode == Mode.STUB;
-        }
-
-        public String normalizedBaseUrl() {
-            return normalize(baseUrl);
-        }
-
-        public Optional<Path> normalizedNgramPath() {
-            String value = normalize(ngramPath);
-            if (value.isBlank()) {
-                return Optional.empty();
-            }
-            try {
-                return Optional.of(Path.of(value));
-            } catch (InvalidPathException exception) {
-                throw new IllegalStateException("textbuddy.languagetool.ngram-path ist kein gültiger Pfad.", exception);
-            }
-        }
-
-        public Duration normalizedTimeout() {
-            return timeout == null || timeout.isZero() || timeout.isNegative() ? DEFAULT_TIMEOUT : timeout;
-        }
-
-        public void validateForHttp() {
-            if (isHttpMode() && normalizedBaseUrl().isBlank()) {
-                throw new IllegalStateException(
-                        "LanguageTool-HTTP-Modus ist aktiv, aber textbuddy.languagetool.base-url fehlt."
-                );
-            }
-        }
-    }
-
     public static class Document {
-
-        public enum Mode {
-            KREUZBERG,
-            HTTP,
-            STUB
-        }
 
         private static final DataSize DEFAULT_MAX_UPLOAD_SIZE = DataSize.ofMegabytes(20);
         private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(45);
-        private Mode mode = Mode.KREUZBERG;
-        private String baseUrl = "";
-        private String apiKey = "";
         private DataSize maxUploadSize = DEFAULT_MAX_UPLOAD_SIZE;
         private Duration timeout = DEFAULT_TIMEOUT;
-
-        public Mode getMode() {
-            return mode;
-        }
-
-        public void setMode(Mode mode) {
-            this.mode = mode == null ? Mode.KREUZBERG : mode;
-        }
-
-        public String getBaseUrl() {
-            return baseUrl;
-        }
-
-        public void setBaseUrl(String baseUrl) {
-            this.baseUrl = normalize(baseUrl);
-        }
-
-        public String getApiKey() {
-            return apiKey;
-        }
-
-        public void setApiKey(String apiKey) {
-            this.apiKey = normalize(apiKey);
-        }
 
         public DataSize getMaxUploadSize() {
             return maxUploadSize;
@@ -334,22 +206,6 @@ public class TextbuddyProperties {
             this.timeout = timeout == null ? DEFAULT_TIMEOUT : timeout;
         }
 
-        public boolean isKreuzbergMode() {
-            return mode == Mode.KREUZBERG;
-        }
-
-        public boolean isHttpMode() {
-            return mode == Mode.HTTP;
-        }
-
-        public boolean isStubMode() {
-            return mode == Mode.STUB;
-        }
-
-        public String normalizedBaseUrl() {
-            return normalize(baseUrl);
-        }
-
         public long normalizedMaxUploadSizeBytes() {
             return maxUploadSize == null || maxUploadSize.toBytes() <= 0
                     ? DEFAULT_MAX_UPLOAD_SIZE.toBytes()
@@ -365,13 +221,6 @@ public class TextbuddyProperties {
         public String describeMaxUploadSize() {
             long mebibytes = normalizedMaxUploadSizeBytes() / (1024L * 1024L);
             return mebibytes <= 0 ? normalizedMaxUploadSizeBytes() + " Bytes" : mebibytes + " MB";
-        }
-        public void validateForHttp() {
-            if (isHttpMode() && normalizedBaseUrl().isBlank()) {
-                throw new IllegalStateException(
-                        "Dokumentimport-HTTP-Modus ist aktiv, aber textbuddy.document.base-url fehlt."
-                );
-            }
         }
     }
 

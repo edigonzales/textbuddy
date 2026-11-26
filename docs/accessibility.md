@@ -2,7 +2,7 @@
 
 Textbuddy strebt WCAG 2.2 AA an, erhebt aber ohne vollständige manuelle Prüfung keinen Konformitätsanspruch.
 
-## Tastaturführung im MVP
+## Tastaturführung
 
 - Der Skip-Link führt direkt zur Arbeitsfläche.
 - **Überarbeiten** und **Prüfen** sind als Tabs umgesetzt. Linke und rechte Pfeiltaste wechseln zwischen ihnen.
@@ -13,8 +13,6 @@ Textbuddy strebt WCAG 2.2 AA an, erhebt aber ohne vollständige manuelle Prüfun
 - Das Statistik-Popover lässt sich mit Escape schliessen; der Fokus kehrt zum Zähler zurück.
 - Diff-Blöcke können einzeln oder global angenommen und abgelehnt werden. Der deutsche Flesch-Vergleich nennt Vorher-, Nachher- und Differenzwert als Text und ist nicht allein über Farbe vermittelt. Moduswechsel und weitere mutierende Aktionen sind während Verarbeitung und Review deaktiviert.
 - Status-, Erfolgs- und Fehlermeldungen werden über Live-Regions angekündigt.
-
-Nicht freigeschaltete Werkzeuge werden im Frontend gar nicht gerendert. Damit entstehen weder unsichtbare Fokusziele noch parallele DOM-Verträge für dieselbe Funktion.
 
 ## Automatische Abdeckung
 
@@ -27,7 +25,7 @@ Die Browser-Suite prüft mit Playwright und `axe-core`:
 - das Statistik-Popover mit eingeblendeter deutscher Flesch-Bewertung,
 - die mobile Ribbon- und Slideover-Nutzung.
 
-Unit- und Browser-Tests decken ausserdem Fokus-Rückgabe, Escape, fehlenden horizontalen Überlauf, die Abwesenheit nicht freigeschalteter Werkzeuge und die dynamische Ergebnisleiste ab.
+Unit- und Browser-Tests decken ausserdem Fokus-Rückgabe, Escape, fehlenden horizontalen Überlauf und die dynamische Ergebnisleiste ab.
 
 ## Manuelle Abnahme pro Release
 

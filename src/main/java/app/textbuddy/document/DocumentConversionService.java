@@ -16,18 +16,15 @@ public class DocumentConversionService {
     private final DoclingClient doclingClient;
     private final DocumentImportFormatCatalog formatCatalog;
     private final TextbuddyProperties.Document properties;
-    private final EditorFriendlyHtmlPostProcessor htmlPostProcessor;
 
     public DocumentConversionService(
             DoclingClient doclingClient,
             DocumentImportFormatCatalog formatCatalog,
-            TextbuddyProperties textbuddyProperties,
-            EditorFriendlyHtmlPostProcessor htmlPostProcessor
+            TextbuddyProperties textbuddyProperties
     ) {
         this.doclingClient = doclingClient;
         this.formatCatalog = formatCatalog;
         this.properties = textbuddyProperties.getDocument();
-        this.htmlPostProcessor = htmlPostProcessor;
     }
 
     public DocumentConversionResponse convert(DocumentUpload upload, String ocrLanguage) {
@@ -55,22 +52,12 @@ public class DocumentConversionService {
             );
         }
 
-        String normalizedOcrLanguage = DocumentOcrLanguage.normalizeCode(ocrLanguage);
-        String html = Objects.requireNonNullElse(
-                doclingClient.convertToHtml(normalizedUpload, normalizedOcrLanguage),
-                ""
+        String text = Objects.requireNonNullElse(
+                doclingClient.extractText(normalizedUpload, ocrLanguage), ""
         );
-
-        if (html.isBlank()) {
+        if (text.isBlank()) {
             throw new DocumentConversionFailedException("Dokumentimport hat keinen Inhalt geliefert.");
         }
-
-        String editorFriendlyHtml = htmlPostProcessor.postProcess(html);
-
-        if (editorFriendlyHtml.isBlank()) {
-            throw new DocumentConversionFailedException("Dokumentimport hat kein HTML für dieses Dokument geliefert.");
-        }
-
-        return new DocumentConversionResponse(editorFriendlyHtml);
+        return new DocumentConversionResponse(text);
     }
 }

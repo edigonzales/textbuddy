@@ -27,12 +27,10 @@ if [ ! -f "${JAR_PATH}" ]; then
   exit 1
 fi
 
-JAVA_OPTS_VALUE="${TEXTBUDDY_JAVA_OPTS:-}"
-if [ -n "${JAVA_OPTS_VALUE}" ]; then
-  # shellcheck disable=SC2206
-  JAVA_OPTS_ARRAY=(${JAVA_OPTS_VALUE})
-else
-  JAVA_OPTS_ARRAY=()
+set -- -jar "${JAR_PATH}" "$@"
+read -r -a JAVA_OPTS_ARRAY <<< "${TEXTBUDDY_JAVA_OPTS:-}"
+if [[ -n "${JAVA_OPTS_ARRAY[0]:-}" ]]; then
+  set -- "${JAVA_OPTS_ARRAY[@]}" "$@"
 fi
 
-exec java --enable-native-access=ALL-UNNAMED "${JAVA_OPTS_ARRAY[@]}" -jar "${JAR_PATH}" "$@"
+exec java --enable-native-access=ALL-UNNAMED "$@"

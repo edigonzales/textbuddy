@@ -13,61 +13,31 @@ interface DocumentRange {
   to: number;
 }
 
-interface TextBlockBoundary {
-  start: number;
-  textLength: number;
-}
-
 export const textCorrectionPluginKey = new PluginKey<DecorationSet>(
   "textbuddyTextCorrections",
 );
 
-function collectTextBlocks(doc: ProseMirrorNode): TextBlockBoundary[] {
-  const blocks: TextBlockBoundary[] = [];
-
+function buildBoundaryIndex(doc: ProseMirrorNode): number[] {
+  const boundaries: number[] = [];
   doc.descendants((node, pos) => {
-    if (!node.isTextblock) {
-      return true;
+    if (!node.isTextblock) return true;
+    // Text and hard breaks each occupy the same number of units in both models.
+    for (let offset = 0; offset <= node.content.size; offset += 1) {
+      boundaries.push(pos + 1 + offset);
     }
-
-    blocks.push({
-      start: pos + 1,
-      textLength: node.textContent.length,
-    });
-
     return false;
   });
-
-  return blocks;
+  return boundaries;
 }
 
-function buildBoundaryIndex(doc: ProseMirrorNode): number[] {
-  const blocks = collectTextBlocks(doc);
-
-  if (blocks.length === 0) {
-    return [0];
-  }
-
-  const plainTextLength = blocks.reduce(
-    (sum, block, index) => sum + block.textLength + (index < blocks.length - 1 ? 1 : 0),
-    0,
-  );
-  const boundaries = new Array<number>(plainTextLength + 1);
-  let plainOffset = 0;
-
-  blocks.forEach((block, index) => {
-    for (let offset = 0; offset <= block.textLength; offset += 1) {
-      boundaries[plainOffset + offset] = block.start + offset;
-    }
-
-    plainOffset += block.textLength;
-
-    if (index < blocks.length - 1) {
-      plainOffset += 1;
-    }
-  });
-
-  return boundaries;
+function documentRange(
+  boundaries: readonly number[],
+  offset: number,
+  length: number,
+): DocumentRange | null {
+  const from = boundaries[offset];
+  const to = boundaries[offset + length];
+  return length >= 0 && from !== undefined && to !== undefined ? { from, to } : null;
 }
 
 export function plainTextRangeToDocumentRange(
@@ -75,64 +45,30 @@ export function plainTextRangeToDocumentRange(
   offset: number,
   length: number,
 ): DocumentRange | null {
-  if (offset < 0 || length <= 0) {
-    return null;
-  }
-
-  const boundaries = buildBoundaryIndex(doc);
-  const endOffset = offset + length;
-
-  if (endOffset >= boundaries.length) {
-    return null;
-  }
-
-  const from = boundaries[offset];
-  const to = boundaries[endOffset];
-
-  if (typeof from !== "number" || typeof to !== "number" || from === to) {
-    return null;
-  }
-
-  return { from, to };
-}
-
-export function documentPositionToPlainTextOffset(
-  doc: ProseMirrorNode,
-  position: number,
-): number | null {
-  const boundaries = buildBoundaryIndex(doc);
-  let lowerBound = 0;
-  let upperBound = boundaries.length - 1;
-
-  while (lowerBound <= upperBound) {
-    const middle = Math.floor((lowerBound + upperBound) / 2);
-    const candidate = boundaries[middle];
-
-    if (candidate === position) {
-      return middle;
-    }
-
-    if (candidate < position) {
-      lowerBound = middle + 1;
-      continue;
-    }
-
-    upperBound = middle - 1;
-  }
-
-  return null;
+  return documentRange(buildBoundaryIndex(doc), offset, length);
 }
 
 function buildDecorationSet(
   doc: ProseMirrorNode,
   corrections: readonly CorrectionRange[],
 ): DecorationSet {
+  const boundaries = buildBoundaryIndex(doc);
   const decorations = corrections
     .map((correction, index) => {
-      const range = plainTextRangeToDocumentRange(doc, correction.offset, correction.length);
+      const range = documentRange(boundaries, correction.offset, correction.length);
 
       if (!range) {
         return null;
+      }
+
+      if (range.from === range.to) {
+        return Decoration.widget(range.from, () => {
+          const marker = document.createElement("span");
+          marker.className = "textbuddy-correction-insertion";
+          marker.dataset.testid = TEXT_CORRECTION_TEST_ID;
+          marker.dataset.correctionIndex = String(index);
+          return marker;
+        });
       }
 
       return Decoration.inline(range.from, range.to, {

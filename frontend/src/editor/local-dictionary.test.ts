@@ -32,17 +32,7 @@ test("filterCorrectionBlocksByDictionary hides known word matches and keeps othe
     },
   ];
 
-  assert.deepEqual(
-    filterCorrectionBlocksByDictionary(original, blocks, new Set(["teh"])),
-    [
-      {
-        offset: 16,
-        length: 2,
-        message: "Unnecessary whitespace found.",
-        shortMessage: "Whitespace",
-        ruleId: "WHITESPACE",
-        replacements: [" "],
-      },
-    ],
-  );
+  const visible = filterCorrectionBlocksByDictionary(original, blocks, new Set(["teh"]));
+  assert.equal(visible.length, 1);
+  assert.equal(visible[0], blocks[1]);
 });

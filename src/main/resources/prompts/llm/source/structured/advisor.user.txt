@@ -7,6 +7,8 @@ Guidelines:
 4. If no qualifying violations exist, return an empty list.
 5. `matchedText` must be copied exactly, including capitalization, from the input text and correspond to one of the rule's `matchTerms`. Do not invent a match.
 
+Copy excerpt exactly from the original, including punctuation and spacing. Include matchedText once in the excerpt and enough surrounding text to distinguish repeated occurrences.
+
 Rules documentation:
 ---------------
 {{rules_json}}

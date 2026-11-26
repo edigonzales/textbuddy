@@ -123,6 +123,9 @@ test("text, controls, focus and selection meet their contrast targets", async ({
 });
 
 test("rendered controls use the accessible interaction roles", async ({ page }) => {
+  await page.getByTestId("editor-input").fill("Ein Antrag liegt vor.");
+  await expect(page.getByTestId("mvp-summary-option")).toBeEnabled();
+
   const styles = await page.evaluate(() => {
     const root = getComputedStyle(document.documentElement);
     const selectedTab = getComputedStyle(

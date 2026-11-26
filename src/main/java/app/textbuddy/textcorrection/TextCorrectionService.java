@@ -55,8 +55,16 @@ public class TextCorrectionService {
 
     private boolean hasValidRange(LanguageToolMatch match, String original) {
         return match.offset() >= 0
-                && match.length() > 0
-                && match.offset() + match.length() <= original.length();
+                && match.offset() <= original.length()
+                && match.length() >= 0
+                && match.length() <= original.length() - match.offset()
+                && isCharacterBoundary(original, match.offset())
+                && isCharacterBoundary(original, match.offset() + match.length());
+    }
+
+    private boolean isCharacterBoundary(String text, int offset) {
+        return offset == 0 || offset == text.length()
+                || !Character.isSurrogatePair(text.charAt(offset - 1), text.charAt(offset));
     }
 
     private String normalizeLanguage(String language) {

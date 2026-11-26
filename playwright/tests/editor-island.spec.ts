@@ -152,7 +152,7 @@ test("workspace mode tabs use icons and the intended visual states", async ({ pa
   await expect(transformTab).toHaveCSS("border-style", "none");
 });
 
-test("starts with a wide editor and only the three MVP tools", async ({ page }) => {
+test("starts with a wide empty editor and the rewrite controls", async ({ page }) => {
   await stubCorrection(page);
   await page.goto("/");
 
@@ -165,19 +165,14 @@ test("starts with a wide editor and only the three MVP tools", async ({ page }) 
   await expect(page.getByTestId("mvp-summary-option")).toBeVisible();
   await expect(page.getByTestId("mvp-action-summarize")).toHaveCount(0);
   await expect(page.getByTestId("mvp-summary-option")).toHaveValue("");
-  await expect(page.getByTestId("mvp-summary-option")).toBeEnabled();
+  await expect(page.getByTestId("mvp-summary-option")).toBeDisabled();
   await expect(page.getByText("STRUKTUR", { exact: true })).toHaveCount(0);
   await expect(page.getByText("STIL", { exact: true })).toHaveCount(0);
   await expect(page.getByTestId("mvp-action-plain-language")).toBeVisible();
   const editorInput = page.getByTestId("editor-input");
-  await expect(editorInput.locator("p")).toHaveCount(3);
-  await expect(editorInput).toContainText(
-    "Um die steuerliche Wettbewerbsfähigkeit des Kantons zu verbessern",
-  );
-  await expect(editorInput).toContainText("Vor diesem Hintergrund sieht die Steuerstrategie");
-  await expect(editorInput).toContainText("Die zur Umsetzung empfohlenen Massnahmen");
-  await expect(page.getByTestId("editor-character-count")).not.toHaveText("0");
-  await expect(page.getByTestId("editor-word-count")).not.toHaveText("0");
+  await expect(editorInput).toHaveText("");
+  await expect(page.getByTestId("editor-character-count")).toHaveText("0");
+  await expect(page.getByTestId("editor-word-count")).toHaveText("0");
   const transformRibbon = page.locator("[data-workspace-ribbon='transform']");
   const ribbonTitles = transformRibbon.locator(".ribbon-group-title");
   await expect(ribbonTitles).toHaveText(["Umstrukturieren", "Verbessern"]);
@@ -194,12 +189,8 @@ test("starts with a wide editor and only the three MVP tools", async ({ page }) 
       return { actionBottom: actions?.bottom ?? 0, titleTop: title?.top ?? 0 };
     });
   expect(firstRibbonGroupPosition.titleTop).toBeGreaterThan(firstRibbonGroupPosition.actionBottom);
-  await expect(page.getByTestId("quick-action-proofread")).toHaveCount(0);
-  await expect(page.getByTestId("quick-action-bullet-points")).toHaveCount(0);
-  await expect(page.getByTestId("quick-action-formality")).toHaveCount(0);
   await expect(page.getByTestId("advisor-toggle")).toBeHidden();
   await expect(page.getByTestId("advisor-panel")).toBeHidden();
-  await expect(page.getByTestId("rewrite-bubble")).toHaveCount(0);
 
   const widths = await page.evaluate(() => ({
     viewport: document.documentElement.clientWidth,
@@ -208,21 +199,33 @@ test("starts with a wide editor and only the three MVP tools", async ({ page }) 
   expect(widths.editor).toBeGreaterThan(widths.viewport * 0.75);
 });
 
-test("temporary start text can be used by a quick action", async ({ page }) => {
-  await stubCorrection(page);
-  let requestText = "";
-  await page.route("**/api/quick-actions/plain-language", async (route) => {
-    const payload = route.request().postDataJSON() as QuickActionRequestPayload;
-    requestText = payload.text;
-    await route.fulfill({ json: { text: `${payload.text} Zusatz.` } });
-  });
+test("the packaged app starts with an empty editor and serves the local tools", async ({ page, request }) => {
   await page.goto("/");
+  await expect(page.getByTestId("editor-mirror")).toHaveValue("");
+  await expect(page.getByTestId("mvp-action-plain-language")).toBeDisabled();
 
-  await page.getByTestId("mvp-action-plain-language").click();
-  await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
-  expect(requestText).toContain(
-    "Um die steuerliche Wettbewerbsfähigkeit des Kantons zu verbessern",
-  );
+  const health = await request.get("/actuator/health");
+  expect(health.ok()).toBeTruthy();
+  expect(await health.json()).toMatchObject({ status: "UP" });
+  const correction = await request.post("/api/text-correction", {
+    data: { text: "This is teh text.", language: "en-US" },
+  });
+  expect(correction.ok()).toBeTruthy();
+  expect((await correction.json()).blocks[0]).toMatchObject({
+    offset: 8, length: 3, replacements: expect.arrayContaining(["the"]),
+  });
+  const rewrite = await request.post("/api/quick-actions/plain-language", {
+    data: { text: "Der Fall ist kompliziert.", language: "de-CH" },
+  });
+  expect(rewrite.ok()).toBeTruthy();
+  expect(await rewrite.json()).toEqual({ text: "Kurz und einfach: Der Fall ist einfach." });
+  const imported = await request.post("/api/convert/doc", {
+    multipart: { file: {
+      name: "antrag.txt", mimeType: "text/plain", buffer: Buffer.from("Antrag\n\nDie Gemeinde stimmt zu."),
+    } },
+  });
+  expect(imported.ok()).toBeTruthy();
+  expect(await imported.json()).toEqual({ text: "Antrag\n\nDie Gemeinde stimmt zu." });
 });
 
 test("typing updates counters and undo/redo remains one action", async ({ page }) => {
@@ -233,9 +236,7 @@ test("typing updates counters and undo/redo remains one action", async ({ page }
   await expect(page.getByTestId("editor-character-count")).toHaveText("10");
   await expect(page.getByTestId("editor-word-count")).toHaveText("2");
   await page.getByTestId("editor-undo").click();
-  await expect(page.getByTestId("editor-mirror")).toHaveValue(
-    /Um die steuerliche Wettbewerbsfähigkeit des Kantons zu verbessern/,
-  );
+  await expect(page.getByTestId("editor-mirror")).toHaveValue("");
   await page.getByTestId("editor-redo").click();
   await expect(page.getByTestId("editor-mirror")).toHaveValue("Hallo Welt");
 });
@@ -277,7 +278,13 @@ test("correction stays compact in transform mode and rail opens only in validate
 test("clicking a correction mark switches mode and focuses its finding", async ({ page }) => {
   await stubCorrection(page);
   await page.goto("/");
-  await enterText(page, "Das ist teh Text.");
+  await enterText(page, "Vorwort");
+  const editor = page.getByTestId("editor-input");
+  await editor.press("End");
+  await editor.press("Shift+Enter");
+  await editor.pressSequentially("Das ist teh Text.");
+  await expect(page.getByTestId("editor-mirror")).toHaveValue("Vorwort\nDas ist teh Text.");
+  await expect(page.getByTestId("correction-mark")).toHaveText("teh");
   await expect(page.locator("[data-correction-index='0']")).toBeVisible();
 
   await page.locator("[data-correction-index='0']").click();
@@ -311,6 +318,7 @@ test("advisor validates bundled guidelines, reviews selected fixes and preserves
     },
   ];
   let validateBody: unknown;
+  let finishValidation = true;
   let fixBody: { text: string; findings: Array<{ ruleId: string }> } | undefined;
   await page.route("**/api/advisor/docs", async (route) => route.fulfill({ json: documents }));
   await page.route("**/api/advisor/validate", async (route) => {
@@ -318,7 +326,7 @@ test("advisor validates bundled guidelines, reviews selected fixes and preserves
     const validation = (stableKey: string, documentName: string, documentTitle: string,
       ruleId: string, ruleTitle: string, matchedText: string, suggestion: string,
       start: number, end: number) => `event:validation\ndata:${JSON.stringify({
-        stableKey, documentName, documentTitle, ruleId, ruleTitle, page: 1, pageLabel: "Seite 1",
+        stableKey, documentName, documentTitle, ruleId, ruleTitle, page: 1,
         message: "Diese Formulierung entspricht nicht der Demo-Regel.", matchedText,
         excerpt: `…${matchedText}…`, suggestion,
         referenceUrl: `/api/advisor/doc/${documentName}#page=1`, start, end,
@@ -330,12 +338,13 @@ test("advisor validates bundled guidelines, reviews selected fixes and preserves
         + 'event:progress\ndata:{"checked":2,"total":4}\n\n'
         + validation("schreib::sofort::21:31", documents[1]!.name, documents[1]!.title,
           "per-sofort-vermeiden", "Per sofort ersetzen", "per sofort", "ab sofort", 21, 31)
-        + 'event:progress\ndata:{"checked":4,"total":4}\n\n',
+        + 'event:progress\ndata:{"checked":4,"total":4}\n\n'
+        + (finishValidation ? 'event:complete\ndata:{"truncated":false}\n\n' : ""),
     });
   });
   await page.route("**/api/advisor/fix", async (route) => {
     fixBody = route.request().postDataJSON() as typeof fixBody;
-    await route.fulfill({ json: { text: "Bitte herunterladen Sie per sofort." } });
+    await route.fulfill({ json: ["herunterladen"] });
   });
   await page.goto("/");
   await enterText(page, "Bitte downloaden Sie per sofort.");
@@ -380,6 +389,20 @@ test("advisor validates bundled guidelines, reviews selected fixes and preserves
   await expect(page.getByTestId("advisor-finding")).toHaveCount(0);
   await page.getByTestId("editor-undo").click();
   await expect(page.getByTestId("editor-mirror")).toHaveValue("Bitte downloaden Sie per sofort.");
+
+  await page.getByTestId("advisor-start").click();
+  await expect(page.getByTestId("advisor-finding")).toHaveCount(2);
+  const editedText = "Bitte downloaden Sie per sofort. Die Gemeinde entscheidet morgen.";
+  await enterText(page, editedText);
+  await expect(page.getByTestId("advisor-finding")).toHaveCount(0);
+  await expect(page.getByTestId("advisor-fix")).toBeDisabled();
+  await expect(page.getByTestId("editor-mirror")).toHaveValue(editedText);
+
+  finishValidation = false;
+  await page.getByTestId("advisor-start").click();
+  await expect(page.getByTestId("advisor-status")).toHaveText("Richtlinienprüfung konnte nicht abgeschlossen werden.");
+  await expect(page.getByTestId("advisor-finding")).toHaveCount(0);
+  await expect(page.getByTestId("editor-mirror")).toHaveValue(editedText);
 });
 
 test("correction sends one request for a 50000-character document", async ({ page }) => {
@@ -512,6 +535,23 @@ test("plain-language review preserves the original and commits as one undoable t
   await expect(page.getByTestId("editor-mirror")).toHaveValue("Das alte Haus ist klein.");
 });
 
+test("the review shows a non-breaking space and keeps undo exact", async ({ page }) => {
+  await stubCorrection(page);
+  await page.route("**/api/quick-actions/plain-language", (route) =>
+    route.fulfill({ json: { text: "Der Betrag beträgt CHF\u00a020." } }));
+  await page.goto("/");
+  await enterText(page, "Der Betrag beträgt CHF 20.");
+  await page.getByTestId("mvp-action-plain-language").click();
+
+  const diff = page.locator("[data-review-inline]");
+  await expect(diff.locator(".diff-removed")).toHaveText("·");
+  await expect(diff.locator(".diff-added")).toHaveText("⍽");
+  await page.getByRole("button", { name: "Alle annehmen" }).click();
+  expect(await page.getByTestId("editor-mirror").inputValue()).toBe("Der Betrag beträgt CHF\u00a020.");
+  await page.getByTestId("editor-undo").click();
+  expect(await page.getByTestId("editor-mirror").inputValue()).toBe("Der Betrag beträgt CHF 20.");
+});
+
 test("summary keeps option values, supports split review, reject-all and retry", async ({ page }) => {
   await stubCorrection(page);
   const payloads: QuickActionRequestPayload[] = [];
@@ -523,7 +563,11 @@ test("summary keeps option values, supports split review, reject-all and retry",
   await page.goto("/");
   await enterText(page, "Ein langer Ausgangstext.");
   await selectTextLanguage(page, "de-CH");
-  await page.getByTestId("mvp-summary-option").selectOption("management_summary");
+  const summary = page.getByTestId("mvp-summary-option");
+  expect(await summary.locator("option").evaluateAll(options =>
+    options.map(option => (option as HTMLOptionElement).value),
+  )).toEqual(["", "sentence", "three_sentence", "paragraph", "page", "management_summary"]);
+  await summary.selectOption("management_summary");
 
   await expect(page.getByTestId("rewrite-diff-panel")).toBeVisible();
   await expect(page.getByTestId("review-readability")).toBeHidden();
@@ -665,7 +709,7 @@ test("upload uses the shared text language for OCR and imports into the full edi
     requestUrl = route.request().url();
     await route.fulfill({
       json: {
-        html: "<h2># Import <em>Titel</em></h2><script>nicht übernehmen</script><p>* Importierter Text.</p>",
+        text: "# Import Titel\n* <script>Importierter Text.</script>",
       },
     });
   });
@@ -681,15 +725,16 @@ test("upload uses the shared text language for OCR and imports into the full edi
   });
 
   await expect(page.getByTestId("editor-mirror")).toHaveValue(
-    "# Import Titel\n* Importierter Text.",
+    "# Import Titel\n* <script>Importierter Text.</script>",
   );
+  await expect(page.getByTestId("editor-input").locator("script")).toHaveCount(0);
   expect(requestUrl).toContain("ocrLanguage=fr");
 });
 
 test("the full editor accepts document drag and drop", async ({ page }) => {
   await stubCorrection(page);
   await page.route("**/api/convert/doc**", async (route) => {
-    await route.fulfill({ json: { html: "<p>Per Drop importiert.</p>" } });
+    await route.fulfill({ json: { text: "Per Drop importiert." } });
   });
   await page.goto("/");
 

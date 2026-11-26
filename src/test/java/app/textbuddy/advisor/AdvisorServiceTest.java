@@ -59,7 +59,7 @@ class AdvisorServiceTest {
                     ))
                     .toList();
         });
-        AdvisorService service = new AdvisorService(catalog, llmClient, 2);
+        AdvisorService service = new AdvisorService(catalog, llmClient);
         RecordingHandler handler = new RecordingHandler();
 
         service.validate(
@@ -68,9 +68,8 @@ class AdvisorServiceTest {
         );
 
         assertThat(requestedBatches).containsExactly(
-                List.of("doc-a::rule-1", "doc-a::rule-2"),
-                List.of("doc-b::rule-3", "doc-b::rule-4"),
-                List.of("doc-b::rule-5")
+                List.of("doc-a::rule-1", "doc-a::rule-2", "doc-b::rule-3"),
+                List.of("doc-b::rule-4", "doc-b::rule-5")
         );
         assertThat(handler.validations)
                 .extracting(AdvisorValidationEvent::stableKey)
@@ -79,8 +78,7 @@ class AdvisorServiceTest {
                         "doc-b::rule-4::34:44"
                 );
         assertThat(handler.progress).containsExactly(
-                new AdvisorProgressEvent(2, 5),
-                new AdvisorProgressEvent(4, 5),
+                new AdvisorProgressEvent(3, 5),
                 new AdvisorProgressEvent(5, 5)
         );
         assertThat(handler.validations)
@@ -89,8 +87,7 @@ class AdvisorServiceTest {
                         "/api/advisor/doc/doc-a#page=3",
                         "/api/advisor/doc/doc-b#page=8"
                 );
-        assertThat(handler.completeCount).isEqualTo(1);
-        assertThat(handler.errors).isEmpty();
+        assertThat(handler.completions).containsExactly(false);
     }
 
     @Test
@@ -104,8 +101,7 @@ class AdvisorServiceTest {
         });
         AdvisorService service = new AdvisorService(
                 catalog(document("doc-a", "Dokument A", 1, List.of(rule("rule-1", 3, List.of("downloaden"))))),
-                llmClient,
-                2
+                llmClient
         );
         RecordingHandler handler = new RecordingHandler();
 
@@ -113,8 +109,7 @@ class AdvisorServiceTest {
 
         assertThat(requestedBatches).isEmpty();
         assertThat(handler.validations).isEmpty();
-        assertThat(handler.completeCount).isEqualTo(1);
-        assertThat(handler.errors).isEmpty();
+        assertThat(handler.completions).containsExactly(false);
     }
 
     @Test
@@ -133,18 +128,18 @@ class AdvisorServiceTest {
             requestedBatchSizes.add(ruleChecks.size());
             return List.of();
         });
-        AdvisorService service = new AdvisorService(catalog, llmClient, 3);
+        AdvisorService service = new AdvisorService(catalog, llmClient);
         RecordingHandler handler = new RecordingHandler();
 
         service.validate(new AdvisorValidateRequest("Text", List.of("doc-a")), handler);
 
         assertThat(requestedBatchSizes).containsExactly(3, 3, 3, 3, 3, 3, 2);
-        assertThat(handler.completeCount).isEqualTo(1);
+        assertThat(handler.completions).containsExactly(true);
     }
 
     @Test
     void validateRejectsMoreThanFiveSelectedDocuments() {
-        AdvisorService service = new AdvisorService(mock(AdvisorCatalog.class), mock(TextbuddyLlmClient.class), 3);
+        AdvisorService service = new AdvisorService(mock(AdvisorCatalog.class), mock(TextbuddyLlmClient.class));
 
         assertThatThrownBy(() -> service.validate(
                 new AdvisorValidateRequest("Text", List.of("a", "b", "c", "d", "e", "f")),
@@ -191,8 +186,7 @@ class AdvisorServiceTest {
 
         private final List<AdvisorValidationEvent> validations = new ArrayList<>();
         private final List<AdvisorProgressEvent> progress = new ArrayList<>();
-        private final List<String> errors = new ArrayList<>();
-        private int completeCount;
+        private final List<Boolean> completions = new ArrayList<>();
 
         @Override
         public void validation(AdvisorValidationEvent event) {
@@ -205,13 +199,8 @@ class AdvisorServiceTest {
         }
 
         @Override
-        public void complete() {
-            completeCount += 1;
-        }
-
-        @Override
-        public void error(String message) {
-            errors.add(message);
+        public void complete(boolean truncated) {
+            completions.add(truncated);
         }
     }
 }

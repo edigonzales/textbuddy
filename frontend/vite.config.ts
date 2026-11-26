@@ -16,8 +16,4 @@ export default defineConfig({
     },
     outDir: resolve(frontendDir, "../build/frontend-dist"),
   },
-  server: {
-    port: 5173,
-    strictPort: true,
-  },
 });

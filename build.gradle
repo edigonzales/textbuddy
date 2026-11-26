@@ -22,10 +22,14 @@ java {
 
 def frontendDir = layout.projectDirectory.dir('frontend')
 def frontendBuildDir = layout.buildDirectory.dir('frontend-dist')
-def generatedFrontendResourcesDir = layout.buildDirectory.dir('generated/frontend-resources')
-def releaseDir = layout.buildDirectory.dir('release')
-def installerScriptsDir = layout.projectDirectory.dir('distribution/bin')
 def releaseVersion = providers.gradleProperty('releaseVersion').getOrElse(version.toString())
+
+configurations.configureEach {
+    // Boot resolves both JAXB implementations to 4.x. Keep GlassFish and the javax API
+    // used by LanguageTool's segment dependency, and avoid duplicate JAR names.
+    exclude group: 'com.sun.xml.bind', module: 'jaxb-core'
+    exclude group: 'com.sun.xml.bind', module: 'jaxb-impl'
+}
 
 dependencies {
     implementation platform('org.springframework.boot:spring-boot-dependencies:4.0.5')
@@ -35,17 +39,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-    implementation("org.languagetool:languagetool-core:${languageToolVersion}") {
-        exclude group: 'com.sun.xml.bind', module: 'jaxb-core'
-        exclude group: 'com.sun.xml.bind', module: 'jaxb-impl'
-        exclude group: 'javax.xml.bind', module: 'jaxb-api'
-    }
+    implementation "org.languagetool:languagetool-core:${languageToolVersion}"
     implementation "org.languagetool:language-de:${languageToolVersion}"
     implementation "org.languagetool:language-en:${languageToolVersion}"
     implementation "org.languagetool:language-fr:${languageToolVersion}"
     implementation "org.languagetool:language-it:${languageToolVersion}"
     implementation "dev.kreuzberg:kreuzberg:${kreuzbergVersion}"
-    implementation 'org.jsoup:jsoup:1.18.3'
     implementation "gg.jte:jte-spring-boot-starter-4:${jteVersion}"
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -60,48 +59,6 @@ tasks.withType(JavaCompile).configureEach {
 
 jte {
     generate()
-}
-
-sourceSets {
-    main {
-        resources {
-            srcDir generatedFrontendResourcesDir
-        }
-    }
-    test {
-        java.exclude 'app/textbuddy/zix/**'
-        java.exclude 'app/textbuddy/wordhoard/**'
-        resources.exclude 'zix-compatibility/**'
-        resources.exclude 'wordhoard-experiment/**'
-    }
-    zixCompatibility {
-        java {
-            srcDir 'src/test/java'
-            include 'app/textbuddy/zix/**'
-        }
-        resources {
-            srcDir 'src/test/resources'
-            include 'zix-compatibility/**'
-        }
-    }
-    wordhoardExperiment {
-        java {
-            srcDir 'src/test/java'
-            include 'app/textbuddy/wordhoard/**'
-        }
-        resources {
-            srcDir 'src/test/resources'
-            include 'wordhoard-experiment/**'
-            include 'zix-compatibility/reference.json'
-        }
-    }
-}
-
-configurations {
-    zixCompatibilityImplementation.extendsFrom testImplementation
-    zixCompatibilityRuntimeOnly.extendsFrom testRuntimeOnly
-    wordhoardExperimentImplementation.extendsFrom testImplementation
-    wordhoardExperimentRuntimeOnly.extendsFrom testRuntimeOnly
 }
 
 tasks.register('npmInstallFrontend', Exec) {
@@ -143,134 +100,48 @@ tasks.register('testFrontendUnit', Exec) {
     inputs.dir frontendDir.dir('src')
 }
 
-tasks.register('syncFrontendAssets', Sync) {
-    dependsOn 'buildFrontend'
-    from frontendBuildDir
-    into generatedFrontendResourcesDir.map { it.dir('static/editor') }
-}
-
 tasks.named('processResources') {
-    dependsOn 'syncFrontendAssets'
+    from(tasks.named('buildFrontend')) {
+        into 'static/editor'
+    }
 }
 
-tasks.named('bootJar') {
+tasks.named('bootRun') {
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
+}
+
+def bootArtifact = tasks.named('bootJar') {
     archiveFileName = 'textbuddy.jar'
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
-tasks.register('releaseBundle', Sync) {
-    dependsOn 'bootJar'
-    into releaseDir
-    includeEmptyDirs = false
-
-    from(tasks.named('bootJar').flatMap { it.archiveFile })
-    from(layout.projectDirectory.file('README.md'))
-    from(layout.projectDirectory.dir('docs')) {
-        into 'docs'
-    }
-    from(layout.projectDirectory.dir('config/examples')) {
-        into 'config/examples'
-    }
-}
-
-tasks.register('verifyReleaseBundle') {
-    dependsOn 'releaseBundle'
-    doLast {
-        List<String> requiredPaths = [
-                'textbuddy.jar',
-                'README.md',
-                'docs/features.md',
-                'docs/getting-started.md',
-                'docs/architecture.md',
-                'docs/operations.md',
-                'docs/accessibility.md',
-                'config/examples/textbuddy.env.example',
-                'config/examples/application-production.properties.example'
-        ]
-
-        requiredPaths.each { relativePath ->
-            File candidate = releaseDir.get().file(relativePath).asFile
-
-            if (!candidate.exists() || !candidate.isFile()) {
-                throw new GradleException("Fehlende Release-Datei: ${relativePath}")
-            }
-        }
-    }
 }
 
 tasks.register('installerZip', Zip) {
-    dependsOn 'verifyReleaseBundle'
-    destinationDirectory = releaseDir
-    archiveFileName = "textbuddy-${releaseVersion}.zip"
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    includeEmptyDirs = false
-
-    from(releaseDir) {
-        include 'textbuddy.jar'
-        include 'README.md'
-        include 'docs/**'
-        include 'config/**'
+    from(bootArtifact)
+    from('README.md', 'LICENSE')
+    from('docs') {
+        into 'docs'
     }
-    from(installerScriptsDir) {
+    from('config/examples') {
+        into 'config/examples'
+    }
+    from('distribution/bin') {
         into 'bin'
+        filesMatching('*.sh') {
+            permissions { unix('rwxr-xr-x') }
+        }
     }
-}
-
-tasks.register('ocrTest', Test) {
-    description = 'Runs the native Kreuzberg OCR integration tests in an isolated JVM.'
-    group = 'verification'
-    testClassesDirs = sourceSets.test.output.classesDirs
-    classpath = sourceSets.test.runtimeClasspath
-    filter.includeTestsMatching('app.textbuddy.integration.docling.Kreuzberg*Test')
-    useJUnitPlatform()
-    jvmArgs '--enable-native-access=ALL-UNNAMED'
-}
-
-tasks.register('embeddedLanguageToolTest', Test) {
-    description = 'Runs the memory-intensive embedded LanguageTool tests in an isolated JVM.'
-    group = 'verification'
-    testClassesDirs = sourceSets.test.output.classesDirs
-    classpath = sourceSets.test.runtimeClasspath
-    filter.includeTestsMatching('app.textbuddy.integration.languagetool.EmbeddedLanguageToolClientTest')
-    useJUnitPlatform()
-    jvmArgs '--enable-native-access=ALL-UNNAMED'
-}
-
-tasks.register('zixCompatibilityTest', Test) {
-    description = 'Runs the isolated LanguageTool/ZIX compatibility experiment.'
-    group = 'verification'
-    testClassesDirs = sourceSets.zixCompatibility.output.classesDirs
-    classpath = sourceSets.zixCompatibility.runtimeClasspath
-    filter.includeTestsMatching('app.textbuddy.zix.ZixCompatibilityTest')
-    useJUnitPlatform()
-    maxHeapSize = '2g'
-    jvmArgs '--enable-native-access=ALL-UNNAMED'
-    systemProperty 'zix.reportDir', layout.buildDirectory.dir('reports/zix-compatibility').get().asFile.absolutePath
-}
-
-tasks.register('wordhoardExperimentTest', Test) {
-    description = 'Runs the isolated LanguageTool/wordhoard lexical-difficulty experiment.'
-    group = 'verification'
-    testClassesDirs = sourceSets.wordhoardExperiment.output.classesDirs
-    classpath = sourceSets.wordhoardExperiment.runtimeClasspath
-    filter.includeTestsMatching('app.textbuddy.wordhoard.WordhoardExperimentTest')
-    useJUnitPlatform()
-    maxHeapSize = '2g'
-    jvmArgs '--enable-native-access=ALL-UNNAMED'
-    systemProperty 'wordhoard.reportDir', layout.buildDirectory.dir('reports/wordhoard-experiment').get().asFile.absolutePath
+    destinationDirectory = layout.buildDirectory.dir('distributions')
+    archiveFileName = "textbuddy-${releaseVersion}.zip"
+    reproducibleFileOrder = true
+    preserveFileTimestamps = false
 }
 
 tasks.named('test') {
-    dependsOn 'bootJar'
     dependsOn 'testFrontendUnit'
-    dependsOn 'ocrTest'
-    dependsOn 'embeddedLanguageToolTest'
-    exclude 'app/textbuddy/integration/docling/Kreuzberg*Test.class'
-    exclude 'app/textbuddy/integration/languagetool/EmbeddedLanguageToolClientTest.class'
-    maxParallelForks = 1
-    jvmArgs '--enable-native-access=ALL-UNNAMED'
     useJUnitPlatform()
-    doFirst {
-        systemProperty 'textbuddy.bootJarPath', tasks.named('bootJar').get().archiveFile.get().asFile.absolutePath
-    }
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
+    maxHeapSize = '2g'
+    inputs.file('distribution/bin/start-textbuddy.sh')
+    inputs.files(providers.environmentVariable('TESSDATA_PREFIX').map { directory ->
+        ['deu', 'eng'].collect { language -> file("${directory}/${language}.traineddata") }
+    }.orElse([]))
 }

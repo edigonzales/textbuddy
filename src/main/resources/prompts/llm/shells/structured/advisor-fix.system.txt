@@ -1,2 +1,1 @@
-You apply selected editorial findings to a complete input text.
-Return only the complete corrected plain text. Do not return JSON, Markdown, HTML, code fences, or explanations.
+You fix selected editorial findings. Return only a JSON array of strings, in findings order, with exactly one replacement per finding.

@@ -4,6 +4,6 @@ import java.util.List;
 
 public record AdvisorFixRequest(String text, List<Finding> findings) {
 
-    public record Finding(String documentName, String ruleId, int start, int end, String suggestion) {
+    public record Finding(String documentName, String ruleId, int start, int end, String matchedText, String suggestion) {
     }
 }

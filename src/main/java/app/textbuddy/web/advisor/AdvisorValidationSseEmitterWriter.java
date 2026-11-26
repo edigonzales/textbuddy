@@ -18,7 +18,6 @@ final class AdvisorValidationSseEmitterWriter implements AdvisorValidationStream
 
     private final SseEmitter emitter;
     private final String traceId;
-    private int validationCount;
 
     AdvisorValidationSseEmitterWriter(SseEmitter emitter, String traceId) {
         this.emitter = emitter;
@@ -27,7 +26,6 @@ final class AdvisorValidationSseEmitterWriter implements AdvisorValidationStream
 
     @Override
     public void validation(AdvisorValidationEvent event) {
-        validationCount += 1;
         send("validation", event);
     }
 
@@ -37,19 +35,18 @@ final class AdvisorValidationSseEmitterWriter implements AdvisorValidationStream
     }
 
     @Override
-    public void complete() {
-        log.info("[{}] Advisor-SSE abgeschlossen (events={}).", traceId, validationCount);
+    public void complete(boolean truncated) {
+        send("complete", Map.of("truncated", truncated));
         emitter.complete();
     }
 
-    @Override
-    public void error(String message) {
+    void error(String message) {
         try {
             send("error", Map.of("message", message));
             log.warn("[{}] Advisor-SSE meldet Fehler: {}", traceId, message);
             emitter.complete();
         } catch (RuntimeException exception) {
-            log.warn("[{}] Failed to send advisor SSE error response.", traceId, exception);
+            log.debug("[{}] Failed to send advisor SSE error response.", traceId);
             emitter.completeWithError(exception);
         }
     }
