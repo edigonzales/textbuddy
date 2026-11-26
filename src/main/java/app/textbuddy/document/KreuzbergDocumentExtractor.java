@@ -1,9 +1,6 @@
-package app.textbuddy.integration.docling;
+package app.textbuddy.document;
 
-import app.textbuddy.document.DocumentConversionFailedException;
-import app.textbuddy.document.DocumentImportTimeoutException;
-import app.textbuddy.document.DocumentOcrLanguage;
-import app.textbuddy.document.DocumentUpload;
+import app.textbuddy.config.TextbuddyProperties;
 import dev.kreuzberg.ErrorCode;
 import dev.kreuzberg.ExtractionResult;
 import dev.kreuzberg.Kreuzberg;
@@ -11,11 +8,14 @@ import dev.kreuzberg.KreuzbergException;
 import dev.kreuzberg.OcrException;
 import dev.kreuzberg.config.ExtractionConfig;
 import dev.kreuzberg.config.OcrConfig;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.Locale;
 import java.util.Objects;
 
-public final class KreuzbergDoclingClient implements DoclingClient {
+@Component
+public final class KreuzbergDocumentExtractor {
 
     private static final String DEFAULT_MIME_TYPE = "application/octet-stream";
     private static final String PLAIN_TEXT = "plain";
@@ -23,16 +23,16 @@ public final class KreuzbergDoclingClient implements DoclingClient {
     private final long extractionTimeoutSeconds;
     private final KreuzbergExtractor extractor;
 
-    public KreuzbergDoclingClient(long extractionTimeoutSeconds) {
-        this(extractionTimeoutSeconds, Kreuzberg::extractBytes);
+    @Autowired
+    public KreuzbergDocumentExtractor(TextbuddyProperties properties) {
+        this(properties.getDocument().normalizedTimeoutSeconds(), Kreuzberg::extractBytes);
     }
 
-    KreuzbergDoclingClient(long extractionTimeoutSeconds, KreuzbergExtractor extractor) {
-        this.extractionTimeoutSeconds = Math.max(1L, extractionTimeoutSeconds);
+    KreuzbergDocumentExtractor(long extractionTimeoutSeconds, KreuzbergExtractor extractor) {
+        this.extractionTimeoutSeconds = extractionTimeoutSeconds;
         this.extractor = Objects.requireNonNull(extractor);
     }
 
-    @Override
     public String extractText(DocumentUpload upload, String ocrLanguage) {
         String mimeType = resolveMimeType(upload);
         String normalizedLanguage = DocumentOcrLanguage.tesseractCode(ocrLanguage);

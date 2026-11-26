@@ -5,10 +5,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
@@ -19,15 +18,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
+@AutoConfigureMockMvc
 class QuickActionControllerMvcTest {
 
     @Autowired
-    private WebApplicationContext context;
+    private MockMvc mockMvc;
 
     @Test
     void rewritesPlainLanguageWithTheStub() throws Exception {
-        MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
-
         mockMvc.perform(post("/api/quick-actions/plain-language")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -47,7 +45,6 @@ class QuickActionControllerMvcTest {
             management_summary|Management Summary
             """)
     void sendsEachSummaryOptionToTheMatchingStubVariant(String option, String expectedPrefix) throws Exception {
-        MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
         mockMvc.perform(post("/api/quick-actions/summarize")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -64,7 +61,6 @@ class QuickActionControllerMvcTest {
 
     @Test
     void rejectsInvalidActionAndOption() throws Exception {
-        MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
         String body = "{\"text\":\"Text\",\"language\":\"de\",\"option\":\"unbekannt\"}";
 
         mockMvc.perform(post("/api/quick-actions/unbekannt").contentType(MediaType.APPLICATION_JSON).content(body))
@@ -75,7 +71,6 @@ class QuickActionControllerMvcTest {
 
     @Test
     void rejectsOversizedTextBeforeCallingTheAdapter() throws Exception {
-        MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
         String oversizedText = "{\"text\":\"" + "x".repeat(50_001) + "\",\"language\":\"de\"}";
 
         mockMvc.perform(post("/api/quick-actions/plain-language")

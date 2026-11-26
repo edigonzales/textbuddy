@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
@@ -70,6 +71,18 @@ class AuthEnabledMvcTest {
     }
 
     @Test
+    void advisorCatalogAndValidationRequireAuthentication() throws Exception {
+        mockMvc.perform(get("/api/advisor/docs"))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/api/advisor/validate")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"text\":\"Text\",\"docs\":[]}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void unknownRoutesRequireAuthentication() throws Exception {
         mockMvc.perform(get("/not-a-public-route"))
                 .andExpect(status().isUnauthorized());
@@ -125,6 +138,11 @@ class AuthEnabledMvcTest {
     @Test
     void allAuthenticatedUsersCanReadEveryAdvisorDocument() throws Exception {
         mockMvc.perform(get("/api/advisor/docs").with(oauth2Login()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].name", hasItem("schreibweisungen")));
+
+        mockMvc.perform(get("/api/advisor/docs")
+                        .with(oauth2Login().authorities(new SimpleGrantedAuthority("ROLE_ADVISOR_INTERNAL"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].name", hasItem("schreibweisungen")));
 

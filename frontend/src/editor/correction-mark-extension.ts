@@ -19,13 +19,11 @@ export const textCorrectionPluginKey = new PluginKey<DecorationSet>(
 
 function buildBoundaryIndex(doc: ProseMirrorNode): number[] {
   const boundaries: number[] = [];
-  doc.descendants((node, pos) => {
-    if (!node.isTextblock) return true;
+  doc.forEach((paragraph, pos) => {
     // Text and hard breaks each occupy the same number of units in both models.
-    for (let offset = 0; offset <= node.content.size; offset += 1) {
+    for (let offset = 0; offset <= paragraph.content.size; offset += 1) {
       boundaries.push(pos + 1 + offset);
     }
-    return false;
   });
   return boundaries;
 }

@@ -241,6 +241,45 @@ test("typing updates counters and undo/redo remains one action", async ({ page }
   await expect(page.getByTestId("editor-mirror")).toHaveValue("Hallo Welt");
 });
 
+test("editor keeps typed markers and formatted clipboard contents as plain text", async ({ page }) => {
+  await stubCorrection(page);
+  await page.goto("/");
+  const input = page.getByTestId("editor-input");
+  const mirror = page.getByTestId("editor-mirror");
+  const typed = "1. Eintrag\n# Titel\n> Zitat";
+  await input.pressSequentially("1. Eintrag");
+  await input.press("Enter");
+  await input.pressSequentially("# Titel");
+  await input.press("Enter");
+  await input.pressSequentially("> Zitat");
+  await expect(mirror).toHaveValue(typed);
+  await expect(input.locator(":scope > p")).toHaveCount(3);
+
+  const pasted = "\n  📄 Absatz\t\u00a0mit Leerraum  \n\n\nLetzte Zeile \n";
+  await input.press("ControlOrMeta+a");
+  await input.evaluate((node, text) => {
+    const clipboardData = new DataTransfer();
+    clipboardData.setData("text/plain", text.replace(/\n/g, "\r\n"));
+    clipboardData.setData("text/html", "<h1><strong>Absatz</strong></h1><ol><li><em>Letzte Zeile</em></li></ol>");
+    node.dispatchEvent(new ClipboardEvent("paste", { clipboardData, bubbles: true, cancelable: true }));
+  }, pasted);
+  await expect(mirror).toHaveValue(pasted);
+  await expect(input.locator(":scope > p")).toHaveCount(6);
+  await expect(input.locator(":scope > :not(p), :scope > p > :not(br)")).toHaveCount(0);
+  await page.getByTestId("editor-undo").click();
+  await expect(mirror).toHaveValue(typed);
+  await page.getByTestId("editor-redo").click();
+  await expect(mirror).toHaveValue(pasted);
+  const copied = await input.evaluate((node) => {
+    const { editor } = node as HTMLElement & { editor: { commands: { selectAll: () => void } } };
+    editor.commands.selectAll();
+    const clipboardData = new DataTransfer();
+    node.dispatchEvent(new ClipboardEvent("copy", { clipboardData, bubbles: true, cancelable: true }));
+    return clipboardData.getData("text/plain");
+  });
+  expect(copied).toBe(pasted);
+});
+
 test("correction stays compact in transform mode and rail opens only in validate mode", async ({
   page,
 }) => {
@@ -293,6 +332,32 @@ test("clicking a correction mark switches mode and focuses its finding", async (
     "true",
   );
   await expect(page.getByRole("button", { name: /Problem 1: teh/ })).toBeFocused();
+});
+
+test("correction marks and applies UTF-16 ranges across and between plaintext paragraphs", async ({ page }) => {
+  const original = "📄 Einleitung\n\nlinks\nrechts Schluss.";
+  const joined = "📄 Einleitung\n\n Schluss.";
+  const offset = original.indexOf("links");
+  await page.route("**/api/text-correction", async (route) => {
+    const { text } = route.request().postDataJSON() as CorrectionRequestPayload;
+    const change = text === original ? { length: "links\nrechts".length, replacements: [""] }
+      : text === joined ? { length: 0, replacements: ["Neuer"] } : null;
+    await route.fulfill({ json: { original: text, blocks: change ? [{
+      offset, ...change, message: "Bitte prüfen.", shortMessage: "Änderung", ruleId: "DEMO_CHANGE",
+    }] : [] } });
+  });
+
+  await page.goto("/");
+  await enterText(page, original);
+  await page.getByTestId("workspace-mode-validate").click();
+  const marks = page.getByTestId("correction-mark");
+  await expect(marks).toHaveText(["links", "rechts"]);
+  await page.getByTestId("correction-suggestion").click();
+  await expect(page.getByTestId("editor-mirror")).toHaveValue(joined);
+  await expect(marks).toHaveClass(/textbuddy-correction-insertion/);
+  await expect(page.getByTestId("editor-input").locator("p").last().getByTestId("correction-mark")).toHaveCount(1);
+  await page.getByTestId("correction-suggestion").click();
+  await expect(page.getByTestId("editor-mirror")).toHaveValue("📄 Einleitung\n\nNeuer Schluss.");
 });
 
 test("advisor uses the bundled catalog and reviews changes without another backend call", async ({ page }) => {

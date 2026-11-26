@@ -1,5 +1,11 @@
 import { Editor } from "@tiptap/core";
-import StarterKit from "@tiptap/starter-kit";
+import { Document } from "@tiptap/extension-document";
+import { HardBreak } from "@tiptap/extension-hard-break";
+import { Paragraph } from "@tiptap/extension-paragraph";
+import { Text } from "@tiptap/extension-text";
+import { UndoRedo } from "@tiptap/extensions";
+import { closeHistory } from "@tiptap/pm/history";
+import { Slice } from "@tiptap/pm/model";
 
 import { mountAdvisor } from "./advisor";
 import { TextCorrectionDecorationExtension } from "./correction-mark-extension";
@@ -47,19 +53,18 @@ export function mountEditorIsland(): void {
 
   const editor = new Editor({
     element: elements.surface,
-    extensions: [
-      StarterKit.configure({
-        code: false,
-        codeBlock: false,
-        dropcursor: false,
-        gapcursor: false,
-        link: false,
-        underline: false,
-      }),
-      TextCorrectionDecorationExtension,
-    ],
+    extensions: [Document, Paragraph, Text, HardBreak, UndoRedo, TextCorrectionDecorationExtension],
     content: plainTextDocument(elements.mirror.value),
     editorProps: {
+      clipboardTextSerializer: ({ content }) => content.textBetween(0, content.size, "\n", "\n"),
+      handlePaste(view, event) {
+        const text = event.clipboardData?.getData("text/plain");
+        if (!text) return false;
+        const pasted = view.state.schema.nodeFromJSON(plainTextDocument(text));
+        view.dispatch(closeHistory(view.state.tr).replaceSelection(Slice.maxOpen(pasted.content))
+          .scrollIntoView().setMeta("paste", true).setMeta("uiEvent", "paste"));
+        return true;
+      },
       attributes: {
         "aria-label": t("editor.ariaLabel"),
         role: "textbox",
