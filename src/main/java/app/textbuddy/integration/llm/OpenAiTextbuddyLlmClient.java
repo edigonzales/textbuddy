@@ -1,6 +1,5 @@
 package app.textbuddy.integration.llm;
 
-import app.textbuddy.advisor.AdvisorFixFinding;
 import app.textbuddy.advisor.AdvisorRuleCheck;
 import app.textbuddy.advisor.AdvisorRuleMatch;
 import app.textbuddy.quickaction.SummarizePrompt;
@@ -29,59 +28,34 @@ public final class OpenAiTextbuddyLlmClient implements TextbuddyLlmClient {
     @Override
     public List<AdvisorRuleMatch> validate(String text, List<AdvisorRuleCheck> ruleChecks) {
         PromptMessages prompt = prompts.advisor(text, ruleChecks);
-        JsonNode root = chatClient.completeJson(prompt.systemPrompt(), prompt.userPrompt());
-        JsonNode matchesNode = root.isArray() ? root : root.path("matches");
-
+        JsonNode matchesNode = chatClient.completeJson(prompt.systemPrompt(), prompt.userPrompt());
         if (!matchesNode.isArray()) {
             throw new LlmProviderException("LLM-Provider lieferte keine gültigen Advisor-Befunde.");
         }
 
         List<AdvisorRuleMatch> matches = new ArrayList<>();
-
         for (JsonNode node : matchesNode) {
-            if (text(node, "documentName").isBlank() || text(node, "ruleId").isBlank()
-                    || !node.path("matchedText").isString() || rawText(node, "matchedText").isBlank()) {
-                throw new LlmProviderException("LLM-Provider lieferte unvollständige Advisor-Befunde.");
+            JsonNode replacement = node.path("replacement");
+            if (!replacement.isNull() && !replacement.isString()) {
+                throw new LlmProviderException("LLM-Provider lieferte keine gültigen Advisor-Befunde.");
             }
             matches.add(new AdvisorRuleMatch(
-                    text(node, "documentName"),
-                    text(node, "ruleId"),
-                    rawText(node, "matchedText"),
-                    rawText(node, "excerpt"),
-                    text(node, "message"),
-                    text(node, "suggestion")
+                    requiredText(node, "documentName"),
+                    requiredText(node, "ruleId"),
+                    requiredText(node, "matchedText"),
+                    requiredText(node, "excerpt"),
+                    requiredText(node, "message"),
+                    replacement.isNull() ? null : replacement.asString()
             ));
         }
-
         return List.copyOf(matches);
     }
 
-    @Override
-    public List<String> fixAdvisor(List<AdvisorFixFinding> findings) {
-        PromptMessages prompt = prompts.advisorFix(findings);
-        JsonNode root = chatClient.completeJson(prompt.systemPrompt(), prompt.userPrompt());
-        if (!root.isArray() || root.size() != findings.size()) {
-            throw new LlmProviderException("LLM-Provider lieferte keine gültigen Advisor-Korrekturen.");
+    private String requiredText(JsonNode node, String field) {
+        JsonNode value = node.path(field);
+        if (!value.isString() || value.asString().isBlank()) {
+            throw new LlmProviderException("LLM-Provider lieferte keine gültigen Advisor-Befunde.");
         }
-        List<String> replacements = new ArrayList<>(root.size());
-        for (JsonNode item : root) {
-            if (!item.isString()) {
-                throw new LlmProviderException("LLM-Provider lieferte keine gültigen Advisor-Korrekturen.");
-            }
-            replacements.add(item.asString());
-        }
-        return replacements;
-    }
-
-    private String text(JsonNode node, String field) {
-        return normalize(node.path(field).asString(""));
-    }
-
-    private String rawText(JsonNode node, String field) {
-        return node.path(field).asString("");
-    }
-
-    private String normalize(String value) {
-        return value == null ? "" : value.trim();
+        return value.asString();
     }
 }

@@ -48,7 +48,6 @@ public class TextbuddyProperties {
     public static class Input {
 
         private int maxTextLength = 50_000;
-        private int maxPromptLength = 2_000;
 
         public int getMaxTextLength() {
             return maxTextLength;
@@ -56,14 +55,6 @@ public class TextbuddyProperties {
 
         public void setMaxTextLength(int maxTextLength) {
             this.maxTextLength = Math.max(1, maxTextLength);
-        }
-
-        public int getMaxPromptLength() {
-            return maxPromptLength;
-        }
-
-        public void setMaxPromptLength(int maxPromptLength) {
-            this.maxPromptLength = Math.max(1, maxPromptLength);
         }
     }
 

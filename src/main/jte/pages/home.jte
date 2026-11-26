@@ -319,7 +319,7 @@
                         </div>
                         <p class="problem-status" data-advisor-status data-testid="advisor-status" role="status" aria-live="polite" aria-atomic="true"></p>
                         <div class="advisor-findings" data-advisor-findings data-testid="advisor-findings" role="list" aria-label="${page.t("advisor.findings.label")}"></div>
-                        <button type="button" class="advisor-button advisor-button-primary advisor-fix" data-advisor-fix data-testid="advisor-fix" hidden>${page.t("advisor.fix")}</button>
+                        <button type="button" class="advisor-button advisor-button-primary advisor-preview" data-advisor-preview data-testid="advisor-preview" hidden>${page.t("advisor.review.open")}</button>
                     </section>
                 </div>
             </aside>

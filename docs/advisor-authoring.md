@@ -34,7 +34,9 @@ Nach einer Änderung sind ein neuer Build und Neustart erforderlich. Es gibt bew
 
 `order` steuert die Katalogreihenfolge. `name` muss eindeutig sein, als sicherer Dateiname funktionieren und exakt zum PDF-Dateinamen passen. Alle Textfelder, mindestens eine Regel und mindestens ein `matchTerms`-Eintrag pro Regel sind Pflicht. Regel-IDs müssen innerhalb des Dokuments eindeutig sein; `page` beginnt bei 1.
 
-`instructions` ist die fachliche Prüfanweisung für das LLM. `message` und `suggestion` sind kontrollierte Rückfälle und helfen dem Stub. `matchTerms` begrenzt Fundstellen auf konkrete Ausdrücke: Das LLM muss `matchedText` exakt aus dem Eingabetext kopieren und dieser Text muss – ohne Beachtung der Gross-/Kleinschreibung – einem Suchbegriff entsprechen. Dadurch kann der Server Positionen selbst bestimmen und Fix-Anfragen gegen die kanonische Regel prüfen.
+`instructions` ist die fachliche Prüfanweisung für das LLM. Die Regeltexte `message` und `suggestion` geben Hinweise zur Begründung und zur Formulierung eines möglichen Ersatzes. `matchTerms` begrenzt Fundstellen auf konkrete Ausdrücke. Das LLM muss `matchedText` exakt aus dem Eingabetext kopieren. Der Ausschnitt muss einem Suchbegriff entsprechen, unabhängig von der Gross- und Kleinschreibung. Das ebenfalls exakt kopierte Feld `excerpt` muss im Eingabetext einmal vorkommen und `matchedText` genau einmal enthalten. Damit bestimmt der Server die Position und ordnet Dokument, Seite und PDF-Link zu.
+
+Im Prüfresultat enthält `message` die Begründung und `replacement` nur den Text, der `matchedText` ersetzt. Ein leerer String löscht die Stelle. `null` kennzeichnet einen Befund ohne Ersatz. Der Browser erhält führenden, nachgestellten und internen Leerraum und verwendet wie im Editor üblich LF als Zeilenumbruch.
 
 ## Fachliche Review-Anforderungen
 
@@ -50,4 +52,4 @@ Die fünf mitgelieferten Regelwerke sind projektinterne Demos mit je zwei Regeln
 
 ## Technische Prüfung
 
-Führe den [regulären Prüfpfad](../README.md#prüfen-und-paketieren) aus. Die Katalogtests erkennen unter anderem fehlende PDFs, doppelte Dokument- oder Regel-IDs, ungültige Seitenzahlen und leere Pflichtfelder. Ergänze für neue Regeln gezielte positive und negative Beispiele, besonders für Begriffe, die auch als Teil längerer Wörter vorkommen.
+Führe den [regulären Prüfpfad](../README.md#prüfen-und-paketieren) aus. Beim Start prüft der Katalog die PDFs, die Eindeutigkeit von Dokument- und Regel-IDs, die Seitenzahlen und die Pflichtfelder. Ergänze für neue Regeln gezielte positive und negative Beispiele, besonders für Begriffe, die auch als Teil längerer Wörter vorkommen.

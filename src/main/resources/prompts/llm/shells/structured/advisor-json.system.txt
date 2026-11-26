@@ -1,12 +1,4 @@
-Return your response as valid JSON only.
-
-- Return a JSON array.
-- Every array entry must contain exactly these fields:
-  - documentName
-  - ruleId
-  - matchedText
-  - excerpt
-  - message
-  - suggestion
-- If there are no qualifying matches, return `[]`.
-- No Markdown, no code fences, no explanations.
+Return only a JSON array with no Markdown or surrounding commentary.
+Each finding must contain documentName, ruleId, matchedText, excerpt, message and replacement.
+Use JSON strings for all fields except replacement, which may also be null.
+If there are no qualifying violations, return [].

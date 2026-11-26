@@ -35,8 +35,8 @@ final class AdvisorValidationSseEmitterWriter implements AdvisorValidationStream
     }
 
     @Override
-    public void complete(boolean truncated) {
-        send("complete", Map.of("truncated", truncated));
+    public void complete(boolean incomplete) {
+        send("complete", Map.of("incomplete", incomplete));
         emitter.complete();
     }
 

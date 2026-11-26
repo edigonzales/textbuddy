@@ -15,16 +15,10 @@ public final class RequestInputValidator {
     }
 
     public void text(String value) {
-        requireMaxLength(value, limits.getMaxTextLength(), "Text ist zu lang.");
-    }
-
-    public void prompt(String value) {
-        requireMaxLength(value, limits.getMaxPromptLength(), "Prompt ist zu lang.");
-    }
-
-    private void requireMaxLength(String value, int maxLength, String message) {
+        int maxLength = limits.getMaxTextLength();
         if (value != null && value.length() > maxLength) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message + " Maximal erlaubt: " + maxLength + " Zeichen.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Text ist zu lang. Maximal erlaubt: " + maxLength + " Zeichen.");
         }
     }
 }

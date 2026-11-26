@@ -8,7 +8,6 @@ public record AdvisorDocument(
         String title,
         String summary,
         String source,
-        String pdfFileName,
         List<AdvisorRule> rules
 ) {
 }

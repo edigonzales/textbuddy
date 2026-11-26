@@ -6,6 +6,6 @@ public record AdvisorRuleMatch(
         String matchedText,
         String excerpt,
         String message,
-        String suggestion
+        String replacement
 ) {
 }

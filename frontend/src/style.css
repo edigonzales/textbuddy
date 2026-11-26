@@ -260,7 +260,7 @@
 #editor-island-root .advisor-finding-meta,
 #editor-island-root .advisor-finding-excerpt,
 #editor-island-root .advisor-finding-message,
-#editor-island-root .advisor-finding-suggestion {
+#editor-island-root .advisor-finding-replacement {
   margin: 0;
   color: var(--textbuddy-neutral-muted);
   font-size: 0.9rem;
@@ -330,7 +330,7 @@
 }
 
 #editor-island-root .advisor-button-primary,
-#editor-island-root .advisor-decision[data-decision="fix"] {
+#editor-island-root .advisor-decision[aria-pressed="true"] {
   border-color: var(--textbuddy-color-primary);
   background: var(--textbuddy-color-interactive-bg);
   color: var(--textbuddy-neutral-ink);
@@ -363,13 +363,14 @@
   margin: 0;
 }
 
-#editor-island-root .advisor-finding-suggestion {
+#editor-island-root .advisor-finding-replacement {
+  white-space: pre-wrap;
   padding-left: 0.625rem;
   border-left: 3px solid var(--textbuddy-color-success);
   color: var(--textbuddy-neutral-ink);
 }
 
-#editor-island-root .advisor-fix {
+#editor-island-root .advisor-preview {
   width: 100%;
 }
 
