@@ -1,6 +1,6 @@
 package app.textbuddy.textcorrection;
 
-import app.textbuddy.integration.languagetool.LanguageToolClient;
+import app.textbuddy.integration.languagetool.EmbeddedLanguageToolClient;
 import app.textbuddy.integration.languagetool.LanguageToolMatch;
 import org.springframework.stereotype.Service;
 
@@ -16,9 +16,9 @@ public class TextCorrectionService {
             Comparator.comparingInt(LanguageToolMatch::offset)
                     .thenComparingInt(LanguageToolMatch::length);
 
-    private final LanguageToolClient languageToolClient;
+    private final EmbeddedLanguageToolClient languageToolClient;
 
-    public TextCorrectionService(LanguageToolClient languageToolClient) {
+    public TextCorrectionService(EmbeddedLanguageToolClient languageToolClient) {
         this.languageToolClient = languageToolClient;
     }
 

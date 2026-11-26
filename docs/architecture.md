@@ -15,8 +15,8 @@ flowchart LR
 
 - `web`: HTTP-Verträge, Eingabegrenzen, Fehlerabbildung und Startseite.
 - Fachpakete wie `quickaction`, `textcorrection`, `advisor` und `document`: kleine Services und unveränderliche Request-/Response-Typen.
-- `integration`: Provider-Adapter. Alle LLM-Funktionen hängen an genau einem `TextbuddyLlmClient`.
-- `config`: ein Konfigurationsaggregat (`TextbuddyProperties`) und die Auswahl der Adapter.
+- `integration`: die eingebettete LanguageTool-Komponente und die LLM-Anbindung. `TextCorrectionService` nutzt `EmbeddedLanguageToolClient` direkt. Alle LLM-Funktionen verwenden `TextbuddyLlmClient`.
+- `config`: das Konfigurationsaggregat `TextbuddyProperties` und die Auswahl der LLM-Implementierung.
 - `frontend`: eine TypeScript-/Tiptap-Insel; keine zweite eigenständige Webanwendung.
 
 ## HTTP-Verträge
@@ -34,7 +34,7 @@ Die Advisor-Prüfung verarbeitet Regeln in Dreierbatches. Das SSE-Abschlussereig
 
 LanguageTool und Advisor liefern halb offene UTF-16-Bereiche im unveränderten Request-Text. Der Advisor verifiziert die vom Provider kopierten Fundstellen anhand des exakten Kontexts und ergänzt die Quellen aus dem lokalen Katalog. Mit jedem Befund liefert der Server den konkreten Ersatztext, einen leeren String für eine Löschung oder `null` für einen Befund ohne ausführbare Änderung. Der Browser prüft die ausgewählten Bereiche und ihre Originalausschnitte und erstellt daraus lokal die gemeinsame Vorschau. Beim Öffnen und Übernehmen prüft er den ursprünglichen Textstand. Die angenommenen Änderungen bilden eine Undo-Transaktion.
 
-Kreuzberg liefert direkt Text und Absatzumbrüche. Der Ergebnis-Cache ist deaktiviert. Der Editor setzt Text als Tiptap-Textknoten ein und verwendet LF als Zeilenumbruch. DOCX exportiert jede Editorzeile als Absatz.
+Der Dokumentservice prüft den Upload und ruft `KreuzbergDocumentExtractor` direkt auf. Kreuzberg liefert Text und Absatzumbrüche bei deaktiviertem Extraktionscache. Der Editor speichert Text in Absätzen mit optionalen manuellen Zeilenumbrüchen. Bei der Positionsabbildung sind Absatzgrenzen und manuelle Umbrüche jeweils ein LF. Die Zwischenablage verwendet verfügbaren Plaintext. DOCX exportiert jede Editorzeile als Absatz.
 
 ## Zustand und Daten
 

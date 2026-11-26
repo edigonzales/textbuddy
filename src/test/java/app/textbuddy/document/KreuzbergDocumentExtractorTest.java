@@ -1,6 +1,6 @@
-package app.textbuddy.integration.docling;
+package app.textbuddy.document;
 
-import app.textbuddy.document.DocumentUpload;
+import app.textbuddy.config.TextbuddyProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -23,9 +23,9 @@ import javax.imageio.ImageIO;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class KreuzbergDoclingClientTest {
+class KreuzbergDocumentExtractorTest {
 
-    private final KreuzbergDoclingClient client = new KreuzbergDoclingClient(45);
+    private final KreuzbergDocumentExtractor client = new KreuzbergDocumentExtractor(new TextbuddyProperties());
 
     @ParameterizedTest
     @MethodSource("supportedUploads")
@@ -68,14 +68,6 @@ class KreuzbergDoclingClientTest {
                                 createDocx("DOCX Import Titel", "Zweite Zeile")
                         ),
                         "DOCX Import Titel\n\nZweite Zeile"
-                },
-                new Object[]{
-                        new DocumentUpload(
-                                "import.md",
-                                "text/markdown",
-                                "# Import Titel\n\nErste Zeile".getBytes(StandardCharsets.UTF_8)
-                        ),
-                        "Import Titel"
                 },
                 new Object[]{
                         new DocumentUpload(

@@ -14,6 +14,6 @@ Der Browser erstellt den Diff für die ausgewählten Advisor-Befunde lokal. Änd
 
 Der Import unterstützt PDF, DOCX, PPTX, XLSX, HTML, Markdown, AsciiDoc, TXT, PNG, JPG/JPEG und TIF/TIFF. Der extrahierte Text ersetzt den Editorinhalt und behält Absatzumbrüche. OCR verwendet die gewählte Textsprache, bei automatischer Erkennung Deutsch. Die Standard-Uploadgrenze beträgt 20 MB.
 
-Die Werkzeugleiste bietet Undo und Redo, Kopieren, DOCX-Export und Textstatistik. Der Export schreibt jede Textzeile als Word-Absatz. Die Statistik zeigt unter anderem Wörter, Sätze und Silben. Bei **Deutsch (Schweiz)** zeigt sie den Amstad-Flesch-Wert. **Verständlicher schreiben** zeigt dann auch einen Vergleich der formalen Lesbarkeit vor und nach der Überarbeitung.
+Beim Einfügen übernimmt der Editor den verfügbaren Klartext aus der Zwischenablage mitsamt Leerraum und Absatzumbrüchen. Die Werkzeugleiste bietet Undo und Redo, Kopieren, DOCX-Export und Textstatistik. Der Export schreibt jede Textzeile als Word-Absatz. Die Statistik zeigt unter anderem Wörter, Sätze und Silben. Bei **Deutsch (Schweiz)** zeigt sie den Amstad-Flesch-Wert. **Verständlicher schreiben** zeigt dann auch einen Vergleich der formalen Lesbarkeit vor und nach der Überarbeitung.
 
 LanguageTool und Dokumentimport verarbeiten Eingaben lokal. Textbuddy speichert Text und Uploads serverseitig nicht dauerhaft. Bei LLM-Aktionen werden die dafür erforderlichen Inhalte an den konfigurierten Provider gesendet. Die gebündelten Advisor-Regeln sind projektspezifische Demos.

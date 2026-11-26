@@ -1,8 +1,5 @@
-package app.textbuddy.integration.docling;
+package app.textbuddy.document;
 
-import app.textbuddy.document.DocumentConversionFailedException;
-import app.textbuddy.document.DocumentImportTimeoutException;
-import app.textbuddy.document.DocumentUpload;
 import dev.kreuzberg.ErrorCode;
 import dev.kreuzberg.KreuzbergException;
 import org.junit.jupiter.api.Test;
@@ -14,12 +11,12 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class KreuzbergDoclingClientOcrFallbackTest {
+class KreuzbergDocumentExtractorOcrFallbackTest {
 
     @Test
     void retriesWithDefaultLanguageWhenNonDefaultOcrLanguageFails() {
         List<String> attemptedLanguages = new ArrayList<>();
-        KreuzbergDoclingClient client = new KreuzbergDoclingClient(45, (content, mimeType, extractionConfig) -> {
+        KreuzbergDocumentExtractor client = new KreuzbergDocumentExtractor(45, (content, mimeType, extractionConfig) -> {
             attemptedLanguages.add(extractionConfig.getOcr().getLanguage());
             throw new KreuzbergException("OCR failed", ErrorCode.OCR_ERROR);
         });
@@ -37,7 +34,7 @@ class KreuzbergDoclingClientOcrFallbackTest {
     @Test
     void doesNotRetryWhenDefaultLanguageFails() {
         List<String> attemptedLanguages = new ArrayList<>();
-        KreuzbergDoclingClient client = new KreuzbergDoclingClient(45, (content, mimeType, extractionConfig) -> {
+        KreuzbergDocumentExtractor client = new KreuzbergDocumentExtractor(45, (content, mimeType, extractionConfig) -> {
             attemptedLanguages.add(extractionConfig.getOcr().getLanguage());
             throw new KreuzbergException("OCR failed", ErrorCode.OCR_ERROR);
         });
@@ -54,7 +51,7 @@ class KreuzbergDoclingClientOcrFallbackTest {
 
     @Test
     void mapsTimeoutErrorsToControlledTimeoutException() {
-        KreuzbergDoclingClient client = new KreuzbergDoclingClient(45, (content, mimeType, extractionConfig) -> {
+        KreuzbergDocumentExtractor client = new KreuzbergDocumentExtractor(45, (content, mimeType, extractionConfig) -> {
             throw new KreuzbergException("extraction timeout reached", ErrorCode.GENERIC_ERROR);
         });
 
@@ -68,7 +65,7 @@ class KreuzbergDoclingClientOcrFallbackTest {
 
     @Test
     void mapsParsingErrorsToControlledCorruptionMessage() {
-        KreuzbergDoclingClient client = new KreuzbergDoclingClient(45, (content, mimeType, extractionConfig) -> {
+        KreuzbergDocumentExtractor client = new KreuzbergDocumentExtractor(45, (content, mimeType, extractionConfig) -> {
             throw new KreuzbergException("cannot parse", ErrorCode.PARSING_ERROR);
         });
 

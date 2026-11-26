@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 @Component
-public final class EmbeddedLanguageToolClient implements LanguageToolClient {
+public final class EmbeddedLanguageToolClient {
 
     private static final Map<String, Set<String>> AUTO_LANGUAGE_HINTS = Map.of(
             "de-CH", Set.of(" der ", " die ", " das ", " und ", " ist ", " nicht ", " mit ", " für ", " grüezi "),
@@ -23,7 +23,6 @@ public final class EmbeddedLanguageToolClient implements LanguageToolClient {
             "en-US", Set.of(" the ", " and ", " is ", " are ", " with ", " this ", " that ", " hello ")
     );
 
-    @Override
     public List<LanguageToolMatch> check(String text, String language) {
         if (text == null || text.isBlank()) {
             return List.of();

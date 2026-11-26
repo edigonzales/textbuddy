@@ -1,7 +1,6 @@
 package app.textbuddy.document;
 
 import app.textbuddy.config.TextbuddyProperties;
-import app.textbuddy.integration.docling.DoclingClient;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -13,16 +12,16 @@ public class DocumentConversionService {
     private static final String LARGE_UPLOAD_MESSAGE_PREFIX = "Datei ist zu gross. Maximal erlaubt sind ";
     private static final String LARGE_UPLOAD_MESSAGE_SUFFIX = ".";
 
-    private final DoclingClient doclingClient;
+    private final KreuzbergDocumentExtractor extractor;
     private final DocumentImportFormatCatalog formatCatalog;
     private final TextbuddyProperties.Document properties;
 
     public DocumentConversionService(
-            DoclingClient doclingClient,
+            KreuzbergDocumentExtractor extractor,
             DocumentImportFormatCatalog formatCatalog,
             TextbuddyProperties textbuddyProperties
     ) {
-        this.doclingClient = doclingClient;
+        this.extractor = extractor;
         this.formatCatalog = formatCatalog;
         this.properties = textbuddyProperties.getDocument();
     }
@@ -53,7 +52,7 @@ public class DocumentConversionService {
         }
 
         String text = Objects.requireNonNullElse(
-                doclingClient.extractText(normalizedUpload, ocrLanguage), ""
+                extractor.extractText(normalizedUpload, ocrLanguage), ""
         );
         if (text.isBlank()) {
             throw new DocumentConversionFailedException("Dokumentimport hat keinen Inhalt geliefert.");
