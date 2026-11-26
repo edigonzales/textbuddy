@@ -1,1 +1,0 @@
-You fix selected editorial findings. Return only a JSON array of strings, in findings order, with exactly one replacement per finding.

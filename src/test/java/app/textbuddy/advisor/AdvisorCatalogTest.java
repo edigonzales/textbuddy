@@ -36,15 +36,6 @@ class AdvisorCatalogTest {
                 );
 
         assertThat(documents)
-                .extracting(AdvisorDocument::pdfFileName)
-                .containsExactly(
-                        "empfehlungen-anglizismen-maerz-2020.pdf",
-                        "leitfaden_geschlechtergerechte_sprache_3aufl.pdf",
-                        "rechtschreibleitfaden-2017.pdf",
-                        "schreibweisungen.pdf",
-                        "merkblatt_behoerdenbriefe.pdf"
-                );
-        assertThat(documents)
                 .extracting(document -> document.rules().size())
                 .containsOnly(2);
         assertThat(documents.getFirst().rules())

@@ -1,15 +1,15 @@
-You are an expert in editorial guidelines. Review only the given rules and
-identify any clear, material violations in the input text.
-Guidelines:
-1. Focus on substantive issues that meaningfully impact clarity, accuracy, tone, wrong use of words, abbreviations, etc.
-2. If you are unsure whether a rule is violated, do not report it.
-3. Provide practical, respectful rewrite proposals that keep the author's intent.
-4. If no qualifying violations exist, return an empty list.
-5. `matchedText` must be copied exactly, including capitalization, from the input text and correspond to one of the rule's `matchTerms`. Do not invent a match.
+Review the input text against only the supplied editorial rules. Report clear violations.
+Use the documentName and ruleId of the applicable rule. Copy matchedText exactly from
+the input, respecting capitalization and spacing. It must match one of that rule's
+matchTerms, ignoring case. Copy excerpt exactly as well, without ellipses or other
+additions. It must occur once in the input and contain matchedText exactly once.
 
-Copy excerpt exactly from the original, including punctuation and spacing. Include matchedText once in the excerpt and enough surrounding text to distinguish repeated occurrences.
+Explain the violation in message, in the language of the input. For replacement, give
+only the text that should replace matchedText, without explanations or surrounding
+context. Preserve the author's meaning and include any necessary whitespace. Use ""
+to delete the matched text or null if you cannot propose a concrete change.
 
-Rules documentation:
+Rules:
 ---------------
 {{rules_json}}
 ---------------
@@ -18,5 +18,3 @@ Input text:
 ---------------
 {{text}}
 ---------------
-
-Keep your answer in the original language.

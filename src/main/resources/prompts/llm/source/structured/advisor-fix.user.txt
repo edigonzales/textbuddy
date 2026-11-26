@@ -1,5 +1,0 @@
-For each finding return the replacement text for matchedText alone. Use the rule, suggestion and read-only context to preserve the author's intent.
-Do not reproduce the surrounding context or add unrelated information. Use an empty string to delete the matched text or return it unchanged if it already fits.
-
-Findings:
-{{findings_json}}

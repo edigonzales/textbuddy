@@ -28,12 +28,11 @@ flowchart LR
 | `GET /api/advisor/docs` | JSON | Statischer Advisor-Katalog |
 | `GET /api/advisor/doc/{name}` | PDF | Referenzdokument für einen neuen Browser-Tab |
 | `POST /api/advisor/validate` | SSE | Regelprüfung mit Befunden, Batchfortschritt und Abschlussereignis |
-| `POST /api/advisor/fix` | JSON | Ein Ersatztext pro ausgewählter Fundstelle in Reihenfolge des Requests |
 | `POST /api/convert/doc` | Multipart/JSON | Extrahierten Dokumenttext als `{"text": "..."}` liefern |
 
-Die Advisor-Prüfung verarbeitet Regeln in Dreierbatches. Das SSE-Abschlussereignis `complete` enthält `truncated: true`, wenn die Regel- oder Befundgrenze Ergebnisse begrenzt. Ein Stream ohne gültiges Abschlussereignis gilt als fehlgeschlagen.
+Die Advisor-Prüfung verarbeitet Regeln in Dreierbatches. Das SSE-Abschlussereignis `complete` enthält `incomplete: true`, wenn eine Regel- oder Befundgrenze Ergebnisse begrenzt oder Befunde ungültig, mehrdeutig oder widersprüchlich sind. Eine ungültige Provider-Antwort führt zu einem Fehler. Ein Stream ohne gültiges Abschlussereignis gilt als fehlgeschlagen.
 
-LanguageTool und Advisor liefern halb offene UTF-16-Bereiche im unveränderten Request-Text. Der Advisor übernimmt exakt kopierte Fundstellen aus gültigen Regeln. Bei Wiederholungen muss ein exakt kopierter Kontext die Stelle eindeutig bestimmen. Für Korrekturen übermittelt der Editor geordnete, disjunkte Bereiche mit ihrem Originalausschnitt. Der Server prüft Textausschnitt und Regel und fordert pro Bereich einen Ersatztext an. Der Editor bindet die Vorschau an den geprüften Textstand und übernimmt die ausgewählten Ersetzungen als eine Undo-Transaktion.
+LanguageTool und Advisor liefern halb offene UTF-16-Bereiche im unveränderten Request-Text. Der Advisor verifiziert die vom Provider kopierten Fundstellen anhand des exakten Kontexts und ergänzt die Quellen aus dem lokalen Katalog. Mit jedem Befund liefert der Server den konkreten Ersatztext, einen leeren String für eine Löschung oder `null` für einen Befund ohne ausführbare Änderung. Der Browser prüft die ausgewählten Bereiche und ihre Originalausschnitte und erstellt daraus lokal die gemeinsame Vorschau. Beim Öffnen und Übernehmen prüft er den ursprünglichen Textstand. Die angenommenen Änderungen bilden eine Undo-Transaktion.
 
 Kreuzberg liefert direkt Text und Absatzumbrüche. Der Ergebnis-Cache ist deaktiviert. Der Editor setzt Text als Tiptap-Textknoten ein und verwendet LF als Zeilenumbruch. DOCX exportiert jede Editorzeile als Absatz.
 
@@ -47,6 +46,6 @@ Kreuzberg liefert direkt Text und Absatzumbrüche. Der Ergebnis-Cache ist deakti
 
 ## Sicherheitsgrenzen
 
-Im Produktionsmodus sind nur Login, Fehlerseite und statische Assets öffentlich; alle übrigen Routen verlangen eine OIDC-Anmeldung. Zustandsändernde Browseranfragen tragen ein CSRF-Token. Ein ungeschützter Start ist nur bei expliziter Loopback-Bindung möglich. Upload-, Text- und Promptgrössen werden vor teurer Verarbeitung geprüft. CSP und `X-Frame-Options: SAMEORIGIN` erlauben eigene PDF-Ressourcen, aber keine fremde Einbettung.
+Im Produktionsmodus sind nur Login, Fehlerseite und statische Assets öffentlich; alle übrigen Routen verlangen eine OIDC-Anmeldung. Zustandsändernde Browseranfragen tragen ein CSRF-Token. Ein ungeschützter Start ist nur bei expliziter Loopback-Bindung möglich. Upload- und Textgrössen werden vor teurer Verarbeitung geprüft. CSP und `X-Frame-Options: SAMEORIGIN` erlauben eigene PDF-Ressourcen, aber keine fremde Einbettung.
 
 Externe Provider sind eine eigene Datenschutzgrenze: Für LLM-Funktionen erforderliche Texte verlassen den Textbuddy-Prozess. Die Entscheidung dafür und die Aufbewahrungsregeln des Providers gehören zur Betriebskonfiguration.

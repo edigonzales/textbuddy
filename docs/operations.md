@@ -50,14 +50,13 @@ Auf macOS (Apple Silicon) wurde die mit Kreuzberg gelieferte Laufzeit mit den vi
 | Einstellung | Standard | Bedeutung |
 | --- | ---: | --- |
 | `textbuddy.input.max-text-length` | `50000` | maximale Zeichen pro Textanfrage |
-| `textbuddy.input.max-prompt-length` | `2000` | Grenze für die Summe der ausgewählten Advisor-Vorschläge |
 | `textbuddy.document.max-upload-size` | `20MB` | Multipart- und fachliche Uploadgrenze |
 | `textbuddy.llm.timeout` | `30s` | Timeout einer LLM-Anfrage |
 | `textbuddy.document.timeout` | `45s` | Timeout der Dokumentverarbeitung |
 
 Nur lokale OCR wiederholt bei einem sprachbezogenen OCR-Fehler einmal mit der Standardsprache.
 
-Eine Advisor-Prüfung verarbeitet maximal fünf Dokumente und zwanzig Regeln. Beim aktuellen Katalog mit zehn Regeln sind das vier serielle LLM-Aufrufe in Dreierbatches; das SSE-Timeout wird aus der maximalen Batchzahl und dem LLM-Timeout abgeleitet. Das Anwenden ausgewählter Befunde verursacht genau einen zusätzlichen atomaren LLM-Aufruf. Die Summe der ausgewählten Vorschläge ist durch `textbuddy.input.max-prompt-length` begrenzt.
+Eine Advisor-Prüfung verarbeitet maximal fünf Dokumente und zwanzig Regeln und liefert höchstens zwanzig Befunde. Beim aktuellen Katalog mit zehn Regeln sind das vier serielle LLM-Aufrufe in Dreierbatches. Das SSE-Timeout leitet sich aus der maximalen Batchzahl und dem LLM-Timeout ab. Die Prüfung liefert bereits die Ersatztexte für die lokale Vorschau und Übernahme im Browser.
 
 ## Reverse Proxy
 

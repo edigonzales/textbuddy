@@ -1,6 +1,5 @@
 package app.textbuddy.integration.llm;
 
-import app.textbuddy.advisor.AdvisorFixFinding;
 import app.textbuddy.advisor.AdvisorRuleCheck;
 import app.textbuddy.advisor.AdvisorRuleMatch;
 import app.textbuddy.quickaction.SummarizePrompt;
@@ -8,14 +7,20 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 @Component
 @ConditionalOnProperty(prefix = "textbuddy.llm", name = "mode", havingValue = "stub")
 public final class StubTextbuddyLlmClient implements TextbuddyLlmClient {
+
+    private static final Map<String, String> DEMO_REPLACEMENTS = Map.of(
+            "downloaden", "herunterladen",
+            "per sofort", "ab sofort",
+            "z.hd.", "zuhanden von"
+    );
 
     @Override
     public String rewrite(String text, String language, SummarizePrompt summary) {
@@ -26,31 +31,34 @@ public final class StubTextbuddyLlmClient implements TextbuddyLlmClient {
 
     @Override
     public List<AdvisorRuleMatch> validate(String text, List<AdvisorRuleCheck> ruleChecks) {
-        String normalizedText = text == null ? "" : text;
-
-        if (normalizedText.isBlank() || ruleChecks == null || ruleChecks.isEmpty()) {
-            return List.of();
-        }
-
         List<AdvisorRuleMatch> matches = new ArrayList<>();
-
-        for (AdvisorRuleCheck rule : ruleChecks) {
-            findFirstMatch(normalizedText, rule).ifPresent(match -> matches.add(new AdvisorRuleMatch(
-                    rule.documentName(),
-                    rule.ruleId(),
-                    match.matchedText(),
-                    excerptAround(normalizedText, match.startIndex(), match.endIndex()),
-                    rule.message() + " Gefunden: '" + match.matchedText() + "'.",
-                    replacementFor(rule.ruleId(), match.matchedText(), rule.suggestion())
-            )));
+        for (AdvisorRuleCheck check : ruleChecks) {
+            for (String term : check.rule().matchTerms()) {
+                String replacement = DEMO_REPLACEMENTS.get(term.toLowerCase(Locale.ROOT));
+                if (replacement == null) continue;
+                var matcher = Pattern.compile("(?<![\\p{L}\\p{N}])" + Pattern.quote(term) + "(?![\\p{L}\\p{N}])",
+                        Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(text);
+                AdvisorRuleMatch finding = null;
+                while (matcher.find()) {
+                    String matchedText = matcher.group();
+                    int previous = text.lastIndexOf(matchedText, matcher.start() - 1);
+                    int next = text.indexOf(matchedText, matcher.end());
+                    String excerpt = previous < 0 && next < 0 ? matchedText
+                            : text.substring(previous + 1, next < 0 ? text.length() : next);
+                    boolean unique = text.indexOf(excerpt) == text.lastIndexOf(excerpt);
+                    if (finding == null || unique) {
+                        finding = new AdvisorRuleMatch(check.document().name(), check.rule().id(), matchedText,
+                                excerpt, check.rule().message(), replacement);
+                    }
+                    if (unique) break;
+                }
+                if (finding != null) {
+                    matches.add(finding);
+                    break;
+                }
+            }
         }
-
-        return List.copyOf(matches);
-    }
-
-    @Override
-    public List<String> fixAdvisor(List<AdvisorFixFinding> findings) {
-        return findings.stream().map(AdvisorFixFinding::suggestion).toList();
+        return matches;
     }
 
     private String plainLanguage(String text, String language) {
@@ -120,71 +128,7 @@ public final class StubTextbuddyLlmClient implements TextbuddyLlmClient {
         return index < 0 || index >= values.size() ? fallback : values.get(index);
     }
 
-    private static Optional<TextMatch> findFirstMatch(String text, AdvisorRuleCheck rule) {
-        return rule.matchTerms().stream()
-                .map(term -> findMatch(text, term))
-                .flatMap(Optional::stream)
-                .min(Comparator.comparingInt(TextMatch::startIndex));
-    }
-
-    private static Optional<TextMatch> findMatch(String text, String term) {
-        String normalizedTerm = normalize(term);
-        if (normalizedTerm.isBlank()) {
-            return Optional.empty();
-        }
-        String lowerText = text.toLowerCase(Locale.ROOT);
-        String lowerTerm = normalizedTerm.toLowerCase(Locale.ROOT);
-        int index = lowerText.indexOf(lowerTerm);
-        while (index >= 0 && !hasWordBoundaries(text, index, index + normalizedTerm.length(), normalizedTerm)) {
-            index = lowerText.indexOf(lowerTerm, index + 1);
-        }
-        return index < 0 ? Optional.empty() : Optional.of(new TextMatch(
-                text.substring(index, index + normalizedTerm.length()),
-                index,
-                index + normalizedTerm.length()
-        ));
-    }
-
-    private static boolean hasWordBoundaries(String text, int start, int end, String term) {
-        boolean left = !Character.isLetterOrDigit(term.charAt(0)) || start == 0
-                || !Character.isLetterOrDigit(text.charAt(start - 1));
-        boolean right = !Character.isLetterOrDigit(term.charAt(term.length() - 1)) || end == text.length()
-                || !Character.isLetterOrDigit(text.charAt(end));
-        return left && right;
-    }
-
-    private static String replacementFor(String ruleId, String matchedText, String fallback) {
-        String term = matchedText.toLowerCase(Locale.ROOT);
-        return switch (ruleId) {
-            case "downloaden-statt-herunterladen" -> switch (term) {
-                case "gedownloadet" -> "heruntergeladen";
-                case "updaten" -> "aktualisieren";
-                case "upgedatet" -> "aktualisiert";
-                default -> "herunterladen";
-            };
-            case "meeting-und-feedback-pruefen" -> term.equals("feedback") ? "Rückmeldung" : "Besprechung";
-            case "mitarbeiter-neutral-formulieren" -> "Mitarbeitende";
-            case "buerger-neutral-formulieren" -> "Bevölkerung";
-            case "alte-dass-schreibung" -> "dass";
-            case "email-mit-bindestrich" -> "E-Mail";
-            case "per-sofort-vermeiden" -> "ab sofort";
-            case "zhd-ausschreiben" -> "zuhanden von";
-            case "beiliegend-modernisieren" -> "Im Anhang";
-            case "obgenannt-vermeiden" -> "genannt";
-            default -> fallback;
-        };
-    }
-
-    private static String excerptAround(String text, int start, int end) {
-        int from = Math.max(0, start - 32);
-        int to = Math.min(text.length(), end + 32);
-        return (from > 0 ? "..." : "") + text.substring(from, to).trim() + (to < text.length() ? "..." : "");
-    }
-
     private static String normalize(String value) {
         return value == null ? "" : value.trim();
-    }
-
-    private record TextMatch(String matchedText, int startIndex, int endIndex) {
     }
 }

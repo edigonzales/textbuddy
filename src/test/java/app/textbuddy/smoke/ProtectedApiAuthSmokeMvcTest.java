@@ -52,10 +52,10 @@ class ProtectedApiAuthSmokeMvcTest {
         mockMvc.perform(get("/api/advisor/docs"))
                 .andExpect(status().isUnauthorized());
 
-        mockMvc.perform(post("/api/advisor/fix")
+        mockMvc.perform(post("/api/advisor/validate")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"text\":\"Text\",\"findings\":[]}"))
+                        .content("{\"text\":\"Text\",\"docs\":[]}"))
                 .andExpect(status().isUnauthorized());
     }
 

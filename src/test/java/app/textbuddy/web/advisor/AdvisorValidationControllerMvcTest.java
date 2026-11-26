@@ -1,19 +1,27 @@
 package app.textbuddy.web.advisor;
 
+import app.textbuddy.integration.llm.LlmProviderException;
+import app.textbuddy.integration.llm.StubTextbuddyLlmClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.nio.charset.StandardCharsets;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -22,6 +30,9 @@ class AdvisorValidationControllerMvcTest {
 
     @Autowired
     private WebApplicationContext webApplicationContext;
+
+    @MockitoSpyBean
+    private StubTextbuddyLlmClient llmClient;
 
     @Test
     void postAdvisorValidateReturnsValidationEvents() throws Exception {
@@ -49,63 +60,45 @@ class AdvisorValidationControllerMvcTest {
                 .andExpect(content().string(containsString("event:validation")))
                 .andExpect(content().string(containsString("event:progress")))
                 .andExpect(content().string(containsString("event:complete")))
-                .andExpect(content().string(containsString("\"truncated\":false")))
+                .andExpect(content().string(containsString("\"incomplete\":false")))
                 .andExpect(content().string(containsString("\"checked\":3")))
                 .andExpect(content().string(containsString("\"checked\":4")))
-                .andExpect(content().string(containsString("\"documentName\":\"empfehlungen-anglizismen-maerz-2020\"")))
-                .andExpect(content().string(containsString("\"ruleId\":\"downloaden-statt-herunterladen\"")))
                 .andExpect(content().string(containsString("\"matchedText\":\"downloaden\"")))
+                .andExpect(content().string(containsString("\"replacement\":\"herunterladen\"")))
+                .andExpect(content().string(containsString("\"referenceUrl\":\"/api/advisor/doc/empfehlungen-anglizismen-maerz-2020#page=")))
                 .andExpect(content().string(containsString("\"start\":6")))
                 .andExpect(content().string(containsString("\"end\":16")))
-                .andExpect(content().string(containsString("\"documentName\":\"schreibweisungen\"")))
-                .andExpect(content().string(containsString("\"ruleId\":\"per-sofort-vermeiden\"")))
                 .andExpect(content().string(containsString("\"matchedText\":\"per sofort\"")));
     }
 
     @Test
-    void postAdvisorFixReturnsOnlySelectedReplacements() throws Exception {
+    void removedFixEndpointReturnsNotFound() throws Exception {
         MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
 
         mockMvc.perform(post("/api/advisor/fix")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "text": "  Das gilt per sofort.  ",
-                                  "findings": [{
-                                    "documentName": "schreibweisungen",
-                                    "ruleId": "per-sofort-vermeiden",
-                                    "start": 11,
-                                    "end": 21,
-                                    "matchedText": "per sofort",
-                                    "suggestion": "ab sofort"
-                                  }]
-                                }
-                                """))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[0]").value("ab sofort"))
-                .andExpect(jsonPath("$.length()").value(1));
+                        .content("{}"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    void postAdvisorFixRejectsUnknownOrMismatchedFindings() throws Exception {
+    void providerFailureEndsTheStreamWithASafeErrorAndNoCompletion() throws Exception {
+        doThrow(new LlmProviderException("Synthetisches Provider-Detail"))
+                .when(llmClient).validate(eq("Bitte lesen."), anyList());
         MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
 
-        mockMvc.perform(post("/api/advisor/fix")
+        MvcResult result = mockMvc.perform(post("/api/advisor/validate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {
-                                  "text": "Das gilt per sofort.",
-                                  "findings": [{
-                                    "documentName": "schreibweisungen",
-                                    "ruleId": "per-sofort-vermeiden",
-                                    "start": 0,
-                                    "end": 3,
-                                    "matchedText": "per sofort",
-                                    "suggestion": "ab sofort"
-                                  }]
-                                }
+                                {"text":"Bitte lesen.","docs":["schreibweisungen"]}
                                 """))
-                .andExpect(status().isBadRequest());
+                .andExpect(request().asyncStarted())
+                .andReturn();
+        result.getAsyncResult(1_000L);
+
+        String stream = mockMvc.perform(asyncDispatch(result)).andReturn()
+                .getResponse().getContentAsString(StandardCharsets.UTF_8);
+        assertThat(stream).contains("event:error", "Richtlinienprüfung fehlgeschlagen.")
+                .doesNotContain("Synthetisches Provider-Detail", "event:complete");
     }
 }

@@ -1,6 +1,5 @@
 package app.textbuddy.web.advisor;
 
-import app.textbuddy.advisor.AdvisorFixRequest;
 import app.textbuddy.advisor.AdvisorService;
 import app.textbuddy.advisor.AdvisorValidateRequest;
 import app.textbuddy.config.TextbuddyProperties;
@@ -17,9 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import jakarta.annotation.PreDestroy;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -29,7 +25,7 @@ import java.util.concurrent.Future;
 public class AdvisorValidationController {
 
     private static final Logger log = LoggerFactory.getLogger(AdvisorValidationController.class);
-    private static final String DEFAULT_ERROR_MESSAGE = "Advisor-Validierung konnte nicht gestartet werden.";
+    private static final String DEFAULT_ERROR_MESSAGE = "Richtlinienprüfung fehlgeschlagen.";
     private final AdvisorService advisorService;
     private final RequestInputValidator inputValidator;
     private final long streamTimeoutMillis;
@@ -75,19 +71,6 @@ public class AdvisorValidationController {
         emitter.onError(error -> cancel.run());
 
         return emitter;
-    }
-
-    @PostMapping(path = "/fix", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<String> fix(@RequestBody AdvisorFixRequest request) {
-        inputValidator.text(request == null ? null : request.text());
-        String suggestions = request == null || request.findings() == null
-                ? ""
-                : request.findings().stream()
-                        .filter(Objects::nonNull)
-                        .map(finding -> Objects.requireNonNullElse(finding.suggestion(), ""))
-                        .collect(Collectors.joining());
-        inputValidator.prompt(suggestions);
-        return advisorService.fix(request);
     }
 
     @PreDestroy

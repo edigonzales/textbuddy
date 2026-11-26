@@ -1,9 +1,7 @@
 package app.textbuddy.integration.llm;
 
-import app.textbuddy.quickaction.SummarizePrompt;
-
-import app.textbuddy.advisor.AdvisorFixFinding;
 import app.textbuddy.advisor.AdvisorRuleCheck;
+import app.textbuddy.quickaction.SummarizePrompt;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
@@ -53,16 +51,14 @@ public final class LlmPrompts {
                 promptCatalog.get("shells/structured/advisor-json.system.txt"),
                 promptCatalog.render("source/structured/advisor.user.txt", Map.of(
                         "text", text,
-                        "rules_json", objectMapper.writeValueAsString(rules)
-                ))
-        );
-    }
-
-    public PromptMessages advisorFix(List<AdvisorFixFinding> findings) {
-        return new PromptMessages(
-                promptCatalog.get("shells/structured/advisor-fix.system.txt"),
-                promptCatalog.render("source/structured/advisor-fix.user.txt", Map.of(
-                        "findings_json", objectMapper.writeValueAsString(findings)
+                        "rules_json", objectMapper.writeValueAsString(rules.stream().map(check -> Map.of(
+                                "documentName", check.document().name(),
+                                "ruleId", check.rule().id(),
+                                "instructions", check.rule().instructions(),
+                                "message", check.rule().message(),
+                                "suggestion", check.rule().suggestion(),
+                                "matchTerms", check.rule().matchTerms()
+                        )).toList())
                 ))
         );
     }

@@ -1,6 +1,7 @@
 package app.textbuddy.integration.llm;
 
-import app.textbuddy.advisor.AdvisorFixFinding;
+import app.textbuddy.advisor.AdvisorDocument;
+import app.textbuddy.advisor.AdvisorRule;
 import app.textbuddy.advisor.AdvisorRuleCheck;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -26,26 +27,18 @@ class LlmPromptsTest {
     }
 
     @Test
-    void advisorIncludesExactTextAndSelectedRules() {
-        String text = "Bitte downloaden Sie das Formular {{rules_json}}.";
-        PromptMessages prompt = prompts.advisor(text, List.of(new AdvisorRuleCheck(
-                "doc-a", "Dokument A", "/api/advisor/doc/doc-a#page=3", "rule-1", "Regel 1", 3,
-                "Keine Anglizismen", "Vermeiden Sie downloaden.", "Nutzen Sie herunterladen.", List.of("downloaden")
-        )));
+    void advisorIncludesExactTextAndSelectedRulesWithoutSourceMetadata() {
+        String text = "  Bitte downloaden Sie das Formular {{rules_json}}.  ";
+        AdvisorRule rule = new AdvisorRule("rule-1", "Regel 1", 3, "Keine Anglizismen",
+                "Vermeiden Sie downloaden.", "Nutzen Sie herunterladen.", List.of("downloaden"));
+        var document = new AdvisorDocument(1, "doc-a", "Dokument A", "Kurzfassung", "Quelle", List.of(rule));
+        PromptMessages prompt = prompts.advisor(text, List.of(new AdvisorRuleCheck(document, rule)));
 
-        assertThat(prompt.systemPrompt()).contains("JSON array");
-        assertThat(prompt.userPrompt()).contains(text, "Review only the given rules", "matchedText` must be copied exactly",
-                "\"ruleId\":\"rule-1\"");
-    }
-
-    @Test
-    void advisorFixRequestsOnlyOrderedReplacementText() {
-        PromptMessages prompt = prompts.advisorFix(List.of(
-                new AdvisorFixFinding("per sofort", "  Bitte per sofort handeln.  ", "Prüfe die Formulierung.", "ab sofort")
-        ));
-
-        assertThat(prompt.systemPrompt()).contains("JSON array of strings", "one replacement per finding");
-        assertThat(prompt.userPrompt()).contains("matchedText alone", "read-only context",
-                "\"matchedText\":\"per sofort\"", "\"suggestion\":\"ab sofort\"", "  Bitte per sofort handeln.  ");
+        assertThat(prompt.systemPrompt()).contains("JSON array", "message and replacement", "may also be null");
+        assertThat(prompt.userPrompt())
+                .contains(text, "Copy matchedText exactly", "excerpt exactly", "necessary whitespace",
+                        "\"ruleId\":\"rule-1\"", "\"documentName\":\"doc-a\"", "\"matchTerms\":[\"downloaden\"]",
+                        "Keine Anglizismen", "Vermeiden Sie downloaden.", "Nutzen Sie herunterladen.")
+                .doesNotContain("Dokument A", "\"page\"", "Regel 1", "/api/advisor/doc");
     }
 }

@@ -1,12 +1,17 @@
 package app.textbuddy.integration.llm;
 
+import app.textbuddy.advisor.AdvisorDocument;
+import app.textbuddy.advisor.AdvisorRule;
 import app.textbuddy.advisor.AdvisorRuleCheck;
+import app.textbuddy.advisor.AdvisorRuleMatch;
 import app.textbuddy.config.TextbuddyProperties;
 import app.textbuddy.quickaction.SummarizePrompt;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.core.io.DefaultResourceLoader;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -25,10 +30,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class OpenAiCompatibleChatClientTest {
 
+    private static final AdvisorRule RULE = new AdvisorRule("per-sofort-vermeiden", "Per sofort ersetzen", 1,
+            "Verwende die hausinterne Schreibweise.", "Vermeide per sofort.", "ab sofort", List.of("per sofort"));
     private static final AdvisorRuleCheck RULE_CHECK = new AdvisorRuleCheck(
-            "schreibweisungen", "Schreibweisungen", "/api/advisor/doc/schreibweisungen#page=1",
-            "per-sofort-vermeiden", "Per sofort ersetzen", 1,
-            "Verwende die hausinterne Schreibweise.", "Vermeide per sofort.", "ab sofort", List.of("per sofort")
+            new AdvisorDocument(1, "schreibweisungen", "Schreibweisungen", "Zusammenfassung", "Quelle", List.of(RULE)),
+            RULE
     );
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -94,18 +100,48 @@ class OpenAiCompatibleChatClientTest {
     }
 
     @Test
-    void rejectsAnAdvisorFindingWithoutAnOriginalTextRange() throws Exception {
-        String response = """
-                {"matches":[{"documentName":"schreibweisungen","ruleId":"per-sofort-vermeiden",
-                "message":"Vermeide diese Formulierung.","suggestion":"ab sofort"}]}
+    void readsAllReplacementValuesWithoutTrimmingInOneRequest() throws Exception {
+        String finding = """
+                {"documentName":"schreibweisungen","ruleId":"per-sofort-vermeiden","matchedText":"per sofort",
+                "excerpt":" per sofort. ","message":"Bitte prüfen.","replacement":%s}
                 """;
+        String response = "[" + String.join(",",
+                finding.formatted("\" \\n\\t \""), finding.formatted("\"\""), finding.formatted("null")) + "]";
+        AtomicInteger requestCount = new AtomicInteger();
+        startServer(exchange -> {
+            requestCount.incrementAndGet();
+            writeJson(exchange, 200, """
+                    {"choices":[{"finish_reason":"stop","message":{"content":%s}}]}
+                    """.formatted(objectMapper.writeValueAsString(response)));
+        });
+
+        var matches = newAdapter().validate(" per sofort. ", List.of(RULE_CHECK));
+
+        assertThat(matches).extracting(AdvisorRuleMatch::replacement).containsExactly(" \n\t ", "", null);
+        assertThat(matches).extracting(AdvisorRuleMatch::excerpt).containsOnly(" per sofort. ");
+        assertThat(requestCount).hasValue(1);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"\"matchedText\":5", "\"excerpt\":null", "\"message\":false", "\"replacement\":[]"})
+    void rejectsInvalidAdvisorFindingFields(String invalidField) throws Exception {
+        var finding = objectMapper.createObjectNode()
+                .put("documentName", "schreibweisungen")
+                .put("ruleId", "per-sofort-vermeiden")
+                .put("matchedText", "per sofort")
+                .put("excerpt", "gilt per sofort.")
+                .put("message", "Bitte prüfen.")
+                .putNull("replacement");
+        objectMapper.readTree("{" + invalidField + "}").properties()
+                .forEach(field -> finding.set(field.getKey(), field.getValue()));
+        String response = objectMapper.writeValueAsString(List.of(finding));
         startServer(exchange -> writeJson(exchange, 200, """
                 {"choices":[{"finish_reason":"stop","message":{"content":%s}}]}
                 """.formatted(objectMapper.writeValueAsString(response))));
 
-        assertThatThrownBy(() -> newAdapter().validate("Die Bewilligung gilt per sofort.", List.of(RULE_CHECK)))
+        assertThatThrownBy(() -> newAdapter().validate("Das gilt per sofort.", List.of(RULE_CHECK)))
                 .isInstanceOf(LlmProviderException.class)
-                .hasMessageContaining("unvollständige Advisor-Befunde");
+                .hasMessageContaining("keine gültigen Advisor-Befunde");
     }
 
     @Test

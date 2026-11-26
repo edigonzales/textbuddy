@@ -26,7 +26,6 @@ textbuddy.document.timeout=45s
 
 # Eingabegrenzen
 textbuddy.input.max-text-length=50000
-textbuddy.input.max-prompt-length=2000
 
 # Nur Health ohne interne Details veröffentlichen
 management.endpoints.web.exposure.include=health

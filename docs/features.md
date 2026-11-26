@@ -6,9 +6,9 @@ LanguageTool prüft den Text nach einer kurzen Eingabepause. Unter **Prüfen** l
 
 ## Advisor und Diff
 
-Der Advisor prüft ausgewählte gebündelte Demo-Regelwerke. Ein Befund enthält die exakte Fundstelle, Begründung, Ersatzvorschlag sowie Dokument, Seite und PDF-Link. **Korrigieren** oder **Überspringen** legt pro Befund fest, welche Textstellen für den anschliessenden LLM-Aufruf freigegeben sind. Eigene Regelwerke lassen sich als [JSON-/PDF-Paare bündeln](advisor-authoring.md).
+Der Advisor prüft ausgewählte gebündelte Demo-Regelwerke und zeigt den Fortschritt. Eine unvollständige Prüfung wird im Ergebnis ausgewiesen. Jeder Befund zeigt die exakte Fundstelle, eine Begründung sowie Dokument, Seite und PDF-Link. Wenn bei der Prüfung ein konkreter Ersatz oder eine Löschung vorgeschlagen wurde, lässt sich der Befund für die Vorschau auswählen. Überlappende Alternativen bleiben sichtbar und lassen sich einzeln auswählen, sobald der bisher gewählte Vorschlag abgewählt ist. Eigene Regelwerke lassen sich als [JSON-/PDF-Paare bündeln](advisor-authoring.md).
 
-Der Diff zeigt die Ersetzungen der ausgewählten Advisor-Befunde sowie die Änderungen aus **Überarbeiten**. Änderungen lassen sich einzeln oder gesammelt annehmen und ablehnen. Die Übernahme erfolgt in einer rückgängig machbaren Editortransaktion. Fehler, Ablehnung und ein erreichtes Diff-Ressourcenlimit erhalten den Originaltext.
+Der Browser erstellt den Diff für die ausgewählten Advisor-Befunde lokal. Änderungen aus **Überarbeiten** nutzen dieselbe Vorschau. Änderungen lassen sich einzeln oder gesammelt annehmen und ablehnen. Die Übernahme erfolgt in einer rückgängig machbaren Editortransaktion. Fehler, Ablehnung und ein erreichtes Diff-Ressourcenlimit erhalten den Originaltext.
 
 ## Dokumente und Statistik
 

@@ -31,7 +31,7 @@ Unit- und Browser-Tests decken ausserdem Fokus-Rückgabe, Escape, fehlenden hori
 
 1. Mit Tastatur schreiben, korrigieren, Modus wechseln, Korrekturen und Advisor schliessen und wieder öffnen.
 2. Advisor-Dokumente auswählen, Prüfung abbrechen, Befunde markieren und zwischen **Korrigieren** und **Überspringen** wechseln.
-3. Transformation und Advisor-Fix starten und alle Einzel- und Globalentscheidungen im Inline- sowie Zweispalten-Diff bedienen.
+3. Transformation starten und Advisor-Vorschläge im Diff öffnen und alle Einzel- und Globalentscheidungen im Inline- sowie Zweispalten-Diff bedienen.
 4. Upload, Drag-and-drop, Kopieren, DOCX-Download und Statistik prüfen.
 5. Mit NVDA/Firefox oder VoiceOver/Safari Namen, Statusmeldungen, Ergebnisliste und Review nachvollziehen.
 6. Bei 200 % und 400 % Zoom sowie auf 390 px Breite Reflow und horizontalen Überlauf prüfen.
